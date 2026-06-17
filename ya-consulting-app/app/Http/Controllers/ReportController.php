@@ -270,6 +270,9 @@ class ReportController extends Controller
             return back()->withErrors(['error' => 'Le fichier du rapport n\'existe pas sur le serveur.']);
         }
 
-        return Storage::disk('public')->download($report->file_path, $report->name . '.' . ($report->file_type === 'pdf' ? 'pdf' : 'csv'));
+        $absolutePath = Storage::disk('public')->path($report->file_path);
+        $fileName = $report->name . '.' . ($report->file_type === 'pdf' ? 'pdf' : 'csv');
+
+        return response()->download($absolutePath, $fileName);
     }
 }
