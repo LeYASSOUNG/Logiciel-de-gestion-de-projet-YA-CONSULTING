@@ -82,10 +82,15 @@ class ProjectController extends Controller
             'description'       => 'nullable|string',
             'start_date'        => 'required|date',
             'planned_end_date'  => 'required|date|after_or_equal:start_date',
-            'budget'            => 'required|numeric|min:0',
+            'budget_labor'      => 'required|numeric|min:0',
+            'budget_material'   => 'required|numeric|min:0',
+            'budget_transport'  => 'required|numeric|min:0',
+            'budget_other'      => 'required|numeric|min:0',
             'status'            => 'required|in:en_cours,termine,en_pause',
             'supplier_contact'  => 'nullable|string|max:255',
         ]);
+
+        $validated['budget'] = (float)$validated['budget_labor'] + (float)$validated['budget_material'] + (float)$validated['budget_transport'] + (float)$validated['budget_other'];
 
         $project = Project::create([
             ...$validated,
@@ -127,6 +132,11 @@ class ProjectController extends Controller
                 'gross_gain'       => $project->gross_gain,
                 'profitability'    => $project->profitability_rate,
                 'is_profitable'    => $project->is_profitable,
+                'expenses_labor'     => $project->expenses_labor,
+                'expenses_material'  => $project->expenses_material,
+                'expenses_transport' => $project->expenses_transport,
+                'expenses_other'     => $project->expenses_other,
+                'has_expenses'       => $project->hasPendingExpenses(),
             ]),
             'expenses_by_category' => $expensesByCategory,
         ]);
@@ -137,7 +147,9 @@ class ProjectController extends Controller
         $this->authorize('update', $project);
 
         return Inertia::render('Projects/Edit', [
-            'project' => $project->load('client'),
+            'project' => array_merge($project->load('client')->toArray(), [
+                'has_expenses' => $project->hasPendingExpenses(),
+            ]),
             'clients' => Client::orderBy('name')->get(['id', 'name']),
         ]);
     }
@@ -153,10 +165,31 @@ class ProjectController extends Controller
             'start_date'        => 'required|date',
             'planned_end_date'  => 'required|date|after_or_equal:start_date',
             'actual_end_date'   => 'nullable|date|after_or_equal:start_date',
-            'budget'            => 'required|numeric|min:0',
+            'budget_labor'      => 'required|numeric|min:0',
+            'budget_material'   => 'required|numeric|min:0',
+            'budget_transport'  => 'required|numeric|min:0',
+            'budget_other'      => 'required|numeric|min:0',
             'status'            => 'required|in:en_cours,termine,en_pause',
             'supplier_contact'  => 'nullable|string|max:255',
         ]);
+
+        // Contrainte de modification si dépenses existantes
+        if ($project->hasPendingExpenses()) {
+            if (
+                $request->client_id != $project->client_id ||
+                \Illuminate\Support\Carbon::parse($request->start_date)->toDateString() != $project->start_date->toDateString() ||
+                (float)$request->budget_labor != (float)$project->budget_labor ||
+                (float)$request->budget_material != (float)$project->budget_material ||
+                (float)$request->budget_transport != (float)$project->budget_transport ||
+                (float)$request->budget_other != (float)$project->budget_other
+            ) {
+                return back()->withErrors([
+                    'budget' => 'Impossible de modifier le budget, le client ou la date de début pour un projet ayant des dépenses enregistrées.'
+                ]);
+            }
+        }
+
+        $validated['budget'] = (float)$validated['budget_labor'] + (float)$validated['budget_material'] + (float)$validated['budget_transport'] + (float)$validated['budget_other'];
 
         $project->update([
             ...$validated,

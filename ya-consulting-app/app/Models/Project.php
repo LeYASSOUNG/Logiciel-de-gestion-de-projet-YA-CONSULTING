@@ -19,6 +19,10 @@ class Project extends Model
         'planned_end_date',
         'actual_end_date',
         'budget',
+        'budget_labor',
+        'budget_material',
+        'budget_transport',
+        'budget_other',
         'status',
         'supplier_contact',
         'created_by',
@@ -29,7 +33,11 @@ class Project extends Model
         'start_date'        => 'date',
         'planned_end_date'  => 'date',
         'actual_end_date'   => 'date',
-        'budget'            => 'decimal:2',
+        'budget'            => 'encrypted',
+        'budget_labor'      => 'encrypted',
+        'budget_material'   => 'encrypted',
+        'budget_transport'  => 'encrypted',
+        'budget_other'      => 'encrypted',
     ];
 
     // ─── Relations ──────────────────────────────────────────────
@@ -60,7 +68,7 @@ class Project extends Model
      */
     public function getTotalExpensesAttribute(): float
     {
-        return (float) $this->expenses()->sum('amount');
+        return (float) $this->expenses->sum('amount');
     }
 
     /**
@@ -86,6 +94,38 @@ class Project extends Model
     public function getIsProfitableAttribute(): bool
     {
         return $this->gross_gain >= 0;
+    }
+
+    /**
+     * Dépenses réelles Main d'œuvre
+     */
+    public function getExpensesLaborAttribute(): float
+    {
+        return (float) $this->expenses->filter(fn($e) => $e->category?->parent_type === 'main_oeuvre')->sum('amount');
+    }
+
+    /**
+     * Dépenses réelles Matériel
+     */
+    public function getExpensesMaterialAttribute(): float
+    {
+        return (float) $this->expenses->filter(fn($e) => $e->category?->parent_type === 'materiel')->sum('amount');
+    }
+
+    /**
+     * Dépenses réelles Transport
+     */
+    public function getExpensesTransportAttribute(): float
+    {
+        return (float) $this->expenses->filter(fn($e) => $e->category?->parent_type === 'transport')->sum('amount');
+    }
+
+    /**
+     * Dépenses réelles Autres coûts
+     */
+    public function getExpensesOtherAttribute(): float
+    {
+        return (float) $this->expenses->filter(fn($e) => $e->category?->parent_type === 'autres' || is_null($e->category?->parent_type))->sum('amount');
     }
 
     /**

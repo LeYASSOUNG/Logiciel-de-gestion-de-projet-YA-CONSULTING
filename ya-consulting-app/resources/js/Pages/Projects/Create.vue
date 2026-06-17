@@ -74,10 +74,41 @@
                 </div>
               </div>
 
+              <div class="form-grid" style="margin-bottom:var(--space-md);">
+                <div class="form-group">
+                  <label class="form-label">Budget Main d'œuvre (FCFA) <span class="required">*</span></label>
+                  <input v-model="form.budget_labor" type="number" class="form-control" :class="{ error: errors.budget_labor }"
+                    placeholder="0" min="0" required />
+                  <div v-if="errors.budget_labor" class="form-error">{{ errors.budget_labor }}</div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Budget Matériel (FCFA) <span class="required">*</span></label>
+                  <input v-model="form.budget_material" type="number" class="form-control" :class="{ error: errors.budget_material }"
+                    placeholder="0" min="0" required />
+                  <div v-if="errors.budget_material" class="form-error">{{ errors.budget_material }}</div>
+                </div>
+              </div>
+
+              <div class="form-grid" style="margin-bottom:var(--space-md);">
+                <div class="form-group">
+                  <label class="form-label">Budget Transport (FCFA) <span class="required">*</span></label>
+                  <input v-model="form.budget_transport" type="number" class="form-control" :class="{ error: errors.budget_transport }"
+                    placeholder="0" min="0" required />
+                  <div v-if="errors.budget_transport" class="form-error">{{ errors.budget_transport }}</div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Autres coûts (FCFA) <span class="required">*</span></label>
+                  <input v-model="form.budget_other" type="number" class="form-control" :class="{ error: errors.budget_other }"
+                    placeholder="0" min="0" required />
+                  <div v-if="errors.budget_other" class="form-error">{{ errors.budget_other }}</div>
+                </div>
+              </div>
+
               <div class="form-group">
-                <label class="form-label">Budget fixé (FCFA) <span class="required">*</span></label>
-                <input v-model="form.budget" type="number" class="form-control" :class="{ error: errors.budget }"
-                  placeholder="Ex: 5000000" min="0" step="1000" required />
+                <label class="form-label">Budget total calculé (FCFA)</label>
+                <input :value="form.budget" type="number" class="form-control" style="background-color: var(--color-bg-light); cursor: not-allowed;" readonly />
                 <div v-if="errors.budget" class="form-error">{{ errors.budget }}</div>
                 <div v-if="form.budget" style="font-size:.8rem; color:var(--color-text-muted); margin-top:4px;">
                   = {{ fmt(form.budget) }}
@@ -115,6 +146,7 @@
 
 <script setup>
 import { Link, useForm } from '@inertiajs/vue3';
+import { watch } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 
 const props = defineProps({
@@ -127,12 +159,26 @@ const form = useForm({
   description:      '',
   start_date:       '',
   planned_end_date: '',
-  budget:           '',
+  budget:           0,
+  budget_labor:     0,
+  budget_material:  0,
+  budget_transport: 0,
+  budget_other:     0,
   status:           'en_cours',
   supplier_contact: '',
 });
 
 const errors = form.errors;
+
+watch(
+  () => [form.budget_labor, form.budget_material, form.budget_transport, form.budget_other],
+  () => {
+    form.budget = (Number(form.budget_labor) || 0) +
+                  (Number(form.budget_material) || 0) +
+                  (Number(form.budget_transport) || 0) +
+                  (Number(form.budget_other) || 0);
+  }
+);
 
 const fmt = (v) => v ? new Intl.NumberFormat('fr-FR', {
   style: 'currency', currency: 'XOF', maximumFractionDigits: 0

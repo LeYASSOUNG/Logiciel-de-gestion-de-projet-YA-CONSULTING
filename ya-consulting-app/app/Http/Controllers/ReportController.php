@@ -113,7 +113,7 @@ class ReportController extends Controller
                   ->orWhere('actual_end_date', '>=', $prevStartDate);
             })->get();
         $prevTotalBudget = $prevProjects->sum('budget');
-        $prevTotalExpenses = Expense::whereBetween('date', [$prevStartDate, $prevEndDate])->sum('amount');
+        $prevTotalExpenses = Expense::whereBetween('date', [$prevStartDate, $prevEndDate])->get()->sum('amount');
         $prevNetProfit = $prevTotalBudget - $prevTotalExpenses;
 
         // 4. Gains des projets terminés ce mois
@@ -175,14 +175,70 @@ class ReportController extends Controller
             Storage::disk('public')->put($fileName, $pdf->output());
             $filePath = $fileName;
         } else {
-            // Pour Excel (maquette simplifiée ou stockage vide si Excel non requis à 100% de suite)
-            // Pour le moment on le génère en PDF ou vide s'il y a un souci, mais créons au moins le fichier Excel de base
-            // (Si Maatwebsite pose un problème de configuration, on peut aussi renvoyer un PDF déguisé ou un csv simple)
             $fileName = "reports/rapport_" . $year . "_" . sprintf("%02d", $month) . "_" . time() . ".csv";
-            $csvContent = "Rapport Financier - " . $monthName . " " . $year . "\n";
-            $csvContent .= "Budget Total," . $totalBudget . "\n";
-            $csvContent .= "Depenses Totales," . $totalExpenses . "\n";
-            $csvContent .= "Benefice Net," . $netProfit . "\n";
+            
+            $handle = fopen('php://temp', 'r+');
+            
+            // UTF-8 BOM for Excel compatibility
+            fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
+            
+            // Titre principal
+            fputcsv($handle, ["Rapport Financier - " . $monthName . " " . $year]);
+            fputcsv($handle, []);
+            
+            // Section Indicateurs
+            fputcsv($handle, ["RÉSUMÉ DES INDICATEURS DE PERFORMANCE"]);
+            fputcsv($handle, ["Indicateur", "Valeur (FCFA)"]);
+            fputcsv($handle, ["Budget Total des projets actifs", $totalBudget]);
+            fputcsv($handle, ["Dépenses Totales", $totalExpenses]);
+            fputcsv($handle, ["Bénéfice Net Global", $netProfit]);
+            fputcsv($handle, []);
+            
+            // Comparatifs N vs N-1
+            fputcsv($handle, ["COMPARAISON MOIS N vs N-1"]);
+            fputcsv($handle, ["Indicateur", "Mois en cours ({$monthName} {$year})", "Mois précédent ({$prevMonthName} {$prevYear})", "Évolution"]);
+            
+            $expensesDiff = $totalExpenses - $prevTotalExpenses;
+            $expensesPct = $prevTotalExpenses > 0 ? round(($expensesDiff / $prevTotalExpenses) * 100, 2) : 0;
+            fputcsv($handle, ["Dépenses Totales", $totalExpenses, $prevTotalExpenses, $expensesDiff . " (" . ($expensesPct >= 0 ? '+' : '') . $expensesPct . "%)"]);
+            
+            $profitDiff = $netProfit - $prevNetProfit;
+            $profitPct = $prevNetProfit != 0 ? round(($profitDiff / abs($prevNetProfit)) * 100, 2) : 0;
+            fputcsv($handle, ["Bénéfice Net", $netProfit, $prevNetProfit, $profitDiff . " (" . ($profitPct >= 0 ? '+' : '') . $profitPct . "%)"]);
+            
+            fputcsv($handle, []);
+            
+            // Projets Actifs
+            fputcsv($handle, ["DÉTAIL DES PROJETS ACTIFS"]);
+            fputcsv($handle, ["Nom du projet", "Client", "Budget Fixé", "Dépenses Réelles", "Marge brute", "Taux de rentabilité"]);
+            foreach ($projects as $proj) {
+                fputcsv($handle, [
+                    $proj->name,
+                    $proj->client?->name ?? 'N/A',
+                    $proj->budget,
+                    $proj->total_expenses,
+                    $proj->gross_gain,
+                    $proj->profitability_rate . "%"
+                ]);
+            }
+            fputcsv($handle, []);
+            
+            // Dépenses par catégorie
+            fputcsv($handle, ["DÉPENSES PAR CATÉGORIE DE DÉPENSE"]);
+            fputcsv($handle, ["Catégorie", "Type de budget", "Nombre de saisies", "Montant total (FCFA)"]);
+            foreach ($expensesByCategory as $catInfo) {
+                fputcsv($handle, [
+                    $catInfo['name'],
+                    $catInfo['type'],
+                    $catInfo['count'],
+                    $catInfo['total']
+                ]);
+            }
+            
+            rewind($handle);
+            $csvContent = stream_get_contents($handle);
+            fclose($handle);
+            
             Storage::disk('public')->put($fileName, $csvContent);
             $filePath = $fileName;
         }

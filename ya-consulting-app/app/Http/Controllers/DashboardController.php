@@ -68,8 +68,8 @@ class DashboardController extends Controller
             ->orderByDesc('total')
             ->get();
 
-        // ─── Évolution mensuelle (12 derniers mois) ───────────────
-        $expensesForTrend = Expense::query()
+        // ─── Évolution mensuelle (12 derniers mois par catégorie) ───
+        $expensesForTrend = Expense::with('category')
             ->where('date', '>=', now()->subMonths(12)->startOfMonth())
             ->when($user->hasRole('chef_projet'), function ($q) use ($user) {
                 $q->whereHas('project', function ($qp) use ($user) {
@@ -83,11 +83,32 @@ class DashboardController extends Controller
         })->map(function ($group, $key) {
             list($year, $month) = explode('-', $key);
             return [
-                'year'  => (int) $year,
-                'month' => (int) $month,
-                'total' => (float) $group->sum('amount'),
+                'year'         => (int) $year,
+                'month'        => (int) $month,
+                'main_oeuvre'  => (float) $group->filter(fn($e) => $e->category?->parent_type === 'main_oeuvre')->sum('amount'),
+                'materiel'     => (float) $group->filter(fn($e) => $e->category?->parent_type === 'materiel')->sum('amount'),
+                'transport'    => (float) $group->filter(fn($e) => $e->category?->parent_type === 'transport')->sum('amount'),
+                'autres'       => (float) $group->filter(fn($e) => $e->category?->parent_type === 'autres' || is_null($e->category?->parent_type))->sum('amount'),
+                'total'        => (float) $group->sum('amount'),
             ];
         })->values()->sortBy(fn ($item) => $item['year'] * 100 + $item['month'])->values();
+
+        // ─── Least profitable projects ──────────────────────────
+        $topLeastProfitable = (clone $projectsQuery)
+            ->with('expenses', 'client')
+            ->get()
+            ->sortBy(fn ($p) => $p->gross_gain)
+            ->take(5)
+            ->values()
+            ->map(fn ($p) => [
+                'id'           => $p->id,
+                'name'         => $p->name,
+                'client'       => $p->client->name ?? '-',
+                'budget'       => $p->budget,
+                'gross_gain'   => $p->gross_gain,
+                'profitability' => $p->profitability_rate,
+                'status'       => $p->status,
+            ]);
 
         // ─── Projets récents ──────────────────────────────────────
         $recentProjects = (clone $projectsQuery)
@@ -120,6 +141,7 @@ class DashboardController extends Controller
                     ? round(($totalGain / $totalBudget) * 100, 2) : 0,
             ],
             'top_profitable'       => $topProfitable,
+            'top_least_profitable' => $topLeastProfitable,
             'expenses_by_category' => $expensesByCategory,
             'monthly_trend'        => $monthlyTrend,
             'recent_projects'      => $recentProjects,

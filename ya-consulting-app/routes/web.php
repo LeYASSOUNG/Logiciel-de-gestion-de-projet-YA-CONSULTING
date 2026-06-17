@@ -41,9 +41,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/reports/{report}/download', [ReportController::class, 'download'])->name('reports.download');
     });
 
-    // Gestion utilisateurs (admin uniquement)
+    // Gestion utilisateurs & catégories (admin uniquement)
     Route::middleware('role:admin')->group(function () {
         Route::resource('users', \App\Http\Controllers\UserController::class)
             ->except(['create', 'store', 'show']);
+        Route::resource('categories', \App\Http\Controllers\ExpenseCategoryController::class)
+            ->except(['create', 'edit', 'show']);
     });
 });

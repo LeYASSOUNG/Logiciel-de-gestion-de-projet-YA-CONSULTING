@@ -71,11 +71,11 @@
         <!-- Évolution mensuelle -->
         <div class="card">
           <div class="card-header">
-            <h2 class="card-title">Évolution des dépenses (12 mois)</h2>
+            <h2 class="card-title">Évolution des dépenses par axe (12 mois)</h2>
           </div>
           <div class="card-body">
             <apexchart
-              type="area"
+              type="bar"
               height="220"
               :options="monthlyChartOptions"
               :series="monthlySeries"
@@ -103,7 +103,7 @@
         </div>
       </div>
 
-      <!-- Projets récents + Top rentables -->
+      <!-- Projets récents + Top/Least rentables -->
       <div class="grid-2 mt-lg">
         <!-- Projets récents -->
         <div class="card">
@@ -138,30 +138,66 @@
           </div>
         </div>
 
-        <!-- Top 5 rentables -->
+        <!-- Rentabilité des projets -->
         <div class="card">
-          <div class="card-header">
-            <h2 class="card-title">🏆 Top projets rentables</h2>
+          <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <h2 class="card-title">Analyse de Rentabilité</h2>
+            <div style="display:inline-flex; border:1px solid var(--color-border); border-radius:6px; overflow:hidden; padding:2px; background:var(--color-bg-light);">
+              <button @click="showLeastProfitable = false" class="btn btn-sm" :class="{ 'btn-accent': !showLeastProfitable }" style="border:none; padding:4px 10px; border-radius:4px; font-size:.75rem; cursor:pointer;">
+                Plus rentables
+              </button>
+              <button @click="showLeastProfitable = true" class="btn btn-sm" :class="{ 'btn-danger': showLeastProfitable }" style="border:none; padding:4px 10px; border-radius:4px; font-size:.75rem; cursor:pointer;">
+                Moins rentables
+              </button>
+            </div>
           </div>
           <div class="card-body" style="padding-top:0;">
-            <div v-for="(project, i) in top_profitable" :key="project.id"
-              style="display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--color-border);">
-              <div style="width:28px; height:28px; border-radius:50%; background:var(--color-accent); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.75rem; color:var(--color-primary-dark); flex-shrink:0;">
-                {{ i + 1 }}
-              </div>
-              <div style="flex:1; min-width:0;">
-                <div style="font-weight:600; font-size:.875rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ project.name }}</div>
-                <div class="profit-bar">
-                  <div class="profit-bar-fill" :class="project.gross_gain >= 0 ? 'positive' : 'negative'"
-                    :style="`width: ${Math.min(Math.abs(project.profitability), 100)}%`" />
+            <!-- Top Profitables -->
+            <div v-show="!showLeastProfitable">
+              <div v-for="(project, i) in top_profitable" :key="'top-' + project.id"
+                style="display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--color-border);">
+                <div style="width:28px; height:28px; border-radius:50%; background:rgba(16,185,129,.1); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.75rem; color:var(--color-success); flex-shrink:0;">
+                  {{ i + 1 }}
+                </div>
+                <div style="flex:1; min-width:0;">
+                  <Link :href="route('projects.show', project.id)" style="font-weight:600; font-size:.875rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--color-primary); text-decoration:none;">
+                    {{ project.name }}
+                  </Link>
+                  <div class="profit-bar">
+                    <div class="profit-bar-fill positive" :style="`width: ${Math.min(Math.abs(project.profitability), 100)}%`" />
+                  </div>
+                </div>
+                <div class="amount-positive" style="font-size:.825rem; flex-shrink:0; font-weight:600;">
+                  +{{ project.profitability }}%
                 </div>
               </div>
-              <div :class="project.gross_gain >= 0 ? 'amount-positive' : 'amount-negative'" style="font-size:.825rem; flex-shrink:0;">
-                {{ project.profitability >= 0 ? '+' : '' }}{{ project.profitability }}%
+              <div v-if="!top_profitable.length" style="text-align:center; color:var(--color-text-muted); padding:30px 0;">
+                Aucun projet disponible
               </div>
             </div>
-            <div v-if="!top_profitable.length" style="text-align:center; color:var(--color-text-muted); padding:30px 0;">
-              Aucun projet disponible
+
+            <!-- Top Moins Rentables -->
+            <div v-show="showLeastProfitable">
+              <div v-for="(project, i) in top_least_profitable" :key="'least-' + project.id"
+                style="display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--color-border);">
+                <div style="width:28px; height:28px; border-radius:50%; background:rgba(239,68,68,.1); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.75rem; color:var(--color-danger); flex-shrink:0;">
+                  {{ i + 1 }}
+                </div>
+                <div style="flex:1; min-width:0;">
+                  <Link :href="route('projects.show', project.id)" style="font-weight:600; font-size:.875rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--color-primary); text-decoration:none;">
+                    {{ project.name }}
+                  </Link>
+                  <div class="profit-bar">
+                    <div class="profit-bar-fill negative" :style="`width: ${Math.min(Math.abs(project.profitability), 100)}%`" />
+                  </div>
+                </div>
+                <div :class="project.gross_gain >= 0 ? 'amount-positive' : 'amount-negative'" style="font-size:.825rem; flex-shrink:0; font-weight:600;">
+                  {{ project.profitability >= 0 ? '+' : '' }}{{ project.profitability }}%
+                </div>
+              </div>
+              <div v-if="!top_least_profitable.length" style="text-align:center; color:var(--color-text-muted); padding:30px 0;">
+                Aucun projet disponible
+              </div>
             </div>
           </div>
         </div>
@@ -171,7 +207,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
@@ -179,10 +215,13 @@ import StatusBadge from '@/Components/StatusBadge.vue';
 const props = defineProps({
   stats: Object,
   top_profitable: Array,
+  top_least_profitable: Array,
   expenses_by_category: Array,
   monthly_trend: Array,
   recent_projects: Array,
 });
+
+const showLeastProfitable = ref(false);
 
 // ─── Formatage ──────────────────────────────────────────────────
 const formatAmount = (v) => {
@@ -191,16 +230,30 @@ const formatAmount = (v) => {
 };
 
 // ─── Graphique mensuel ──────────────────────────────────────────
-const monthlySeries = computed(() => [{
-  name: 'Dépenses',
-  data: props.monthly_trend.map(m => m.total),
-}]);
+const monthlySeries = computed(() => [
+  {
+    name: "Main d'œuvre",
+    data: props.monthly_trend.map(m => m.main_oeuvre),
+  },
+  {
+    name: "Matériel",
+    data: props.monthly_trend.map(m => m.materiel),
+  },
+  {
+    name: "Transport",
+    data: props.monthly_trend.map(m => m.transport),
+  },
+  {
+    name: "Autres",
+    data: props.monthly_trend.map(m => m.autres),
+  }
+]);
 
 const monthlyChartOptions = computed(() => ({
-  chart: { toolbar: { show: false }, sparkline: { enabled: false } },
-  colors: ['#C9A84C'],
-  fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.05 } },
-  stroke: { curve: 'smooth', width: 2.5 },
+  chart: { toolbar: { show: false }, stacked: true },
+  colors: ['#6366F1', '#F59E0B', '#10B981', '#6B7280'],
+  plotOptions: { bar: { horizontal: false, columnWidth: '55%', borderRadius: 4 } },
+  stroke: { width: 1, colors: ['#fff'] },
   xaxis: {
     categories: props.monthly_trend.map(m => `${m.month}/${m.year}`),
     labels: { style: { colors: '#64748B', fontSize: '11px' } },
@@ -209,6 +262,7 @@ const monthlyChartOptions = computed(() => ({
   yaxis: { labels: { style: { colors: '#64748B', fontSize: '11px' }, formatter: v => `${(v/1000).toFixed(0)}k` } },
   grid: { borderColor: '#E2E8F0', strokeDashArray: 4 },
   tooltip: { y: { formatter: v => formatAmount(v) } },
+  legend: { position: 'bottom', fontSize: '11px', fontFamily: 'Inter' }
 }));
 
 // ─── Graphique catégories ───────────────────────────────────────

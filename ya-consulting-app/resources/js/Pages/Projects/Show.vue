@@ -125,6 +125,96 @@
         </div>
       </div>
 
+      <!-- Suivi Analytique du Budget -->
+      <div class="card mb-xl animate-fade-up">
+        <div class="card-header">
+          <h2 class="card-title">💼 Suivi Analytique du Budget</h2>
+        </div>
+        <div class="card-body">
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:var(--space-lg);">
+            <!-- Main d'oeuvre -->
+            <div style="background:var(--color-bg-light); padding:16px; border-radius:8px; border:1px solid var(--color-border);">
+              <div style="display:flex; justify-content:space-between; font-size:.75rem; color:var(--color-text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">
+                <span>Main d'œuvre</span>
+                <span>{{ pct(project.expenses_labor, project.budget_labor) }}%</span>
+              </div>
+              <div style="font-size:1.15rem; font-weight:700; margin:8px 0 4px; color:var(--color-primary);">
+                {{ formatAmount(project.expenses_labor) }}
+              </div>
+              <div style="font-size:.8rem; color:var(--color-text-muted);">
+                Budget : {{ formatAmount(project.budget_labor) }}
+              </div>
+              <div style="width:100%; height:8px; background:#e2e8f0; border-radius:4px; overflow:hidden; margin-top:10px;">
+                <div :style="`width: ${Math.min(pct(project.expenses_labor, project.budget_labor), 100)}%; height:100%; background: ${Number(project.expenses_labor) > Number(project.budget_labor) ? 'var(--color-danger)' : '#6366F1'};`"/>
+              </div>
+              <div v-if="Number(project.expenses_labor) > Number(project.budget_labor)" style="font-size:.7rem; color:var(--color-danger); margin-top:6px; font-weight:600;">
+                ⚠️ Dépassement de {{ formatAmount(project.expenses_labor - project.budget_labor) }}
+              </div>
+            </div>
+
+            <!-- Materiel -->
+            <div style="background:var(--color-bg-light); padding:16px; border-radius:8px; border:1px solid var(--color-border);">
+              <div style="display:flex; justify-content:space-between; font-size:.75rem; color:var(--color-text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">
+                <span>Matériel</span>
+                <span>{{ pct(project.expenses_material, project.budget_material) }}%</span>
+              </div>
+              <div style="font-size:1.15rem; font-weight:700; margin:8px 0 4px; color:var(--color-primary);">
+                {{ formatAmount(project.expenses_material) }}
+              </div>
+              <div style="font-size:.8rem; color:var(--color-text-muted);">
+                Budget : {{ formatAmount(project.budget_material) }}
+              </div>
+              <div style="width:100%; height:8px; background:#e2e8f0; border-radius:4px; overflow:hidden; margin-top:10px;">
+                <div :style="`width: ${Math.min(pct(project.expenses_material, project.budget_material), 100)}%; height:100%; background: ${Number(project.expenses_material) > Number(project.budget_material) ? 'var(--color-danger)' : '#F59E0B'};`"/>
+              </div>
+              <div v-if="Number(project.expenses_material) > Number(project.budget_material)" style="font-size:.7rem; color:var(--color-danger); margin-top:6px; font-weight:600;">
+                ⚠️ Dépassement de {{ formatAmount(project.expenses_material - project.budget_material) }}
+              </div>
+            </div>
+
+            <!-- Transport -->
+            <div style="background:var(--color-bg-light); padding:16px; border-radius:8px; border:1px solid var(--color-border);">
+              <div style="display:flex; justify-content:space-between; font-size:.75rem; color:var(--color-text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">
+                <span>Transport</span>
+                <span>{{ pct(project.expenses_transport, project.budget_transport) }}%</span>
+              </div>
+              <div style="font-size:1.15rem; font-weight:700; margin:8px 0 4px; color:var(--color-primary);">
+                {{ formatAmount(project.expenses_transport) }}
+              </div>
+              <div style="font-size:.8rem; color:var(--color-text-muted);">
+                Budget : {{ formatAmount(project.budget_transport) }}
+              </div>
+              <div style="width:100%; height:8px; background:#e2e8f0; border-radius:4px; overflow:hidden; margin-top:10px;">
+                <div :style="`width: ${Math.min(pct(project.expenses_transport, project.budget_transport), 100)}%; height:100%; background: ${Number(project.expenses_transport) > Number(project.budget_transport) ? 'var(--color-danger)' : '#10B981'};`"/>
+              </div>
+              <div v-if="Number(project.expenses_transport) > Number(project.budget_transport)" style="font-size:.7rem; color:var(--color-danger); margin-top:6px; font-weight:600;">
+                ⚠️ Dépassement de {{ formatAmount(project.expenses_transport - project.budget_transport) }}
+              </div>
+            </div>
+
+            <!-- Autres -->
+            <div style="background:var(--color-bg-light); padding:16px; border-radius:8px; border:1px solid var(--color-border);">
+              <div style="display:flex; justify-content:space-between; font-size:.75rem; color:var(--color-text-muted); font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">
+                <span>Autres coûts</span>
+                <span>{{ pct(project.expenses_other, project.budget_other) }}%</span>
+              </div>
+              <div style="font-size:1.15rem; font-weight:700; margin:8px 0 4px; color:var(--color-primary);">
+                {{ formatAmount(project.expenses_other) }}
+              </div>
+              <div style="font-size:.8rem; color:var(--color-text-muted);">
+                Budget : {{ formatAmount(project.budget_other) }}
+              </div>
+              <div style="width:100%; height:8px; background:#e2e8f0; border-radius:4px; overflow:hidden; margin-top:10px;">
+                <div :style="`width: ${Math.min(pct(project.expenses_other, project.budget_other), 100)}%; height:100%; background: ${Number(project.expenses_other) > Number(project.budget_other) ? 'var(--color-danger)' : '#6B7280'};`"/>
+              </div>
+              <div v-if="Number(project.expenses_other) > Number(project.budget_other)" style="font-size:.7rem; color:var(--color-danger); margin-top:6px; font-weight:600;">
+                ⚠️ Dépassement de {{ formatAmount(project.expenses_other - project.budget_other) }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Liste des Dépenses du projet -->
       <div class="card">
         <div class="card-header">
@@ -251,6 +341,11 @@ const formatDate = (dateStr) => {
   if (!dateStr) return '';
   const date = new Date(dateStr);
   return date.toLocaleDateString('fr-FR');
+};
+
+const pct = (expenses, budget) => {
+  if (!budget || Number(budget) === 0) return 0;
+  return Math.round((Number(expenses) / Number(budget)) * 100);
 };
 
 // ─── Actions ────────────────────────────────────────────────────
