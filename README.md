@@ -119,12 +119,6 @@ Logiciel-de-gestion-de-projet-YA-CONSULTING/
 
 ---
 
-## 🔑 Identifiants de Connexion de Test (Seeders)
-
-Pour tester rapidement l'application, connectez-vous avec le compte administrateur généré automatiquement :
-
-*   **Identifiant** : `courriel@ya-consulting.com`
-*   **Mot de passe** : `Admin@2024`
 
 > [!TIP]
 > Une fois connecté en tant qu'**Administrateur**, vous pouvez créer de nouveaux profils d'utilisateurs et leur affecter les rôles de **Chef de Projet** ou de **Collaborateur** directement depuis l'interface d'administration.
