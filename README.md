@@ -9,7 +9,7 @@
 
 > **Solution interne de suivi de projet, de gestion des dépenses et d'analyse financière de rentabilité.**
 
-Ce dépôt contient l'ensemble des livrables et le code source de l'application de gestion de projet développée pour **YA CONSULTING S.U.A.R.L** (Dakar, Sénégal).
+Ce dépôt contient l'ensemble des livrables et le code source de l'application de gestion de projet développée pour **YA CONSULTING** 
 
 ---
 
