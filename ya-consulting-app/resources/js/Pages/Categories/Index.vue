@@ -2,18 +2,16 @@
   <AppLayout title="Catégories de Dépenses">
     <div class="animate-fade-up">
       <!-- En-tête -->
-      <div class="page-header">
-        <div class="page-header-info">
-          <h1>Catégories de Dépenses</h1>
-          <p>{{ categories.length }} catégorie(s) configurée(s)</p>
-        </div>
-        <button @click="openCreateModal" class="btn btn-accent">
-          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-          </svg>
-          Nouvelle catégorie
-        </button>
-      </div>
+      <PageHeader title="Catégories de Dépenses" :description="`${categories.length} catégorie(s) configurée(s)`">
+        <template v-slot:actions>
+          <Button variant="accent" @click="openCreateModal">
+            <template v-slot:icon-left>
+              <Icon name="plus" :size="16" />
+            </template>
+            Nouvelle catégorie
+          </Button>
+        </template>
+      </PageHeader>
 
       <!-- Erreurs éventuelles -->
       <div v-if="$page.props.errors.delete" class="alert alert-danger mb-lg">
@@ -21,12 +19,12 @@
       </div>
 
       <!-- Tableau -->
-      <div class="card">
+      <Card>
         <div class="table-container">
           <table class="table">
             <thead>
               <tr>
-                <th style="width: 60px;">Couleur</th>
+                <th style="width: 80px;">Couleur</th>
                 <th>Nom</th>
                 <th>Type de budget (Axe)</th>
                 <th>Origine</th>
@@ -52,12 +50,12 @@
                 <td class="text-right">{{ cat.expenses_count }}</td>
                 <td style="text-align:right">
                   <div v-if="cat.is_custom" style="display:flex; gap:6px; justify-content:flex-end;">
-                    <button @click="openEditModal(cat)" class="btn btn-outline btn-sm" style="padding:4px 8px;" title="Modifier">
-                      ✏️
-                    </button>
-                    <button @click="deleteCategory(cat)" class="btn btn-outline btn-sm text-danger" :disabled="cat.expenses_count > 0" :title="cat.expenses_count > 0 ? 'Impossible de supprimer (dépenses existantes)' : 'Supprimer'" style="padding:4px 8px; border-color:var(--color-border)">
-                      ✕
-                    </button>
+                    <Button variant="outline" size="sm" style="padding: 6px 10px;" title="Modifier" @click="openEditModal(cat)">
+                      <Icon name="pencil-square" :size="14" />
+                    </Button>
+                    <Button variant="outline" size="sm" class="text-danger" :disabled="cat.expenses_count > 0" :title="cat.expenses_count > 0 ? 'Impossible de supprimer (dépenses existantes)' : 'Supprimer'" style="padding: 6px 10px;" @click="deleteCategory(cat)">
+                      <Icon name="trash" :size="14" />
+                    </Button>
                   </div>
                   <span v-else style="font-size: .8rem; color: var(--color-text-muted); font-style: italic;">Verrouillée</span>
                 </td>
@@ -65,7 +63,7 @@
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
     </div>
 
     <!-- Modal Formulaire (Créer / Modifier) -->
@@ -77,38 +75,35 @@
         </div>
         <div class="card-body">
           <form @submit.prevent="submit">
-            <div class="form-group">
-              <label class="form-label">Nom de la catégorie <span class="required">*</span></label>
+            <FormField label="Nom de la catégorie" :error="errors.name" required>
               <input v-model="form.name" type="text" class="form-control" :class="{ error: errors.name }" placeholder="Ex: Achat fournitures bureau" required />
-              <div v-if="errors.name" class="form-error">{{ errors.name }}</div>
-            </div>
+            </FormField>
 
-            <div class="form-group">
-              <label class="form-label">Type de budget alloué <span class="required">*</span></label>
+            <FormField label="Type de budget alloué" :error="errors.parent_type" required>
               <select v-model="form.parent_type" class="form-control" :class="{ error: errors.parent_type }" required>
                 <option value="">Sélectionner un type...</option>
                 <option v-for="(label, value) in parent_types" :key="value" :value="value">
                   {{ label }}
                 </option>
               </select>
-              <div v-if="errors.parent_type" class="form-error">{{ errors.parent_type }}</div>
-            </div>
+            </FormField>
 
-            <div class="form-group">
-              <label class="form-label">Couleur d'identification <span class="required">*</span></label>
+            <FormField label="Couleur d'identification" :error="errors.color" required>
               <div style="display:flex; gap:12px; align-items:center;">
                 <input v-model="form.color" type="color" style="width: 48px; height: 38px; padding: 2px; border: 1px solid var(--color-border); border-radius: 6px; cursor: pointer;" />
                 <input v-model="form.color" type="text" class="form-control" placeholder="#ffffff" style="max-width: 120px;" required />
               </div>
-              <div v-if="errors.color" class="form-error">{{ errors.color }}</div>
-            </div>
+            </FormField>
 
             <div style="display:flex; justify-content:flex-end; gap:var(--space-md); margin-top:var(--space-xl); padding-top:var(--space-lg); border-top:1px solid var(--color-border);">
-              <button type="button" @click="closeModal" class="btn btn-outline">Annuler</button>
-              <button type="submit" class="btn btn-accent" :disabled="form.processing">
+              <Button type="button" variant="outline" @click="closeModal">Annuler</Button>
+              <Button type="submit" variant="accent" :disabled="form.processing">
                 <span v-if="form.processing">Enregistrement...</span>
-                <span v-else>✓ Enregistrer</span>
-              </button>
+                <span v-else style="display: flex; align-items: center; gap: 8px;">
+                  <Icon name="check" :size="16" />
+                  Enregistrer
+                </span>
+              </Button>
             </div>
           </form>
         </div>
@@ -121,6 +116,11 @@
 import { ref, computed } from 'vue';
 import { useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import Button from '@/Components/Button.vue';
+import Card from '@/Components/Card.vue';
+import FormField from '@/Components/FormField.vue';
+import Icon from '@/Components/Icon.vue';
 
 const props = defineProps({
   categories: Array,

@@ -2,16 +2,20 @@
   <div class="login-page">
     <!-- Panneau gauche - Branding -->
     <div class="login-brand">
+      <!-- Pattern décoratif -->
+      <div class="login-dots-pattern"></div>
+
       <div class="login-brand-content">
-        <div class="brand-logo">
-          <span>YA</span>
+        <div style="background: #ffffff; border-radius: var(--radius-lg); height: 95px; width: 100%; max-width: 320px; overflow: hidden; display: flex; align-items: center; justify-content: center; margin-bottom: var(--space-xl); box-shadow: var(--shadow-md); position: relative; padding: 12px 24px;">
+          <img src="/images/logo.svg" alt="YA Consulting Logo" style="height: 100%; max-height: 100%; max-width: 100%; object-fit: contain;" />
         </div>
-        <h1 class="brand-name">YA Consulting</h1>
         <p class="brand-tagline">Logiciel de gestion et suivi<br>de la rentabilité de vos projets</p>
 
         <div class="brand-features">
           <div class="feature-item" v-for="feat in features" :key="feat.label">
-            <div class="feature-icon">{{ feat.icon }}</div>
+            <div class="feature-icon" style="display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.1); padding: 8px; border-radius: 8px; color: var(--color-accent);">
+              <Icon :name="feat.icon" :size="20" />
+            </div>
             <div>
               <div class="feature-title">{{ feat.label }}</div>
               <div class="feature-desc">{{ feat.desc }}</div>
@@ -28,6 +32,13 @@
     <!-- Panneau droit - Formulaire -->
     <div class="login-form-panel">
       <div class="login-form-container">
+        <!-- Logo mobile uniquement -->
+        <div class="mobile-logo-container">
+          <div style="background: #ffffff; border-radius: var(--radius-lg); height: 75px; width: 100%; max-width: 250px; overflow: hidden; display: flex; align-items: center; justify-content: center; margin: 0 auto var(--space-xl) auto; box-shadow: var(--shadow-md); padding: 8px;">
+            <img src="/images/logo.svg" alt="YA Consulting Logo" style="height: 100%; max-height: 100%; max-width: 100%; object-fit: contain;" />
+          </div>
+        </div>
+
         <div style="text-align:center; margin-bottom:var(--space-2xl);">
           <h2 style="font-size:1.8rem; font-weight:800; color:var(--color-text); margin:0 0 8px;">
             Connexion
@@ -38,13 +49,13 @@
         </div>
 
         <!-- Message status (reset password) -->
-        <div v-if="status" class="alert alert-success" style="margin-bottom:var(--space-lg);">
+        <div v-if="status" class="alert alert-success mb-lg">
+          <Icon name="check-circle" :size="18" style="color: var(--color-success);" />
           {{ status }}
         </div>
 
         <form @submit.prevent="submit">
-          <div class="form-group">
-            <label class="form-label">Adresse email</label>
+          <FormField label="Adresse email" :error="form.errors.email" required>
             <input
               id="email"
               v-model="form.email"
@@ -56,15 +67,9 @@
               required
               autofocus
             />
-            <div v-if="form.errors.email" class="form-error">
-              {{ form.errors.email }}
-            </div>
-          </div>
+          </FormField>
 
-          <div class="form-group">
-            <label class="form-label">
-              <span>Mot de passe</span>
-            </label>
+          <FormField label="Mot de passe" :error="form.errors.password" required>
             <input
               id="password"
               v-model="form.password"
@@ -75,10 +80,7 @@
               autocomplete="current-password"
               required
             />
-            <div v-if="form.errors.password" class="form-error">
-              {{ form.errors.password }}
-            </div>
-          </div>
+          </FormField>
 
           <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:var(--space-xl);">
             <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:.875rem;">
@@ -87,15 +89,17 @@
             </label>
           </div>
 
-          <button
+          <Button
             type="submit"
-            class="btn btn-primary"
             style="width:100%; justify-content:center; padding:13px; font-size:1rem;"
             :disabled="form.processing"
           >
             <span v-if="form.processing">Connexion en cours...</span>
-            <span v-else>Se connecter →</span>
-          </button>
+            <span v-else style="display: flex; align-items: center; gap: 8px;">
+              Se connecter
+              <Icon name="arrow-right" :size="16" />
+            </span>
+          </Button>
         </form>
       </div>
     </div>
@@ -104,6 +108,9 @@
 
 <script setup>
 import { useForm } from '@inertiajs/vue3';
+import Icon from '@/Components/Icon.vue';
+import Button from '@/Components/Button.vue';
+import FormField from '@/Components/FormField.vue';
 
 defineProps({
   canResetPassword: Boolean,
@@ -117,10 +124,10 @@ const form = useForm({
 });
 
 const features = [
-  { icon: '📊', label: 'Suivi en temps réel',  desc: 'Dépenses et rentabilité mise à jour instantanément' },
-  { icon: '📈', label: 'Statistiques avancées', desc: 'Analyses et KPIs pour piloter votre activité' },
-  { icon: '📄', label: 'Rapports PDF & Excel',  desc: 'Exports mensuels automatisés en un clic' },
-  { icon: '🔒', label: 'Sécurisé & traçable',   desc: 'Journal d\'audit complet de toutes les actions' },
+  { icon: 'chart-bar', label: 'Suivi en temps réel',  desc: 'Dépenses et rentabilité mise à jour instantanément' },
+  { icon: 'arrow-trending-up', label: 'Statistiques avancées', desc: 'Analyses et KPIs pour piloter votre activité' },
+  { icon: 'document-text', label: 'Rapports PDF & Excel',  desc: 'Exports mensuels automatisés en un clic' },
+  { icon: 'shield-check', label: 'Sécurisé & traçable',   desc: 'Journal d\'audit complet de toutes les actions' },
 ];
 
 const submit = () => form.post(route('login'));
@@ -216,8 +223,13 @@ const submit = () => form.post(route('login'));
   max-width: 380px;
 }
 
+.mobile-logo-container {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .login-brand { display: none; }
-  .login-form-panel { width: 100%; }
+  .login-form-panel { width: 100%; padding: var(--space-lg); }
+  .mobile-logo-container { display: block; }
 }
 </style>

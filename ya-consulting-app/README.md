@@ -88,7 +88,7 @@ Accédez à l'application sur : [**http://localhost:8000**](http://localhost:800
 
 Lors du `db:seed`, un compte administrateur par défaut est généré :
 
-*   **Email** : `admin@yaconsulting.sn`
+*   **Email** : `courriel@ya-consulting.com`
 *   **Mot de passe** : `Admin@2024`
 
 ### Création d'autres rôles pour test :

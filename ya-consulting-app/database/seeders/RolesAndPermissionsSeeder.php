@@ -56,9 +56,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'view clients',
         ]);
 
-        // ─── Utilisateur Admin par défaut ─────────────────────────
-        $adminUser = User::firstOrCreate(
-            ['email' => 'admin@yaconsulting.sn'],
+        $adminUser = User::updateOrCreate(
+            ['email' => 'courriel@ya-consulting.com'],
             [
                 'name'     => 'Administrateur YA',
                 'password' => Hash::make('Admin@2024'),
@@ -66,8 +65,8 @@ class RolesAndPermissionsSeeder extends Seeder
         );
         $adminUser->assignRole('admin');
 
-        $this->command->info('✅ Rôles, permissions et compte admin créés.');
-        $this->command->info('   Email : admin@yaconsulting.sn');
+        $this->command->info('Compte Admin créé avec succès.');
+        $this->command->info('   Email : courriel@ya-consulting.com');
         $this->command->info('   Mot de passe : Admin@2024');
     }
 }

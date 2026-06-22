@@ -74,6 +74,15 @@
         .kpi-value.loss {
             color: #EF4444;
         }
+        .text-success {
+            color: #10B981;
+        }
+        .text-danger {
+            color: #EF4444;
+        }
+        .text-bold {
+            font-weight: bold;
+        }
         h2 {
             color: #1A2B4A;
             font-size: 15px;
@@ -143,9 +152,9 @@
             <div class="logo-text">YA <span class="logo-gold">CONSULTING</span></div>
         </div>
         <div class="company-info">
-            <strong>YA CONSULTING S.U.A.R.L</strong><br>
-            Dakar, Sénégal<br>
-            contact@yaconsulting.sn | +221 33 000 00 00
+            <strong>YA CONSULTING </strong><br>
+            Abidjan, Côte d'Ivoire<br>
+            courriel@ya-consulting.com | (225) 01 52 22 63 12 || (225) 05 65 24 69 74
         </div>
         <div class="clear"></div>
     </div>
@@ -185,25 +194,25 @@
         <tbody>
             <tr>
                 <td><strong>Dépenses de la période</strong></td>
-                <td class="text-right" style="color: #EF4444; font-weight: bold;">{{ number_format($total_expenses, 0, ',', ' ') }} FCFA</td>
+                <td class="text-right text-bold text-danger">{{ number_format($total_expenses, 0, ',', ' ') }} FCFA</td>
                 <td class="text-right">{{ number_format($prev_total_expenses, 0, ',', ' ') }} FCFA</td>
-                <td class="text-right" style="font-weight: bold; color: {{ ($total_expenses - $prev_total_expenses) <= 0 ? '#10B981' : '#EF4444' }};">
+                <td class="text-right text-bold {{ ($total_expenses - $prev_total_expenses) <= 0 ? 'text-success' : 'text-danger' }}">
                     {{ ($total_expenses - $prev_total_expenses) >= 0 ? '+' : '' }}{{ number_format($total_expenses - $prev_total_expenses, 0, ',', ' ') }} FCFA
                 </td>
             </tr>
             <tr>
                 <td><strong>Bénéfice net mensuel</strong></td>
-                <td class="text-right" style="font-weight: bold; color: {{ $net_profit >= 0 ? '#10B981' : '#EF4444' }};">{{ number_format($net_profit, 0, ',', ' ') }} FCFA</td>
+                <td class="text-right text-bold {{ $net_profit >= 0 ? 'text-success' : 'text-danger' }}">{{ number_format($net_profit, 0, ',', ' ') }} FCFA</td>
                 <td class="text-right">{{ number_format($prev_net_profit, 0, ',', ' ') }} FCFA</td>
-                <td class="text-right" style="font-weight: bold; color: {{ ($net_profit - $prev_net_profit) >= 0 ? '#10B981' : '#EF4444' }};">
+                <td class="text-right text-bold {{ ($net_profit - $prev_net_profit) >= 0 ? 'text-success' : 'text-danger' }}">
                     {{ ($net_profit - $prev_net_profit) >= 0 ? '+' : '' }}{{ number_format($net_profit - $prev_net_profit, 0, ',', ' ') }} FCFA
                 </td>
             </tr>
             <tr>
                 <td><strong>Gains des projets clôturés ce mois</strong></td>
-                <td class="text-right" style="color: #10B981; font-weight: bold;">{{ number_format($total_gains_completed, 0, ',', ' ') }} FCFA</td>
+                <td class="text-right text-bold text-success">{{ number_format($total_gains_completed, 0, ',', ' ') }} FCFA</td>
                 <td class="text-right" style="color: #666; font-style: italic;">{{ $completed_projects_count }} projet(s) clos</td>
-                <td class="text-right" style="font-weight: bold; color: {{ $total_gains_completed >= 0 ? '#10B981' : '#EF4444' }};">Performance cumulée</td>
+                <td class="text-right text-bold {{ $total_gains_completed >= 0 ? 'text-success' : 'text-danger' }}">Performance cumulée</td>
             </tr>
         </tbody>
     </table>
@@ -227,7 +236,7 @@
                     <td>{{ $p->client?->name ?? 'N/A' }}</td>
                     <td class="text-right">{{ number_format($p->budget, 0, ',', ' ') }}</td>
                     <td class="text-right">{{ number_format($p->total_expenses, 0, ',', ' ') }}</td>
-                    <td class="text-right" style="color: {{ $p->gross_gain >= 0 ? '#10B981' : '#EF4444' }};">
+                    <td class="text-right {{ $p->gross_gain >= 0 ? 'text-success' : 'text-danger' }}">
                         {{ number_format($p->gross_gain, 0, ',', ' ') }}
                     </td>
                     <td class="text-right">
@@ -258,7 +267,7 @@
             @forelse($expenses_by_category as $cat)
                 <tr>
                     <td>
-                        <span style="display: inline-block; width: 10px; height: 10px; background-color: {{ $cat['color'] }}; margin-right: 5px; border-radius: 2px;"></span>
+                        <span {!! 'style="display: inline-block; width: 10px; height: 10px; background-color: ' . e($cat['color']) . '; margin-right: 5px; border-radius: 2px;"' !!}></span>
                         <strong>{{ $cat['name'] }}</strong>
                     </td>
                     <td>{{ $cat['type'] }}</td>

@@ -2,27 +2,29 @@
   <AppLayout title="Projets">
     <div class="animate-fade-up">
       <!-- En-tête -->
-      <div class="page-header">
-        <div class="page-header-info">
-          <h1>Projets</h1>
-          <p>{{ projects.total }} projet{{ projects.total > 1 ? 's' : '' }} au total</p>
-        </div>
-        <Link v-if="can.create" :href="route('projects.create')" class="btn btn-accent">
-          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-          </svg>
-          Nouveau projet
-        </Link>
-      </div>
+      <PageHeader title="Projets" :description="`${projects.total} projet${projects.total > 1 ? 's' : ''} au total`">
+        <template v-slot:actions>
+          <Button v-if="can.create" as="Link" :href="route('projects.create')" variant="accent">
+            <template v-slot:icon-left>
+              <Icon name="plus" :size="16" />
+            </template>
+            Nouveau projet
+          </Button>
+        </template>
+      </PageHeader>
 
       <!-- Filtres -->
       <div class="filters-bar">
-        <input
-          v-model="search"
-          class="form-control"
-          placeholder="🔍 Rechercher un projet..."
-          @input="applyFilters"
-        />
+        <div style="position: relative; flex: 1; min-width: 200px; max-width: 300px;">
+          <input
+            v-model="search"
+            class="form-control"
+            style="padding-left: 36px;"
+            placeholder="Rechercher un projet..."
+            @input="applyFilters"
+          />
+          <Icon name="magnifying-glass" :size="16" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-text-light);" />
+        </div>
         <select v-model="filters.status" class="form-control" @change="applyFilters">
           <option value="">Tous les statuts</option>
           <option value="en_cours">En cours</option>
@@ -39,14 +41,17 @@
           <option value="">Toutes les années</option>
           <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
         </select>
-        <button v-if="hasFilters" class="btn btn-outline btn-sm" @click="clearFilters">
-          ✕ Effacer
-        </button>
+        <Button v-if="hasFilters" variant="outline" size="sm" @click="clearFilters">
+          <template v-slot:icon-left>
+            <Icon name="x-mark" :size="14" />
+          </template>
+          Effacer
+        </Button>
       </div>
 
-      <!-- Tableau -->
-      <div class="card">
-        <div class="table-container">
+      <!-- Tableau / Liste -->
+      <Card>
+        <div v-if="projects.data.length" class="table-container">
           <table class="table">
             <thead>
               <tr>
@@ -58,27 +63,26 @@
                 <th>Gain / Perte</th>
                 <th>Rentabilité</th>
                 <th>Début</th>
-                <th></th>
+                <th style="width: 120px;"></th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="project in projects.data" :key="project.id">
                 <td>
-                  <Link :href="route('projects.show', project.id)"
-                    style="font-weight:600; color:var(--color-primary); text-decoration:none;">
+                  <Link :href="route('projects.show', project.id)" class="link-primary">
                     {{ project.name }}
                   </Link>
                 </td>
-                <td style="color:var(--color-text-muted);">{{ project.client || '—' }}</td>
+                <td class="text-muted">{{ project.client || '—' }}</td>
                 <td><StatusBadge :status="project.status" /></td>
                 <td class="amount-neutral">{{ fmt(project.budget) }}</td>
-                <td style="color:var(--color-danger);">{{ fmt(project.total_expenses) }}</td>
+                <td style="color: var(--color-danger); font-weight: 600;">{{ fmt(project.total_expenses) }}</td>
                 <td :class="project.gross_gain >= 0 ? 'amount-positive' : 'amount-negative'">
                   {{ project.gross_gain >= 0 ? '+' : '' }}{{ fmt(project.gross_gain) }}
                 </td>
                 <td>
-                  <div style="min-width:100px;">
-                    <div style="font-size:.8rem; font-weight:600; margin-bottom:4px;"
+                  <div style="min-width: 100px;">
+                    <div style="font-size: .8rem; font-weight: 600; margin-bottom: 4px;"
                       :class="project.profitability >= 0 ? 'text-success' : 'text-danger'">
                       {{ project.profitability >= 0 ? '+' : '' }}{{ project.profitability }}%
                     </div>
@@ -88,33 +92,33 @@
                     </div>
                   </div>
                 </td>
-                <td style="color:var(--color-text-muted); font-size:.8rem;">{{ project.start_date }}</td>
-                <td>
-                  <div style="display:flex; gap:6px;">
-                    <Link :href="route('projects.show', project.id)" class="btn btn-outline btn-sm">Voir</Link>
-                    <Link v-if="can.edit" :href="route('projects.edit', project.id)" class="btn btn-outline btn-sm">✏️</Link>
+                <td class="text-muted" style="font-size: .8rem;">{{ project.start_date }}</td>
+                <td style="text-align: right;">
+                  <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                    <Button as="Link" :href="route('projects.show', project.id)" variant="outline" size="sm">
+                      Voir
+                    </Button>
+                    <Button v-if="can.edit" as="Link" :href="route('projects.edit', project.id)" variant="outline" size="sm" style="padding: 6px 10px;">
+                      <Icon name="pencil-square" :size="14" />
+                    </Button>
                   </div>
-                </td>
-              </tr>
-              <tr v-if="!projects.data.length">
-                <td colspan="9" style="text-align:center; padding:40px; color:var(--color-text-muted);">
-                  Aucun projet trouvé
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
+        
+        <div v-else style="padding: var(--space-xl);">
+          <EmptyState
+            title="Aucun projet trouvé"
+            description="Essayez de modifier vos filtres ou de créer un nouveau projet."
+            icon="briefcase"
+          />
+        </div>
 
         <!-- Pagination -->
-        <div v-if="projects.last_page > 1"
-          style="display:flex; justify-content:center; gap:6px; padding:16px; border-top:1px solid var(--color-border);">
-          <Link v-for="link in projects.links" :key="link.label"
-            :href="link.url || '#'"
-            class="btn btn-outline btn-sm"
-            :style="link.active ? 'background:var(--color-primary); color:#fff; border-color:var(--color-primary)' : ''"
-            v-html="link.label" />
-        </div>
-      </div>
+        <Pagination :links="projects.links" />
+      </Card>
     </div>
   </AppLayout>
 </template>
@@ -124,6 +128,12 @@ import { ref, computed } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
+import Icon from '@/Components/Icon.vue';
+import Button from '@/Components/Button.vue';
+import Card from '@/Components/Card.vue';
+import EmptyState from '@/Components/EmptyState.vue';
+import Pagination from '@/Components/Pagination.vue';
+import PageHeader from '@/Components/PageHeader.vue';
 
 const props = defineProps({
   projects: Object,
