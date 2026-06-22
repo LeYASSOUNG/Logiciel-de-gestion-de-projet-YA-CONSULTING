@@ -2,18 +2,16 @@
   <AppLayout title="Clients">
     <div class="animate-fade-up">
       <!-- En-tête -->
-      <div class="page-header">
-        <div class="page-header-info">
-          <h1>Clients</h1>
-          <p>{{ clients.total }} client{{ clients.total > 1 ? 's' : '' }} enregistré{{ clients.total > 1 ? 's' : '' }}</p>
-        </div>
-        <button v-if="canManage" @click="openCreateModal" class="btn btn-accent">
-          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-          </svg>
-          Nouveau client
-        </button>
-      </div>
+      <PageHeader title="Clients" :description="`${clients.total} client${clients.total > 1 ? 's' : ''} enregistré${clients.total > 1 ? 's' : ''}`">
+        <template v-slot:actions>
+          <Button v-if="canManage" variant="accent" @click="openCreateModal">
+            <template v-slot:icon-left>
+              <Icon name="plus" :size="16" />
+            </template>
+            Nouveau client
+          </Button>
+        </template>
+      </PageHeader>
 
       <!-- Erreurs éventuelles -->
       <div v-if="$page.props.errors.delete" class="alert alert-danger mb-lg">
@@ -22,20 +20,27 @@
 
       <!-- Filtres -->
       <div class="filters-bar">
-        <input
-          v-model="search"
-          class="form-control"
-          placeholder="🔍 Rechercher un client..."
-          @input="applyFilters"
-        />
-        <button v-if="search" class="btn btn-outline btn-sm" @click="clearFilters">
-          ✕ Effacer
-        </button>
+        <div style="position: relative; flex: 1; min-width: 200px; max-width: 300px;">
+          <input
+            v-model="search"
+            class="form-control"
+            style="padding-left: 36px;"
+            placeholder="Rechercher un client..."
+            @input="applyFilters"
+          />
+          <Icon name="magnifying-glass" :size="16" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-text-light);" />
+        </div>
+        <Button v-if="search" variant="outline" size="sm" @click="clearFilters">
+          <template v-slot:icon-left>
+            <Icon name="x-mark" :size="14" />
+          </template>
+          Effacer
+        </Button>
       </div>
 
       <!-- Tableau -->
-      <div class="card">
-        <div class="table-container">
+      <Card>
+        <div v-if="clients.data.length" class="table-container">
           <table class="table">
             <thead>
               <tr>
@@ -52,45 +57,41 @@
                 <td><strong style="color:var(--color-primary);">{{ client.name }}</strong></td>
                 <td>{{ client.company || '—' }}</td>
                 <td>
-                  <a v-if="client.contact_email" :href="`mailto:${client.contact_email}`" style="color:var(--color-primary-light); text-decoration:none;">
+                  <a v-if="client.contact_email" :href="`mailto:${client.contact_email}`" class="link-primary">
                     {{ client.contact_email }}
                   </a>
                   <span v-else>—</span>
                 </td>
                 <td>{{ client.contact_phone || '—' }}</td>
-                <td style="color:var(--color-text-muted); font-size:.8rem; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                <td class="text-muted" style="font-size:.8rem; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
                   {{ client.address || '—' }}
                 </td>
                 <td v-if="canManage" style="text-align:right">
                   <div style="display:flex; gap:6px; justify-content:flex-end;">
-                    <button @click="openEditModal(client)" class="btn btn-outline btn-sm" style="padding:4px 8px;">
-                      ✏️
-                    </button>
-                    <button @click="deleteClient(client.id)" class="btn btn-outline btn-sm text-danger" style="padding:4px 8px; border-color:var(--color-border)">
-                      ✕
-                    </button>
+                    <Button variant="outline" size="sm" style="padding: 6px 10px;" @click="openEditModal(client)">
+                      <Icon name="pencil-square" :size="14" />
+                    </Button>
+                    <Button variant="outline" size="sm" class="text-danger" style="padding: 6px 10px;" @click="deleteClient(client.id)">
+                      <Icon name="trash" :size="14" />
+                    </Button>
                   </div>
-                </td>
-              </tr>
-              <tr v-if="!clients.data.length">
-                <td colspan="6" style="text-align:center; padding:40px; color:var(--color-text-muted);">
-                  Aucun client trouvé
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <!-- Pagination -->
-        <div v-if="clients.last_page > 1"
-          style="display:flex; justify-content:center; gap:6px; padding:16px; border-top:1px solid var(--color-border);">
-          <Link v-for="link in clients.links" :key="link.label"
-            :href="link.url || '#'"
-            class="btn btn-outline btn-sm"
-            :style="link.active ? 'background:var(--color-primary); color:#fff; border-color:var(--color-primary)' : ''"
-            v-html="link.label" />
+        <div v-else style="padding: var(--space-xl);">
+          <EmptyState
+            title="Aucun client trouvé"
+            description="Essayez de modifier vos filtres ou de créer un nouveau client."
+            icon="users"
+          />
         </div>
-      </div>
+
+        <!-- Pagination -->
+        <Pagination :links="clients.links" />
+      </Card>
     </div>
 
     <!-- Modal Formulaire (Créer / Modifier) -->
@@ -102,46 +103,41 @@
         </div>
         <div class="card-body">
           <form @submit.prevent="submit">
-            <div class="form-group">
-              <label class="form-label">Nom du contact <span class="required">*</span></label>
+            <FormField label="Nom du contact" :error="errors.name" required>
               <input v-model="form.name" type="text" class="form-control" :class="{ error: errors.name }" placeholder="Ex: Moustapha Diop" required />
-              <div v-if="errors.name" class="form-error">{{ errors.name }}</div>
-            </div>
+            </FormField>
 
-            <div class="form-group">
-              <label class="form-label">Entreprise / Organisation</label>
+            <FormField label="Entreprise / Organisation">
               <input v-model="form.company" type="text" class="form-control" placeholder="Ex: YA CONSULTING" />
-            </div>
+            </FormField>
 
             <div class="form-grid">
-              <div class="form-group">
-                <label class="form-label">Email de contact</label>
+              <FormField label="Email de contact" :error="errors.contact_email">
                 <input v-model="form.contact_email" type="email" class="form-control" :class="{ error: errors.contact_email }" placeholder="Ex: client@entreprise.sn" />
-                <div v-if="errors.contact_email" class="form-error">{{ errors.contact_email }}</div>
-              </div>
+              </FormField>
 
-              <div class="form-group">
-                <label class="form-label">Téléphone</label>
+              <FormField label="Téléphone">
                 <input v-model="form.contact_phone" type="text" class="form-control" placeholder="Ex: +221 77 000 00 00" />
-              </div>
+              </FormField>
             </div>
 
-            <div class="form-group">
-              <label class="form-label">Adresse physique</label>
-              <input v-model="form.address" type="text" class="form-control" placeholder="Ex: Almadies, Route de la plage, Dakar" />
-            </div>
+            <FormField label="Adresse physique">
+              <input v-model="form.address" type="text" class="form-control" placeholder="Ex: Palmerai, la rue ministre, Abidjan" />
+            </FormField>
 
-            <div class="form-group">
-              <label class="form-label">Notes / Commentaires</label>
+            <FormField label="Notes / Commentaires">
               <textarea v-model="form.notes" class="form-control" rows="2" placeholder="Informations complémentaires sur le client..." />
-            </div>
+            </FormField>
 
             <div style="display:flex; justify-content:flex-end; gap:var(--space-md); margin-top:var(--space-xl); padding-top:var(--space-lg); border-top:1px solid var(--color-border);">
-              <button type="button" @click="closeModal" class="btn btn-outline">Annuler</button>
-              <button type="submit" class="btn btn-accent" :disabled="form.processing">
+              <Button type="button" variant="outline" @click="closeModal">Annuler</Button>
+              <Button type="submit" variant="accent" :disabled="form.processing">
                 <span v-if="form.processing">Enregistrement...</span>
-                <span v-else>✓ Enregistrer</span>
-              </button>
+                <span v-else style="display: flex; align-items: center; gap: 8px;">
+                  <Icon name="check" :size="16" />
+                  Enregistrer
+                </span>
+              </Button>
             </div>
           </form>
         </div>
@@ -152,8 +148,15 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { Link, useForm, usePage, router } from '@inertiajs/vue3';
+import { useForm, usePage, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import Button from '@/Components/Button.vue';
+import Card from '@/Components/Card.vue';
+import FormField from '@/Components/FormField.vue';
+import Pagination from '@/Components/Pagination.vue';
+import EmptyState from '@/Components/EmptyState.vue';
+import Icon from '@/Components/Icon.vue';
 
 const props = defineProps({
   clients: Object,

@@ -12,29 +12,60 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Contrôleur de gestion des Dépenses.
+ *
+ * Ce contrôleur gère le cycle de vie complet d'une dépense :
+ * création, consultation, modification et suppression.
+ * Il inclut la gestion des justificatifs (upload de fichiers PDF/images).
+ *
+ * Règles de sécurité principales :
+ * - Toutes les actions sont protégées par ExpensePolicy.
+ * - Les chefs de projet ne voient et ne modifient que les dépenses
+ *   de leurs propres projets (contrôle via project->created_by).
+ * - Les montants sont chiffrés en BDD (cast 'encrypted' dans le modèle),
+ *   ce qui nécessite une pagination manuelle lors de la recherche numérique.
+ */
 class ExpenseController extends Controller
 {
     use AuthorizesRequests;
 
+    // Constantes pour éviter les "magic strings" (fautes de frappe dans les noms de colonnes)
+    private const COL_CREATED_BY  = 'created_by';
+    private const COL_PROJECT_ID  = 'project_id';
+    private const COL_CATEGORY_ID = 'category_id';
+    private const COL_DESCRIPTION = 'description';
+    private const COL_NAME        = 'name';
+
+    /**
+     * Affiche la liste paginée des dépenses avec filtres avancés.
+     *
+     * IMPORTANT : La recherche sur le montant (chiffré) ne peut pas se faire en SQL.
+     * On effectue alors une pagination manuelle en PHP pour les recherches numériques.
+     */
     public function index(Request $request): Response
     {
         $this->authorize('viewAny', Expense::class);
 
+        // Eager loading des relations pour éviter le problème N+1
         $query = Expense::with(['project', 'category', 'creator']);
 
-        // Restrictions par rôle
-        if (Auth::user()->hasRole('chef_projet')) {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        // Restriction chef de projet : uniquement les dépenses de SES projets
+        if ($user && $user->hasRole('chef_projet')) {
             $query->whereHas('project', function ($q) {
-                $q->where('created_by', Auth::id());
+                $q->where(self::COL_CREATED_BY, Auth::id());
             });
         }
 
-        // Filtres
+        // ─── Application des filtres ───────────────────────────────
         if ($request->filled('project_id')) {
-            $query->where('project_id', $request->project_id);
+            $query->where(self::COL_PROJECT_ID, $request->project_id);
         }
         if ($request->filled('category_id')) {
-            $query->where('category_id', $request->category_id);
+            $query->where(self::COL_CATEGORY_ID, $request->category_id);
         }
         if ($request->filled('date_from')) {
             $query->whereDate('date', '>=', $request->date_from);
@@ -42,59 +73,103 @@ class ExpenseController extends Controller
         if ($request->filled('date_to')) {
             $query->whereDate('date', '<=', $request->date_to);
         }
-        if ($request->filled('search')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('description', 'like', '%' . $request->search . '%')
-                  ->orWhere('amount', 'like', '%' . $request->search . '%');
+
+        $search = $request->search;
+        $isNumericSearch = $request->filled('search') && is_numeric($search);
+
+        if ($isNumericSearch) {
+            // PROBLÈME : le champ `amount` est chiffré en BDD, donc impossible de faire
+            // un WHERE LIKE en SQL. Solution : charger toutes les dépenses en mémoire,
+            // les déchiffrer via Eloquent, filtrer en PHP puis paginer manuellement.
+            $allExpenses = $query->latest('date')->get();
+            $filteredExpenses = $allExpenses->filter(function ($expense) use ($search) {
+                return str_contains(strtolower($expense->description ?? ''), strtolower($search))
+                    || str_contains((string) $expense->amount, $search);
             });
+
+            // Pagination manuelle sur la collection filtrée
+            $currentPage = \Illuminate\Pagination\LengthAwarePaginator::resolveCurrentPage();
+            $perPage = 15;
+            $currentItems = $filteredExpenses->slice(($currentPage - 1) * $perPage, $perPage)->values();
+            $expenses = new \Illuminate\Pagination\LengthAwarePaginator(
+                $currentItems,
+                $filteredExpenses->count(),
+                $perPage,
+                $currentPage,
+                ['path' => \Illuminate\Pagination\LengthAwarePaginator::resolveCurrentPath()]
+            );
+            $expenses->appends($request->all()); // Préserve les filtres dans les liens de pagination
+        } else {
+            // Recherche textuelle classique sur la description via SQL (montant non ciblé)
+            if ($request->filled('search')) {
+                $query->where(self::COL_DESCRIPTION, 'like', '%' . $search . '%');
+            }
+            $expenses = $query->latest('date')
+                ->paginate(15)
+                ->withQueryString();
         }
 
-        $expenses = $query->latest('date')
-            ->paginate(15)
-            ->withQueryString();
-
-        // Récupérer les projets pour les filtres
+        // Projets pour le filtre déroulant : limité aux projets du chef de projet si applicable
         $projectsQuery = Project::query();
-        if (Auth::user()->hasRole('chef_projet')) {
-            $projectsQuery->where('created_by', Auth::id());
+        if ($user && $user->hasRole('chef_projet')) {
+            $projectsQuery->where(self::COL_CREATED_BY, Auth::id());
         }
-        $projects = $projectsQuery->orderBy('name')->get(['id', 'name']);
+        $projects = $projectsQuery->orderBy(self::COL_NAME)->get(['id', self::COL_NAME]);
 
         return Inertia::render('Expenses/Index', [
             'expenses'   => $expenses,
             'projects'   => $projects,
-            'categories' => ExpenseCategory::orderBy('name')->get(['id', 'name', 'color']),
+            'categories' => ExpenseCategory::orderBy(self::COL_NAME)->get(['id', self::COL_NAME, 'color']),
             'filters'    => $request->only(['project_id', 'category_id', 'date_from', 'date_to', 'search']),
         ]);
     }
 
+    /**
+     * Affiche le formulaire de création d'une dépense.
+     * La liste des projets est filtrée selon le rôle de l'utilisateur.
+     */
     public function create(): Response
     {
         $this->authorize('create', Expense::class);
 
         $projectsQuery = Project::query();
-        if (Auth::user()->hasRole('chef_projet')) {
-            $projectsQuery->where('created_by', Auth::id());
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        if ($user && $user->hasRole('chef_projet')) {
+            $projectsQuery->where(self::COL_CREATED_BY, Auth::id());
         }
 
         return Inertia::render('Expenses/Create', [
-            'projects'   => $projectsQuery->orderBy('name')->get(['id', 'name', 'budget']),
-            'categories' => ExpenseCategory::orderBy('name')->get(['id', 'name']),
+            'projects'   => $projectsQuery->orderBy(self::COL_NAME)->get(['id', self::COL_NAME, 'budget']),
+            'categories' => ExpenseCategory::orderBy(self::COL_NAME)->get(['id', self::COL_NAME]),
         ]);
     }
 
+    /**
+     * Affiche le formulaire de création d'une dépense pré-rempli avec un projet.
+     * Appelé depuis la page de détail d'un projet (bouton "Ajouter une dépense").
+     *
+     * Double vérification : l'utilisateur doit pouvoir créer une dépense ET voir le projet.
+     */
     public function createForProject(Project $project): Response
     {
         $this->authorize('create', Expense::class);
-        $this->authorize('view', $project);
+        $this->authorize('view', $project); // Double protection : vérifier l'accès au projet
 
         return Inertia::render('Expenses/Create', [
-            'projects'         => [$project->only(['id', 'name', 'budget'])],
-            'selected_project' => $project->only(['id', 'name']),
-            'categories'       => ExpenseCategory::orderBy('name')->get(['id', 'name']),
+            'projects'         => [$project->only(['id', self::COL_NAME, 'budget'])],
+            'selected_project' => $project->only(['id', self::COL_NAME]),
+            'categories'       => ExpenseCategory::orderBy(self::COL_NAME)->get(['id', self::COL_NAME]),
         ]);
     }
 
+    /**
+     * Enregistre une nouvelle dépense en base de données.
+     *
+     * Validations métier supplémentaires :
+     * - La date de dépense doit être dans la période du projet (entre start_date et actual_end_date).
+     * - Si un justificatif est joint, il est stocké dans le dossier `receipts/` du stockage public.
+     */
     public function store(Request $request)
     {
         $this->authorize('create', Expense::class);
@@ -105,32 +180,56 @@ class ExpenseController extends Controller
             'date'         => 'required|date',
             'amount'       => 'required|numeric|min:0.01',
             'description'  => 'nullable|string',
+            // Justificatif : optionnel, max 5 Mo, formats acceptés : PDF, JPEG, PNG, WebP
             'receipt'      => 'nullable|file|max:5120|mimes:pdf,jpeg,png,jpg,webp',
         ]);
 
         $project = Project::findOrFail($validated['project_id']);
-        $this->authorize('update', $project); // S'assurer que l'utilisateur peut modifier ce projet
 
+        // Vérification de l'ownership : l'utilisateur peut-il modifier CE projet ?
+        $this->authorize('update', $project);
+
+        // ─── Validation métier de la date ─────────────────────────
+        $expenseDate = \Carbon\Carbon::parse($validated['date']);
+
+        // La dépense ne peut pas être antérieure au début du projet
+        if ($expenseDate->lt($project->start_date)) {
+            return back()->withErrors([
+                'date' => 'La date de la dépense ne peut pas être antérieure à la date de début du projet (' . \Carbon\Carbon::parse($project->start_date)->format('d/m/Y') . ').'
+            ]);
+        }
+
+        // Si le projet est terminé, la dépense ne peut pas être postérieure à la date de fin réelle
+        if ($project->actual_end_date && $expenseDate->gt($project->actual_end_date)) {
+            return back()->withErrors([
+                'date' => 'La date de la dépense ne peut pas être postérieure à la date de fin réelle du projet (' . \Carbon\Carbon::parse($project->actual_end_date)->format('d/m/Y') . ').'
+            ]);
+        }
+
+        // ─── Gestion du justificatif ──────────────────────────────
         $receiptPath = null;
         $receiptOriginalName = null;
 
         if ($request->hasFile('receipt')) {
             $file = $request->file('receipt');
+            // Stockage dans le disque 'public' → accessible via /storage/receipts/...
             $receiptPath = $file->store('receipts', 'public');
             $receiptOriginalName = $file->getClientOriginalName();
         }
 
+        // ─── Création de la dépense ───────────────────────────────
         $expense = Expense::create([
             'project_id'            => $validated['project_id'],
             'category_id'           => $validated['category_id'],
             'date'                  => $validated['date'],
-            'amount'                => $validated['amount'],
+            'amount'                => $validated['amount'], // Sera chiffré automatiquement par le cast
             'description'           => $validated['description'],
             'receipt_path'          => $receiptPath,
             'receipt_original_name' => $receiptOriginalName,
             'created_by'            => Auth::id(),
         ]);
 
+        // Journalisation avec la propriété 'project' pour contexte dans le log d'audit
         activity()->causedBy(Auth::user())
             ->performedOn($expense)
             ->withProperty('project', $project->name)
@@ -140,22 +239,33 @@ class ExpenseController extends Controller
             ->with('success', 'Dépense enregistrée avec succès.');
     }
 
+    /**
+     * Affiche le formulaire d'édition d'une dépense existante.
+     */
     public function edit(Expense $expense): Response
     {
         $this->authorize('update', $expense);
 
         $projectsQuery = Project::query();
-        if (Auth::user()->hasRole('chef_projet')) {
-            $projectsQuery->where('created_by', Auth::id());
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        if ($user && $user->hasRole('chef_projet')) {
+            $projectsQuery->where(self::COL_CREATED_BY, Auth::id());
         }
 
         return Inertia::render('Expenses/Edit', [
             'expense'    => $expense,
-            'projects'   => $projectsQuery->orderBy('name')->get(['id', 'name', 'budget']),
-            'categories' => ExpenseCategory::orderBy('name')->get(['id', 'name']),
+            'projects'   => $projectsQuery->orderBy(self::COL_NAME)->get(['id', self::COL_NAME, 'budget']),
+            'categories' => ExpenseCategory::orderBy(self::COL_NAME)->get(['id', self::COL_NAME]),
         ]);
     }
 
+    /**
+     * Met à jour une dépense existante.
+     *
+     * Si un nouveau justificatif est fourni, l'ancien fichier est supprimé du stockage
+     * avant de stocker le nouveau (évite les fichiers orphelins sur le disque).
+     */
     public function update(Request $request, Expense $expense)
     {
         $this->authorize('update', $expense);
@@ -172,8 +282,23 @@ class ExpenseController extends Controller
         $project = Project::findOrFail($validated['project_id']);
         $this->authorize('update', $project);
 
+        // Validation métier de la date (même règle qu'à la création)
+        $expenseDate = \Carbon\Carbon::parse($validated['date']);
+        if ($expenseDate->lt($project->start_date)) {
+            return back()->withErrors([
+                'date' => 'La date de la dépense ne peut pas être antérieure à la date de début du projet (' . \Carbon\Carbon::parse($project->start_date)->format('d/m/Y') . ').'
+            ]);
+        }
+
+        if ($project->actual_end_date && $expenseDate->gt($project->actual_end_date)) {
+            return back()->withErrors([
+                'date' => 'La date de la dépense ne peut pas être postérieure à la date de fin réelle du projet (' . \Carbon\Carbon::parse($project->actual_end_date)->format('d/m/Y') . ').'
+            ]);
+        }
+
+        // ─── Remplacement du justificatif ─────────────────────────
         if ($request->hasFile('receipt')) {
-            // Supprimer l'ancien fichier s'il existe
+            // Supprimer l'ancien fichier du disque pour éviter les fichiers orphelins
             if ($expense->receipt_path) {
                 Storage::disk('public')->delete($expense->receipt_path);
             }
@@ -191,6 +316,7 @@ class ExpenseController extends Controller
             'updated_by'  => Auth::id(),
         ]);
 
+        // Journalisation de la modification
         activity()->causedBy(Auth::user())
             ->performedOn($expense)
             ->log('Dépense mise à jour');
@@ -199,21 +325,30 @@ class ExpenseController extends Controller
             ->with('success', 'Dépense mise à jour avec succès.');
     }
 
+    /**
+     * Supprime une dépense et son justificatif associé.
+     *
+     * Le fichier physique du justificatif est supprimé du disque avant
+     * la suppression logique de l'enregistrement en base de données.
+     */
     public function destroy(Expense $expense)
     {
         $this->authorize('delete', $expense);
 
+        // On mémorise l'ID du projet avant suppression pour la redirection
         $projectId = $expense->project_id;
 
+        // Suppression du fichier justificatif du disque public si présent
         if ($expense->receipt_path) {
             Storage::disk('public')->delete($expense->receipt_path);
         }
 
+        // Journalisation avant la suppression
         activity()->causedBy(Auth::user())
             ->performedOn($expense)
             ->log('Dépense supprimée');
 
-        $expense->delete();
+        $expense->delete(); // Suppression logique (SoftDeletes)
 
         return redirect()->route('projects.show', $projectId)
             ->with('success', 'Dépense supprimée.');

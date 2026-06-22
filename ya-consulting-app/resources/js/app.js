@@ -6,7 +6,7 @@ import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 import '../css/app.css';
 
 createInertiaApp({
-    title: (title) => `${title} — YA Consulting`,
+    title: (title) => `${title} Gestion de projet YA Consulting`,
     resolve: (name) =>
         resolvePageComponent(
             `./Pages/${name}.vue`,

@@ -16,8 +16,11 @@ class ProjectController extends Controller
 
     public function index(Request $request): Response
     {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
         $query = Project::with('client', 'expenses')
-            ->when(Auth::user()->hasRole('chef_projet'), fn ($q) =>
+            ->when($user && $user->hasRole('chef_projet'), fn ($q) =>
                 $q->where('created_by', Auth::id())
             );
 
@@ -57,8 +60,8 @@ class ProjectController extends Controller
             'years'    => Project::whereNotNull('start_date')->get()
                 ->map(fn($p) => $p->start_date->year)->unique()->sortDesc()->values(),
             'can'      => [
-                'create' => Auth::user()->hasAnyRole(['admin', 'chef_projet']),
-                'edit'   => Auth::user()->hasAnyRole(['admin', 'chef_projet']),
+                'create' => $user && $user->hasAnyRole(['admin', 'chef_projet']),
+                'edit'   => $user && $user->hasAnyRole(['admin', 'chef_projet']),
             ],
         ]);
     }
@@ -164,7 +167,7 @@ class ProjectController extends Controller
             'description'       => 'nullable|string',
             'start_date'        => 'required|date',
             'planned_end_date'  => 'required|date|after_or_equal:start_date',
-            'actual_end_date'   => 'nullable|date|after_or_equal:start_date',
+            'actual_end_date'   => 'required_if:status,termine|nullable|date|after_or_equal:start_date',
             'budget_labor'      => 'required|numeric|min:0',
             'budget_material'   => 'required|numeric|min:0',
             'budget_transport'  => 'required|numeric|min:0',
@@ -177,7 +180,7 @@ class ProjectController extends Controller
         if ($project->hasPendingExpenses()) {
             if (
                 $request->client_id != $project->client_id ||
-                \Illuminate\Support\Carbon::parse($request->start_date)->toDateString() != $project->start_date->toDateString() ||
+                \Illuminate\Support\Carbon::parse($request->start_date)->toDateString() != \Illuminate\Support\Carbon::parse($project->start_date)->toDateString() ||
                 (float)$request->budget_labor != (float)$project->budget_labor ||
                 (float)$request->budget_material != (float)$project->budget_material ||
                 (float)$request->budget_transport != (float)$project->budget_transport ||
