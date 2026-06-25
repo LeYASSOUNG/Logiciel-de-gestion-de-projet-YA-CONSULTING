@@ -1,9 +1,9 @@
 # Étape 1 : Construction du Frontend (Node.js)
 FROM node:20 AS frontend
 WORKDIR /app
-COPY package*.json ./
+COPY ya-consulting-app/package*.json ./
 RUN npm install
-COPY . .
+COPY ya-consulting-app/ ./
 RUN npm run build
 
 # Étape 2 : Construction du Backend (PHP)
@@ -33,7 +33,7 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
 
 # Copie du code Laravel
-COPY . .
+COPY ya-consulting-app/ .
 
 # Copie des fichiers compilés depuis l'étape frontend
 COPY --from=frontend /app/public/build ./public/build
@@ -46,7 +46,7 @@ RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cac
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Copie de la configuration Nginx
-COPY docker/nginx.conf /etc/nginx/sites-available/default
+COPY nginx.conf /etc/nginx/sites-available/default
 
 # Rendre le script de démarrage exécutable
 COPY start.sh /usr/local/bin/start.sh
