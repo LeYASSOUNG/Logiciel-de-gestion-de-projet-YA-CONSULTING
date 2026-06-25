@@ -2,12 +2,16 @@
   <AppLayout title="Utilisateurs">
     <div class="animate-fade-up">
       <!-- En-tête -->
-      <div class="page-header">
-        <div class="page-header-info">
-          <h1>Gestion des Utilisateurs</h1>
-          <p>{{ users.total }} utilisateur{{ users.total > 1 ? 's' : '' }} enregistré{{ users.total > 1 ? 's' : '' }}</p>
-        </div>
-      </div>
+      <PageHeader title="Gestion des Utilisateurs" :description="`${users.total} utilisateur${users.total > 1 ? 's' : ''} enregistré${users.total > 1 ? 's' : ''}`">
+        <template v-slot:actions>
+          <Button variant="accent" @click="openCreateModal">
+            <template v-slot:icon-left>
+              <Icon name="plus" :size="16" />
+            </template>
+            Nouvel utilisateur
+          </Button>
+        </template>
+      </PageHeader>
 
       <!-- Erreurs de suppression -->
       <div v-if="$page.props.errors.delete" class="alert alert-danger mb-lg">
@@ -16,20 +20,27 @@
 
       <!-- Filtres -->
       <div class="filters-bar">
-        <input
-          v-model="search"
-          class="form-control"
-          placeholder="🔍 Rechercher un utilisateur..."
-          @input="applyFilters"
-        />
-        <button v-if="search" class="btn btn-outline btn-sm" @click="clearFilters">
-          ✕ Effacer
-        </button>
+        <div style="position: relative; flex: 1; min-width: 200px; max-width: 300px;">
+          <input
+            v-model="search"
+            class="form-control"
+            style="padding-left: 36px;"
+            placeholder="Rechercher un utilisateur..."
+            @input="applyFilters"
+          />
+          <Icon name="magnifying-glass" :size="16" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-text-light);" />
+        </div>
+        <Button v-if="search" variant="outline" size="sm" @click="clearFilters">
+          <template v-slot:icon-left>
+            <Icon name="x-mark" :size="14" />
+          </template>
+          Effacer
+        </Button>
       </div>
 
       <!-- Tableau -->
-      <div class="card">
-        <div class="table-container">
+      <Card>
+        <div v-if="users.data.length" class="table-container">
           <table class="table">
             <thead>
               <tr>
@@ -49,77 +60,82 @@
                     {{ getRoleLabel(user.role) }}
                   </span>
                 </td>
-                <td style="color:var(--color-text-muted); font-size:.8rem;">{{ user.created_at }}</td>
+                <td class="text-muted" style="font-size:.8rem;">{{ user.created_at }}</td>
                 <td style="text-align:right">
                   <div style="display:flex; gap:6px; justify-content:flex-end;">
-                    <button @click="openEditModal(user)" class="btn btn-outline btn-sm" style="padding:4px 8px;">
-                      ✏️
-                    </button>
-                    <button v-if="user.id !== $page.props.auth.user.id" @click="deleteUser(user.id)" class="btn btn-outline btn-sm text-danger" style="padding:4px 8px; border-color:var(--color-border)">
-                      ✕
-                    </button>
+                    <Button variant="outline" size="sm" style="padding: 6px 10px;" @click="openEditModal(user)">
+                      <Icon name="pencil-square" :size="14" />
+                    </Button>
+                    <Button v-if="user.id !== $page.props.auth.user.id" variant="outline" size="sm" class="text-danger" style="padding: 6px 10px;" @click="deleteUser(user.id)">
+                      <Icon name="trash" :size="14" />
+                    </Button>
                   </div>
-                </td>
-              </tr>
-              <tr v-if="!users.data.length">
-                <td colspan="5" style="text-align:center; padding:40px; color:var(--color-text-muted);">
-                  Aucun utilisateur trouvé
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
 
-        <!-- Pagination -->
-        <div v-if="users.last_page > 1"
-          style="display:flex; justify-content:center; gap:6px; padding:16px; border-top:1px solid var(--color-border);">
-          <Link v-for="link in users.links" :key="link.label"
-            :href="link.url || '#'"
-            class="btn btn-outline btn-sm"
-            :style="link.active ? 'background:var(--color-primary); color:#fff; border-color:var(--color-primary)' : ''"
-            v-html="link.label" />
+        <div v-else style="padding: var(--space-xl);">
+          <EmptyState
+            title="Aucun utilisateur trouvé"
+            description="Essayez de modifier vos filtres ou d'ajouter un nouvel utilisateur."
+            icon="users"
+          />
         </div>
-      </div>
+
+        <!-- Pagination -->
+        <Pagination :links="users.links" />
+      </Card>
     </div>
 
-    <!-- Modal d'édition d'utilisateur -->
+    <!-- Modal de gestion d'utilisateur -->
     <div v-if="showModal" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(15,28,51,0.5); display:flex; align-items:center; justify-content:center; z-index:1000; backdrop-filter:blur(3px);">
       <div class="card animate-fade-up" style="width:100%; max-width:480px; margin:20px;">
         <div class="card-header">
-          <h2 class="card-title">Modifier l'utilisateur</h2>
+          <h2 class="card-title">{{ editingUserId ? "Modifier l'utilisateur" : "Ajouter un utilisateur" }}</h2>
           <button @click="closeModal" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--color-text-muted)">✕</button>
         </div>
         <div class="card-body">
           <form @submit.prevent="submit">
-            <div class="form-group">
-              <label class="form-label">Nom complet <span class="required">*</span></label>
+            <FormField label="Nom complet" :error="errors.name" required>
               <input v-model="form.name" type="text" class="form-control" :class="{ error: errors.name }" required />
-              <div v-if="errors.name" class="form-error">{{ errors.name }}</div>
-            </div>
+            </FormField>
 
-            <div class="form-group">
-              <label class="form-label">Adresse email <span class="required">*</span></label>
+            <FormField label="Adresse email" :error="errors.email" required>
               <input v-model="form.email" type="email" class="form-control" :class="{ error: errors.email }" required />
-              <div v-if="errors.email" class="form-error">{{ errors.email }}</div>
-            </div>
+            </FormField>
 
-            <div class="form-group">
-              <label class="form-label">Rôle d'accès <span class="required">*</span></label>
+            <FormField label="Rôle d'accès" :error="errors.role" required>
               <select v-model="form.role" class="form-control" :class="{ error: errors.role }" required>
                 <option value="">Sélectionner un rôle...</option>
                 <option v-for="role in roles" :key="role" :value="role">
                   {{ getRoleLabel(role) }}
                 </option>
               </select>
-              <div v-if="errors.role" class="form-error">{{ errors.role }}</div>
+            </FormField>
+
+            <div v-if="!editingUserId" class="form-group">
+              <FormField label="Mot de passe" :error="errors.password" required>
+                <input v-model="form.password" type="password" class="form-control" :class="{ error: errors.password }" required />
+              </FormField>
+            </div>
+
+            <div v-if="!editingUserId" class="form-group">
+              <FormField label="Confirmer le mot de passe" :error="errors.password_confirmation" required>
+                <input v-model="form.password_confirmation" type="password" class="form-control" :class="{ error: errors.password_confirmation }" required />
+              </FormField>
             </div>
 
             <div style="display:flex; justify-content:flex-end; gap:var(--space-md); margin-top:var(--space-xl); padding-top:var(--space-lg); border-top:1px solid var(--color-border);">
-              <button type="button" @click="closeModal" class="btn btn-outline">Annuler</button>
-              <button type="submit" class="btn btn-accent" :disabled="form.processing">
+              <Button type="button" variant="outline" @click="closeModal">Annuler</Button>
+              <Button type="submit" variant="accent" :disabled="form.processing">
                 <span v-if="form.processing">Enregistrement...</span>
-                <span v-else>✓ Enregistrer</span>
-              </button>
+                <span v-else style="display: flex; align-items: center; gap: 8px;">
+                  <Icon name="check" :size="16" />
+                  Enregistrer
+                </span>
+              </Button>
             </div>
           </form>
         </div>
@@ -130,8 +146,15 @@
 
 <script setup>
 import { ref, computed } from 'vue';
-import { Link, useForm, router } from '@inertiajs/vue3';
+import { useForm, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import Button from '@/Components/Button.vue';
+import Card from '@/Components/Card.vue';
+import FormField from '@/Components/FormField.vue';
+import Pagination from '@/Components/Pagination.vue';
+import EmptyState from '@/Components/EmptyState.vue';
+import Icon from '@/Components/Icon.vue';
 
 const props = defineProps({
   users:   Object,
@@ -144,9 +167,11 @@ const showModal = ref(false);
 const editingUserId = ref(null);
 
 const form = useForm({
-  name:  '',
-  email: '',
-  role:  '',
+  name:                  '',
+  email:                 '',
+  role:                  '',
+  password:              '',
+  password_confirmation: '',
 });
 
 const errors = form.errors;
@@ -181,6 +206,13 @@ const clearFilters = () => {
   router.get(route('users.index'));
 };
 
+const openCreateModal = () => {
+  editingUserId.value = null;
+  form.reset();
+  form.clearErrors();
+  showModal.value = true;
+};
+
 const openEditModal = (user) => {
   editingUserId.value = user.id;
   form.name = user.name;
@@ -197,9 +229,15 @@ const closeModal = () => {
 };
 
 const submit = () => {
-  form.put(route('users.update', editingUserId.value), {
-    onSuccess: () => closeModal(),
-  });
+  if (editingUserId.value) {
+    form.put(route('users.update', editingUserId.value), {
+      onSuccess: () => closeModal(),
+    });
+  } else {
+    form.post(route('users.store'), {
+      onSuccess: () => closeModal(),
+    });
+  }
 };
 
 const deleteUser = (id) => {

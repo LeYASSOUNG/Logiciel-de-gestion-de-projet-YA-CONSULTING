@@ -2,99 +2,92 @@
   <AppLayout title="Nouveau décaissement">
     <div class="animate-fade-up" style="max-width: 680px; margin: 0 auto;">
       <!-- En-tête -->
-      <div class="page-header">
-        <div class="page-header-info">
-          <h1>Enregistrer une dépense</h1>
-          <p>Saisissez les détails de la transaction financière</p>
-        </div>
-        <Link :href="selected_project ? route('projects.show', selected_project.id) : route('expenses.index')" class="btn btn-outline">
-          ← Retour
-        </Link>
-      </div>
+      <PageHeader title="Enregistrer une dépense" description="Saisissez les détails de la transaction financière">
+        <template v-slot:actions>
+          <Button as="Link" :href="selected_project ? route('projects.show', selected_project.id) : route('expenses.index')" variant="outline">
+            Retour
+          </Button>
+        </template>
+      </PageHeader>
 
-      <div class="card">
-        <div class="card-body">
-          <form @submit.prevent="submit">
-            <!-- Projet -->
-            <div class="form-group">
-              <label class="form-label">Projet rattaché <span class="required">*</span></label>
-              <select v-model="form.project_id" class="form-control" :class="{ error: errors.project_id }" :disabled="!!selected_project" required>
-                <option value="">Sélectionner un projet...</option>
-                <option v-for="project in projects" :key="project.id" :value="project.id">
-                  {{ project.name }} (Budget: {{ fmt(project.budget) }})
+      <Card>
+        <form @submit.prevent="submit">
+          <!-- Projet -->
+          <FormField label="Projet rattaché" :error="errors.project_id" required>
+            <select v-model="form.project_id" class="form-control" :class="{ error: errors.project_id }" :disabled="!!selected_project" required>
+              <option value="">Sélectionner un projet...</option>
+              <option v-for="project in projects" :key="project.id" :value="project.id">
+                {{ project.name }} (Budget: {{ fmt(project.budget) }})
+              </option>
+            </select>
+          </FormField>
+
+          <div class="form-grid">
+            <!-- Catégorie -->
+            <FormField label="Catégorie de coût" :error="errors.category_id" required>
+              <select v-model="form.category_id" class="form-control" :class="{ error: errors.category_id }" required>
+                <option value="">Sélectionner une catégorie...</option>
+                <option v-for="cat in categories" :key="cat.id" :value="cat.id">
+                  {{ cat.name }}
                 </option>
               </select>
-              <div v-if="errors.project_id" class="form-error">{{ errors.project_id }}</div>
-            </div>
+            </FormField>
 
-            <div class="form-grid">
-              <!-- Catégorie -->
-              <div class="form-group">
-                <label class="form-label">Catégorie de coût <span class="required">*</span></label>
-                <select v-model="form.category_id" class="form-control" :class="{ error: errors.category_id }" required>
-                  <option value="">Sélectionner une catégorie...</option>
-                  <option v-for="cat in categories" :key="cat.id" :value="cat.id">
-                    {{ cat.name }}
-                  </option>
-                </select>
-                <div v-if="errors.category_id" class="form-error">{{ errors.category_id }}</div>
+            <!-- Date -->
+            <FormField label="Date du paiement" :error="errors.date" required>
+              <input v-model="form.date" type="date" class="form-control" :class="{ error: errors.date }" required />
+            </FormField>
+          </div>
+
+          <div class="form-grid">
+            <!-- Montant -->
+            <FormField label="Montant (FCFA)" :error="errors.amount" required>
+              <input v-model="form.amount" type="number" class="form-control" :class="{ error: errors.amount }"
+                placeholder="Ex: 250000" min="1" step="1" required />
+              <div v-if="form.amount" style="font-size:.8rem; color:var(--color-text-muted); margin-top:4px;">
+                = {{ fmt(form.amount) }}
               </div>
+            </FormField>
 
-              <!-- Date -->
-              <div class="form-group">
-                <label class="form-label">Date du paiement <span class="required">*</span></label>
-                <input v-model="form.date" type="date" class="form-control" :class="{ error: errors.date }" required />
-                <div v-if="errors.date" class="form-error">{{ errors.date }}</div>
-              </div>
-            </div>
+            <!-- Fichier justificatif -->
+            <FormField label="Justificatif (PDF, Image - max 5Mo)" :error="errors.receipt">
+              <input type="file" @input="form.receipt = $event.target.files[0]" class="form-control" :class="{ error: errors.receipt }" accept="image/*,application/pdf" />
+            </FormField>
+          </div>
 
-            <div class="form-grid">
-              <!-- Montant -->
-              <div class="form-group">
-                <label class="form-label">Montant (FCFA) <span class="required">*</span></label>
-                <input v-model="form.amount" type="number" class="form-control" :class="{ error: errors.amount }"
-                  placeholder="Ex: 250000" min="1" step="5" required />
-                <div v-if="errors.amount" class="form-error">{{ errors.amount }}</div>
-                <div v-if="form.amount" style="font-size:.8rem; color:var(--color-text-muted); margin-top:4px;">
-                  = {{ fmt(form.amount) }}
-                </div>
-              </div>
+          <!-- Description -->
+          <FormField label="Description / Libellé de la dépense">
+            <textarea v-model="form.description" class="form-control" rows="3"
+              placeholder="Détails complémentaires de la transaction (ex: Facture #45, Achat de ciment...)" />
+          </FormField>
 
-              <!-- Fichier justificatif -->
-              <div class="form-group">
-                <label class="form-label">Justificatif (PDF, Image - max 5Mo)</label>
-                <input type="file" @input="form.receipt = $event.target.files[0]" class="form-control" :class="{ error: errors.receipt }" accept="image/*,application/pdf" />
-                <div v-if="errors.receipt" class="form-error">{{ errors.receipt }}</div>
-              </div>
-            </div>
-
-            <!-- Description -->
-            <div class="form-group">
-              <label class="form-label">Description / Libellé de la dépense</label>
-              <textarea v-model="form.description" class="form-control" rows="3"
-                placeholder="Détails complémentaires de la transaction (ex: Facture #45, Achat de ciment...)" />
-            </div>
-
-            <!-- Actions -->
-            <div style="display:flex; justify-content:flex-end; gap:var(--space-md); margin-top:var(--space-xl); padding-top:var(--space-lg); border-top:1px solid var(--color-border);">
-              <Link :href="selected_project ? route('projects.show', selected_project.id) : route('expenses.index')" class="btn btn-outline">
-                Annuler
-              </Link>
-              <button type="submit" class="btn btn-accent" :disabled="form.processing">
-                <span v-if="form.processing">Enregistrement...</span>
-                <span v-else>✓ Enregistrer la dépense</span>
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
+          <!-- Actions -->
+          <div style="display:flex; justify-content:flex-end; gap:var(--space-md); margin-top:var(--space-xl); padding-top:var(--space-lg); border-top:1px solid var(--color-border);">
+            <Button as="Link" :href="selected_project ? route('projects.show', selected_project.id) : route('expenses.index')" variant="outline">
+              Annuler
+            </Button>
+            <Button type="submit" variant="accent" :disabled="form.processing">
+              <span v-if="form.processing">Enregistrement...</span>
+              <span v-else style="display: flex; align-items: center; gap: 8px;">
+                <Icon name="check" :size="16" />
+                Enregistrer la dépense
+              </span>
+            </Button>
+          </div>
+        </form>
+      </Card>
     </div>
   </AppLayout>
 </template>
 
 <script setup>
-import { Link, useForm } from '@inertiajs/vue3';
+import { useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import Button from '@/Components/Button.vue';
+import Card from '@/Components/Card.vue';
+import FormField from '@/Components/FormField.vue';
+import Icon from '@/Components/Icon.vue';
 
 const props = defineProps({
   projects:         Array,

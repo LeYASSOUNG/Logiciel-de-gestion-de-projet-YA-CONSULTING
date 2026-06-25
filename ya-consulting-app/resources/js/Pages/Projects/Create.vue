@@ -1,153 +1,145 @@
 <template>
   <AppLayout title="Nouveau projet">
     <div class="animate-fade-up" style="max-width: 720px; margin: 0 auto;">
-      <div class="page-header">
-        <div class="page-header-info">
-          <h1>Créer un projet</h1>
-          <p>Remplissez les informations pour créer un nouveau projet</p>
-        </div>
-        <Link :href="route('projects.index')" class="btn btn-outline">← Retour</Link>
-      </div>
+      <PageHeader title="Créer un projet" description="Remplissez les informations pour créer un nouveau projet">
+        <template v-slot:actions>
+          <Button as="Link" :href="route('projects.index')" variant="outline">
+            <template v-slot:icon-left>
+              <Icon name="arrow-left" :size="16" />
+            </template>
+            Retour
+          </Button>
+        </template>
+      </PageHeader>
 
-      <div class="card">
-        <div class="card-body">
-          <form @submit.prevent="submit">
-            <!-- Informations générales -->
-            <div style="margin-bottom:var(--space-xl);">
-              <h3 style="font-size:.9rem; font-weight:700; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:.8px; margin:0 0 var(--space-lg);">
-                Informations générales
-              </h3>
-
-              <div class="form-group">
-                <label class="form-label">Nom du projet <span class="required">*</span></label>
-                <input v-model="form.name" type="text" class="form-control" :class="{ error: errors.name }"
-                  placeholder="Ex: Construction Immeuble A - Dakar" required />
-                <div v-if="errors.name" class="form-error">{{ errors.name }}</div>
-              </div>
-
-              <div class="form-grid">
-                <div class="form-group">
-                  <label class="form-label">Client <span class="required">*</span></label>
-                  <select v-model="form.client_id" class="form-control" :class="{ error: errors.client_id }" required>
-                    <option value="">Sélectionner un client...</option>
-                    <option v-for="client in clients" :key="client.id" :value="client.id">
-                      {{ client.name }}
-                    </option>
-                  </select>
-                  <div v-if="errors.client_id" class="form-error">{{ errors.client_id }}</div>
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Statut <span class="required">*</span></label>
-                  <select v-model="form.status" class="form-control">
-                    <option value="en_cours">En cours</option>
-                    <option value="en_pause">En pause</option>
-                    <option value="termine">Terminé</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label">Description</label>
-                <textarea v-model="form.description" class="form-control" rows="3"
-                  placeholder="Décrivez le projet, ses objectifs, le contexte..." />
-              </div>
+      <Card>
+        <form @submit.prevent="submit">
+          <!-- Informations générales -->
+          <div style="margin-bottom:var(--space-xl);">
+            <div class="form-section">
+              <div class="form-section-icon"><Icon name="information-circle" :size="18" /></div>
+              <span class="form-section-title">Informations générales</span>
             </div>
 
-            <!-- Dates & Budget -->
-            <div style="margin-bottom:var(--space-xl);">
-              <h3 style="font-size:.9rem; font-weight:700; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:.8px; margin:0 0 var(--space-lg);">
-                Dates & Budget
-              </h3>
+            <FormField label="Nom du projet" :error="errors.name" required>
+              <input v-model="form.name" type="text" class="form-control" :class="{ error: errors.name }"
+                placeholder="Ex: Construction Immeuble A - Dakar" required />
+            </FormField>
 
-              <div class="form-grid">
-                <div class="form-group">
-                  <label class="form-label">Date de début <span class="required">*</span></label>
-                  <input v-model="form.start_date" type="date" class="form-control" :class="{ error: errors.start_date }" required />
-                  <div v-if="errors.start_date" class="form-error">{{ errors.start_date }}</div>
-                </div>
+            <div class="form-grid">
+              <FormField label="Client" :error="errors.client_id" required>
+                <select v-model="form.client_id" class="form-control" :class="{ error: errors.client_id }" required>
+                  <option value="">Sélectionner un client...</option>
+                  <option v-for="client in clients" :key="client.id" :value="client.id">
+                    {{ client.name }}
+                  </option>
+                </select>
+              </FormField>
 
-                <div class="form-group">
-                  <label class="form-label">Date de fin prévisionnelle <span class="required">*</span></label>
-                  <input v-model="form.planned_end_date" type="date" class="form-control" :class="{ error: errors.planned_end_date }" required />
-                  <div v-if="errors.planned_end_date" class="form-error">{{ errors.planned_end_date }}</div>
-                </div>
-              </div>
-
-              <div class="form-grid" style="margin-bottom:var(--space-md);">
-                <div class="form-group">
-                  <label class="form-label">Budget Main d'œuvre (FCFA) <span class="required">*</span></label>
-                  <input v-model="form.budget_labor" type="number" class="form-control" :class="{ error: errors.budget_labor }"
-                    placeholder="0" min="0" required />
-                  <div v-if="errors.budget_labor" class="form-error">{{ errors.budget_labor }}</div>
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Budget Matériel (FCFA) <span class="required">*</span></label>
-                  <input v-model="form.budget_material" type="number" class="form-control" :class="{ error: errors.budget_material }"
-                    placeholder="0" min="0" required />
-                  <div v-if="errors.budget_material" class="form-error">{{ errors.budget_material }}</div>
-                </div>
-              </div>
-
-              <div class="form-grid" style="margin-bottom:var(--space-md);">
-                <div class="form-group">
-                  <label class="form-label">Budget Transport (FCFA) <span class="required">*</span></label>
-                  <input v-model="form.budget_transport" type="number" class="form-control" :class="{ error: errors.budget_transport }"
-                    placeholder="0" min="0" required />
-                  <div v-if="errors.budget_transport" class="form-error">{{ errors.budget_transport }}</div>
-                </div>
-
-                <div class="form-group">
-                  <label class="form-label">Autres coûts (FCFA) <span class="required">*</span></label>
-                  <input v-model="form.budget_other" type="number" class="form-control" :class="{ error: errors.budget_other }"
-                    placeholder="0" min="0" required />
-                  <div v-if="errors.budget_other" class="form-error">{{ errors.budget_other }}</div>
-                </div>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label">Budget total calculé (FCFA)</label>
-                <input :value="form.budget" type="number" class="form-control" style="background-color: var(--color-bg-light); cursor: not-allowed;" readonly />
-                <div v-if="errors.budget" class="form-error">{{ errors.budget }}</div>
-                <div v-if="form.budget" style="font-size:.8rem; color:var(--color-text-muted); margin-top:4px;">
-                  = {{ fmt(form.budget) }}
-                </div>
-              </div>
+              <FormField label="Statut" required>
+                <select v-model="form.status" class="form-control">
+                  <option value="en_cours">En cours</option>
+                  <option value="en_pause">En pause</option>
+                  <option value="termine">Terminé</option>
+                </select>
+              </FormField>
             </div>
 
-            <!-- Contact fournisseur -->
-            <div>
-              <h3 style="font-size:.9rem; font-weight:700; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:.8px; margin:0 0 var(--space-lg);">
-                Informations complémentaires
-              </h3>
+            <FormField label="Description">
+              <textarea v-model="form.description" class="form-control" rows="3"
+                placeholder="Décrivez le projet, ses objectifs, le contexte..." />
+            </FormField>
+          </div>
 
-              <div class="form-group">
-                <label class="form-label">Contact fournisseur</label>
-                <input v-model="form.supplier_contact" type="text" class="form-control"
-                  placeholder="Nom, téléphone ou email du fournisseur principal" />
+          <!-- Dates & Budget -->
+          <div style="margin-bottom:var(--space-xl);">
+            <div class="form-section">
+              <div class="form-section-icon"><Icon name="calendar-days" :size="18" /></div>
+              <span class="form-section-title">Dates &amp; Budget</span>
+            </div>
+
+            <div class="form-grid">
+              <FormField label="Date de début" :error="errors.start_date" required>
+                <input v-model="form.start_date" type="date" class="form-control" :class="{ error: errors.start_date }" required />
+              </FormField>
+
+              <FormField label="Date de fin prévisionnelle" :error="errors.planned_end_date" required>
+                <input v-model="form.planned_end_date" type="date" class="form-control" :class="{ error: errors.planned_end_date }" required />
+              </FormField>
+            </div>
+
+            <div class="form-grid" style="margin-bottom:var(--space-md);">
+              <FormField label="Budget Main d'œuvre (FCFA)" :error="errors.budget_labor" required>
+                <input v-model="form.budget_labor" type="number" class="form-control" :class="{ error: errors.budget_labor }"
+                  placeholder="0" min="0" required />
+              </FormField>
+
+              <FormField label="Budget Matériel (FCFA)" :error="errors.budget_material" required>
+                <input v-model="form.budget_material" type="number" class="form-control" :class="{ error: errors.budget_material }"
+                  placeholder="0" min="0" required />
+              </FormField>
+            </div>
+
+            <div class="form-grid" style="margin-bottom:var(--space-md);">
+              <FormField label="Budget Transport (FCFA)" :error="errors.budget_transport" required>
+                <input v-model="form.budget_transport" type="number" class="form-control" :class="{ error: errors.budget_transport }"
+                  placeholder="0" min="0" required />
+              </FormField>
+
+              <FormField label="Autres coûts (FCFA)" :error="errors.budget_other" required>
+                <input v-model="form.budget_other" type="number" class="form-control" :class="{ error: errors.budget_other }"
+                  placeholder="0" min="0" required />
+              </FormField>
+            </div>
+
+            <div class="budget-summary">
+              <div>
+                <div class="budget-summary-label">Budget total calculé</div>
+                <div v-if="form.budget" style="font-size:.78rem; color:var(--color-text-muted); margin-top:2px;">= {{ fmt(form.budget) }}</div>
               </div>
+              <div class="budget-summary-value">{{ form.budget ? fmt(form.budget) : '0 FCFA' }}</div>
+            </div>
+          </div>
+
+          <!-- Contact fournisseur -->
+          <div>
+            <div class="form-section">
+              <div class="form-section-icon"><Icon name="user" :size="18" /></div>
+              <span class="form-section-title">Informations complémentaires</span>
             </div>
 
-            <!-- Actions -->
-            <div style="display:flex; justify-content:flex-end; gap:var(--space-md); margin-top:var(--space-xl); padding-top:var(--space-lg); border-top:1px solid var(--color-border);">
-              <Link :href="route('projects.index')" class="btn btn-outline">Annuler</Link>
-              <button type="submit" class="btn btn-accent" :disabled="form.processing">
-                <span v-if="form.processing">Création...</span>
-                <span v-else>✓ Créer le projet</span>
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
+            <FormField label="Contact fournisseur">
+              <input v-model="form.supplier_contact" type="text" class="form-control"
+                placeholder="Nom, téléphone ou email du fournisseur principal" />
+            </FormField>
+          </div>
+
+          <!-- Actions -->
+          <div style="display:flex; justify-content:flex-end; gap:var(--space-md); margin-top:var(--space-xl); padding-top:var(--space-lg); border-top:1px solid var(--color-border);">
+            <Button as="Link" :href="route('projects.index')" variant="outline">Annuler</Button>
+            <Button type="submit" variant="accent" :disabled="form.processing">
+              <span v-if="form.processing">Création...</span>
+              <span v-else style="display: flex; align-items: center; gap: 8px;">
+                <Icon name="check" :size="16" />
+                Créer le projet
+              </span>
+            </Button>
+          </div>
+        </form>
+      </Card>
     </div>
   </AppLayout>
 </template>
 
 <script setup>
-import { Link, useForm } from '@inertiajs/vue3';
+import { useForm } from '@inertiajs/vue3';
 import { watch } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import Icon from '@/Components/Icon.vue';
+import Button from '@/Components/Button.vue';
+import Card from '@/Components/Card.vue';
+import FormField from '@/Components/FormField.vue';
+import PageHeader from '@/Components/PageHeader.vue';
 
 const props = defineProps({
   clients: Array,

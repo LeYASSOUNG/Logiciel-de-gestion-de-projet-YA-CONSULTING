@@ -15,10 +15,18 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Contrôleur gérant la génération et le téléchargement des Rapports Financiers mensuels.
+ * Permet d'exporter des rapports au format PDF ou CSV (Excel).
+ */
 class ReportController extends Controller
 {
     use AuthorizesRequests;
 
+    /**
+     * Affiche la liste des rapports mensuels générés, avec pagination.
+     * Prépare également les données nécessaires aux filtres (mois et années disponibles).
+     */
     public function index(Request $request): Response
     {
         $reports = MonthlyReport::with('generator')
@@ -57,6 +65,13 @@ class ReportController extends Controller
         ]);
     }
 
+    /**
+     * Génère un nouveau rapport mensuel (PDF ou CSV) et le stocke.
+     * Calcule le budget, les dépenses, le bénéfice net et compare avec le mois précédent.
+     *
+     * @param Request $request Contient le mois, l'année et le format (pdf/excel)
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function generate(Request $request)
     {
         $validated = $request->validate([
@@ -264,6 +279,12 @@ class ReportController extends Controller
             ->with('success', 'Rapport généré avec succès.');
     }
 
+    /**
+     * Télécharge le fichier physique d'un rapport existant.
+     *
+     * @param MonthlyReport $report Le modèle du rapport
+     * @return \Symfony\Component\HttpFoundation\BinaryFileResponse|\Illuminate\Http\RedirectResponse
+     */
     public function download(MonthlyReport $report)
     {
         if (!Storage::disk('public')->exists($report->file_path)) {

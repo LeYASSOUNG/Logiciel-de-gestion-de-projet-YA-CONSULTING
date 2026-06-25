@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * Modèle de brouillon (Scaffold) représentant un Projet.
+ * Un projet est relié à un client et regroupe plusieurs dépenses.
+ */
 class Project extends Model
 {
     use SoftDeletes;
@@ -33,21 +37,34 @@ class Project extends Model
     ];
 
     // ─── Relations ──────────────────────────────────────────────
+    
+    /**
+     * Le client auquel ce projet est facturé/rattaché.
+     */
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
     }
 
+    /**
+     * La liste des dépenses affectées à ce projet.
+     */
     public function expenses(): HasMany
     {
         return $this->hasMany(Expense::class);
     }
 
+    /**
+     * L'utilisateur qui a créé ce projet.
+     */
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    /**
+     * Le dernier utilisateur à avoir modifié ce projet.
+     */
     public function updater(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
@@ -97,27 +114,27 @@ class Project extends Model
     }
 
     // ─── Scopes ─────────────────────────────────────────────────
-    public function scopeEnCours($query)
+    public function scopeEnCours(\Illuminate\Database\Eloquent\Builder $query)
     {
         return $query->where('status', 'en_cours');
     }
 
-    public function scopeTermine($query)
+    public function scopeTermine(\Illuminate\Database\Eloquent\Builder $query)
     {
         return $query->where('status', 'termine');
     }
 
-    public function scopeEnPause($query)
+    public function scopeEnPause(\Illuminate\Database\Eloquent\Builder $query)
     {
         return $query->where('status', 'en_pause');
     }
 
-    public function scopeByClient($query, int $clientId)
+    public function scopeByClient(\Illuminate\Database\Eloquent\Builder $query, int $clientId)
     {
         return $query->where('client_id', $clientId);
     }
 
-    public function scopeByYear($query, int $year)
+    public function scopeByYear(\Illuminate\Database\Eloquent\Builder $query, int $year)
     {
         return $query->whereYear('start_date', $year);
     }
