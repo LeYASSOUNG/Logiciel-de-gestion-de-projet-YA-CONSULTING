@@ -1,15 +1,15 @@
 services:
   - type: web
     name: ya-consulting-app
-    env: docker
+    runtime: docker
     rootDir: ya-consulting-app
     dockerfilePath: Dockerfile
     plan: starter # Starter ($7/mo) est recommandé pour avoir 512MB RAM minimum
     envVars:
       - key: APP_ENV
-        value: production
+        value: 'production'
       - key: APP_DEBUG
-        value: false
+        value: 'false'
       - key: APP_KEY
         generateValue: true
       - key: APP_URL
