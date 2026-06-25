@@ -10,15 +10,27 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Contrôleur de brouillon (Scaffold) pour la gestion des Projets.
+ * Permet de créer, lire, mettre à jour et supprimer des projets.
+ */
 class ProjectController extends Controller
 {
     use AuthorizesRequests;
 
+    /**
+     * Affiche la liste des projets avec filtres et pagination.
+     * @param Request $request
+     * @return Response
+     */
     public function index(Request $request): Response
     {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        
         $query = Project::with('client', 'expenses')
-            ->when(Auth::user()->hasRole('chef_projet'), fn ($q) =>
-                $q->where('created_by', Auth::id())
+            ->when($user->hasRole('chef_projet'), fn ($q) =>
+                $q->where('created_by', $user->id)
             );
 
         // Filtres
@@ -59,6 +71,10 @@ class ProjectController extends Controller
         ]);
     }
 
+    /**
+     * Affiche le formulaire de création d'un projet.
+     * @return Response
+     */
     public function create(): Response
     {
         $this->authorize('create', Project::class);
@@ -68,6 +84,11 @@ class ProjectController extends Controller
         ]);
     }
 
+    /**
+     * Enregistre un nouveau projet en base de données.
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function store(Request $request)
     {
         $this->authorize('create', Project::class);
@@ -96,6 +117,11 @@ class ProjectController extends Controller
             ->with('success', 'Projet créé avec succès.');
     }
 
+    /**
+     * Affiche les détails d'un projet spécifique.
+     * @param Project $project
+     * @return Response
+     */
     public function show(Project $project): Response
     {
         $this->authorize('view', $project);
@@ -128,6 +154,11 @@ class ProjectController extends Controller
         ]);
     }
 
+    /**
+     * Affiche le formulaire d'édition d'un projet.
+     * @param Project $project
+     * @return Response
+     */
     public function edit(Project $project): Response
     {
         $this->authorize('update', $project);
@@ -138,6 +169,12 @@ class ProjectController extends Controller
         ]);
     }
 
+    /**
+     * Met à jour les informations d'un projet.
+     * @param Request $request
+     * @param Project $project
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function update(Request $request, Project $project)
     {
         $this->authorize('update', $project);
@@ -167,6 +204,11 @@ class ProjectController extends Controller
             ->with('success', 'Projet mis à jour.');
     }
 
+    /**
+     * Supprime un projet s'il ne possède pas de dépenses.
+     * @param Project $project
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function destroy(Project $project)
     {
         $this->authorize('delete', $project);

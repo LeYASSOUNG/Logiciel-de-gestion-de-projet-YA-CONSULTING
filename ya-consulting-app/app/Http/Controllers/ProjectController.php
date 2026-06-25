@@ -10,21 +10,34 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Contrôleur gérant l'ensemble de la logique métier liée aux Projets.
+ * Permet de lister, créer, afficher, modifier et supprimer des projets.
+ */
 class ProjectController extends Controller
 {
     use AuthorizesRequests;
 
+    /**
+     * Affiche la liste des projets avec pagination, filtres et recherche.
+     * Accessible par tous les rôles, mais les chefs de projet ne voient que leurs propres projets.
+     *
+     * @param Request $request La requête HTTP contenant d'éventuels filtres (status, client_id, year, search)
+     * @return Response Vue Inertia (Projects/Index)
+     */
     public function index(Request $request): Response
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
+        // Initialise la requête de base en chargeant les relations nécessaires pour éviter le problème N+1
         $query = Project::with('client', 'expenses')
             ->when($user && $user->hasRole('chef_projet'), fn ($q) =>
+                // Si l'utilisateur est un chef de projet, on filtre pour ne récupérer que les projets qu'il a créés
                 $q->where('created_by', Auth::id())
             );
 
-        // Filtres
+        // Application dynamique des filtres de recherche si présents dans la requête
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
@@ -38,6 +51,7 @@ class ProjectController extends Controller
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
+        // Récupère les résultats paginés et transforme la collection pour ne renvoyer que les données nécessaires au frontend
         $projects = $query->latest()->paginate(15)->withQueryString()
             ->through(fn ($p) => [
                 'id'              => $p->id,
@@ -66,8 +80,14 @@ class ProjectController extends Controller
         ]);
     }
 
+    /**
+     * Affiche le formulaire de création d'un nouveau projet.
+     *
+     * @return Response Vue Inertia (Projects/Create)
+     */
     public function create(): Response
     {
+        // Vérifie via les Policies si l'utilisateur a le droit de créer un projet (Admin ou Chef de Projet)
         $this->authorize('create', Project::class);
 
         return Inertia::render('Projects/Create', [
@@ -75,10 +95,17 @@ class ProjectController extends Controller
         ]);
     }
 
+    /**
+     * Enregistre un nouveau projet dans la base de données.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse Redirige vers la vue détaillée du projet
+     */
     public function store(Request $request)
     {
         $this->authorize('create', Project::class);
 
+        // Validation stricte des données soumises par l'utilisateur
         $validated = $request->validate([
             'name'              => 'required|string|max:255',
             'client_id'         => 'required|exists:clients,id',
@@ -93,6 +120,7 @@ class ProjectController extends Controller
             'supplier_contact'  => 'nullable|string|max:255',
         ]);
 
+        // Calcul automatique du budget global à partir des budgets détaillés
         $validated['budget'] = (float)$validated['budget_labor'] + (float)$validated['budget_material'] + (float)$validated['budget_transport'] + (float)$validated['budget_other'];
 
         $project = Project::create([
@@ -108,10 +136,18 @@ class ProjectController extends Controller
             ->with('success', 'Projet créé avec succès.');
     }
 
+    /**
+     * Affiche les détails complets d'un projet spécifique (Vue "Show").
+     * Calcule la rentabilité, affiche les dépenses groupées par catégorie.
+     *
+     * @param Project $project Le projet injecté automatiquement par Laravel via le Route Model Binding
+     * @return Response
+     */
     public function show(Project $project): Response
     {
         $this->authorize('view', $project);
 
+        // Chargement des relations (Eager Loading) pour éviter les requêtes N+1 dans la vue
         $project->load([
             'client',
             'expenses.category',
@@ -129,6 +165,7 @@ class ProjectController extends Controller
                 'count' => $expenses->count(),
             ])->values();
 
+        // Renvoie toutes les métriques de rentabilité et la répartition des dépenses
         return Inertia::render('Projects/Show', [
             'project'             => array_merge($project->toArray(), [
                 'total_expenses'   => $project->total_expenses,
@@ -145,6 +182,12 @@ class ProjectController extends Controller
         ]);
     }
 
+    /**
+     * Affiche le formulaire de modification d'un projet existant.
+     *
+     * @param Project $project
+     * @return Response
+     */
     public function edit(Project $project): Response
     {
         $this->authorize('update', $project);
@@ -157,6 +200,14 @@ class ProjectController extends Controller
         ]);
     }
 
+    /**
+     * Met à jour les informations du projet dans la base de données.
+     * Empêche la modification de certaines données financières sensibles si des dépenses ont déjà été engagées.
+     *
+     * @param Request $request
+     * @param Project $project
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function update(Request $request, Project $project)
     {
         $this->authorize('update', $project);
@@ -207,6 +258,13 @@ class ProjectController extends Controller
             ->with('success', 'Projet mis à jour.');
     }
 
+    /**
+     * Supprime définitivement un projet.
+     * La suppression est interdite (bloquée) si le projet contient des dépenses pour garantir l'intégrité financière.
+     *
+     * @param Project $project
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function destroy(Project $project)
     {
         $this->authorize('delete', $project);

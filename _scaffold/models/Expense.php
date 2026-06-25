@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * Modèle de brouillon (Scaffold) représentant une Dépense.
+ * Attaché à un projet et à une catégorie de dépense.
+ */
 class Expense extends Model
 {
     use SoftDeletes;
@@ -28,16 +32,26 @@ class Expense extends Model
     ];
 
     // ─── Relations ───────────────────────────────────────────────
+    
+    /**
+     * Le projet auquel appartient cette dépense.
+     */
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
     }
 
+    /**
+     * La catégorie associée à cette dépense.
+     */
     public function category(): BelongsTo
     {
         return $this->belongsTo(ExpenseCategory::class, 'category_id');
     }
 
+    /**
+     * L'utilisateur qui a enregistré cette dépense.
+     */
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');

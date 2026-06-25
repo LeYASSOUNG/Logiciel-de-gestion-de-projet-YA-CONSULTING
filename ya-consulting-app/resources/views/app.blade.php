@@ -3,6 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta name="description" content="YA Consulting — Logiciel de gestion et suivi de la rentabilité des projets">
 
         <title inertia>YA Consulting</title>

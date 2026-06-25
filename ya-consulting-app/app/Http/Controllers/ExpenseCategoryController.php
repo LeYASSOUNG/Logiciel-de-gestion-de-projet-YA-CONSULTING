@@ -12,14 +12,18 @@ class ExpenseCategoryController extends Controller
 {
     public function index(): Response
     {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
         // Require admin role
-        if (!Auth::user()->hasRole('admin')) {
+        if (!$user->hasRole('admin')) {
             abort(403, 'Accès non autorisé.');
         }
 
-        $categories = ExpenseCategory::withCount('expenses')
-            ->orderBy('is_custom')
-            ->orderBy('name')
+        $categories = ExpenseCategory::query()
+            ->withCount('expenses')
+            ->orderBy('is_custom', 'asc')
+            ->orderBy('name', 'asc')
             ->get();
 
         return Inertia::render('Categories/Index', [
@@ -38,7 +42,9 @@ class ExpenseCategoryController extends Controller
 
     public function store(Request $request)
     {
-        if (!Auth::user()->hasRole('admin')) {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        if (!$user->hasRole('admin')) {
             abort(403, 'Accès non autorisé.');
         }
 
@@ -63,7 +69,9 @@ class ExpenseCategoryController extends Controller
 
     public function update(Request $request, ExpenseCategory $category)
     {
-        if (!Auth::user()->hasRole('admin') || !$category->is_custom) {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        if (!$user->hasRole('admin') || !$category->is_custom) {
             abort(403, 'Accès non autorisé.');
         }
 
@@ -85,7 +93,9 @@ class ExpenseCategoryController extends Controller
 
     public function destroy(ExpenseCategory $category)
     {
-        if (!Auth::user()->hasRole('admin') || !$category->is_custom) {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        if (!$user->hasRole('admin') || !$category->is_custom) {
             abort(403, 'Accès non autorisé.');
         }
 
