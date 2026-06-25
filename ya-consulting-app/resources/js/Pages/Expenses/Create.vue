@@ -43,7 +43,7 @@
             <!-- Montant -->
             <FormField label="Montant (FCFA)" :error="errors.amount" required>
               <input v-model="form.amount" type="number" class="form-control" :class="{ error: errors.amount }"
-                placeholder="Ex: 250000" min="1" step="5" required />
+                placeholder="Ex: 250000" min="1" step="1" required />
               <div v-if="form.amount" style="font-size:.8rem; color:var(--color-text-muted); margin-top:4px;">
                 = {{ fmt(form.amount) }}
               </div>

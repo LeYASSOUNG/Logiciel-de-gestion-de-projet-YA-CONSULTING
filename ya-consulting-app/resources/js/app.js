@@ -3,6 +3,7 @@ import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import VueApexCharts from 'vue3-apexcharts';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
+import './bootstrap';
 import '../css/app.css';
 
 createInertiaApp({

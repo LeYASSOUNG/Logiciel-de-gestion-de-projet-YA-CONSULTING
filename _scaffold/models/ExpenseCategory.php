@@ -6,6 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * Modèle de brouillon (Scaffold) représentant une Catégorie de Dépense.
+ * Exemples: Main d'œuvre, Matériel, Transport.
+ */
 class ExpenseCategory extends Model
 {
     protected $fillable = [
@@ -19,6 +23,9 @@ class ExpenseCategory extends Model
         'is_custom' => 'boolean',
     ];
 
+    /**
+     * Récupère la liste des dépenses liées à cette catégorie.
+     */
     public function expenses(): HasMany
     {
         return $this->hasMany(Expense::class, 'category_id');
