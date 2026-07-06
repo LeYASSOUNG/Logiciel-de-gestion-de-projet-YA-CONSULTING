@@ -57,7 +57,7 @@ class RolesAndPermissionsSeeder extends Seeder
         ]);
 
         $adminUser = User::updateOrCreate(
-            ['email' => 'courriel@ya-consulting.com'],
+            ['email' => 'ya-consulting@ges-pro.com'],
             [
                 'name'     => 'Administrateur YA',
                 'password' => Hash::make('Admin@2024'),
@@ -66,7 +66,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $adminUser->assignRole('admin');
 
         $this->command->info('Compte Admin créé avec succès.');
-        $this->command->info('   Email : courriel@ya-consulting.com');
+        $this->command->info('   Email : ya-consulting@ges-pro.com');
         $this->command->info('   Mot de passe : Admin@2024');
     }
 }
