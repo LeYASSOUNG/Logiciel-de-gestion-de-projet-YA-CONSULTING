@@ -74,18 +74,8 @@ class UserController extends Controller
         $validated = $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => 'required|string|email|max:255|unique:users,email', // L'email doit être unique
-            // Règles renforcées : min 10 caractères, majuscules + minuscules, chiffres,
-            // symboles, et vérification contre les bases de mots de passe compromis (HIBP).
-            'password' => [
-                'required',
-                'confirmed',
-                Password::min(10)
-                    ->letters()
-                    ->mixedCase()
-                    ->numbers()
-                    ->symbols()
-                    ->uncompromised(),
-            ],
+            // Règles standard : minimum 8 caractères
+            'password' => ['required', 'confirmed', 'min:8'],
             'role'     => 'required|exists:roles,name',      // Le rôle doit exister en BDD
         ]);
 
