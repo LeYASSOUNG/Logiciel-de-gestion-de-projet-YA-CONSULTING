@@ -48,15 +48,17 @@
             <Icon name="briefcase" :size="22" />
             Projets
           </Link>
-          <Link :href="route('expenses.index')" class="navbar-link" :class="{ active: $page.url.startsWith('/expenses') }">
-            <Icon name="banknotes" :size="22" />
-            Dépenses
-          </Link>
-          <Link :href="route('clients.index')" class="navbar-link" :class="{ active: $page.url.startsWith('/clients') }">
-            <Icon name="users" :size="22" />
-            Clients
-          </Link>
-          <template v-if="!$page.props.auth.user.roles?.includes('collaborateur')">
+          <template v-if="!$page.props.auth.user.roles?.includes('client')">
+            <Link :href="route('expenses.index')" class="navbar-link" :class="{ active: $page.url.startsWith('/expenses') }">
+              <Icon name="banknotes" :size="22" />
+              Dépenses
+            </Link>
+            <Link :href="route('clients.index')" class="navbar-link" :class="{ active: $page.url.startsWith('/clients') }">
+              <Icon name="users" :size="22" />
+              Clients
+            </Link>
+          </template>
+          <template v-if="!$page.props.auth.user.roles?.includes('collaborateur') && !$page.props.auth.user.roles?.includes('client')">
             <Link :href="route('reports.index')" class="navbar-link" :class="{ active: $page.url.startsWith('/reports') }">
               <Icon name="chart-bar" :size="22" />
               Rapports
@@ -199,15 +201,17 @@
             <Icon name="briefcase" :size="24" />
             Projets
           </Link>
-          <Link :href="route('expenses.index')" class="navbar-mobile-link" :class="{ active: $page.url.startsWith('/expenses') }">
-            <Icon name="banknotes" :size="20" />
-            Dépenses
-          </Link>
-          <Link :href="route('clients.index')" class="navbar-mobile-link" :class="{ active: $page.url.startsWith('/clients') }">
-            <Icon name="users" :size="20" />
-            Clients
-          </Link>
-          <template v-if="!$page.props.auth.user.roles?.includes('collaborateur')">
+          <template v-if="!$page.props.auth.user.roles?.includes('client')">
+            <Link :href="route('expenses.index')" class="navbar-mobile-link" :class="{ active: $page.url.startsWith('/expenses') }">
+              <Icon name="banknotes" :size="20" />
+              Dépenses
+            </Link>
+            <Link :href="route('clients.index')" class="navbar-mobile-link" :class="{ active: $page.url.startsWith('/clients') }">
+              <Icon name="users" :size="20" />
+              Clients
+            </Link>
+          </template>
+          <template v-if="!$page.props.auth.user.roles?.includes('collaborateur') && !$page.props.auth.user.roles?.includes('client')">
             <Link :href="route('reports.index')" class="navbar-mobile-link" :class="{ active: $page.url.startsWith('/reports') }">
               <Icon name="chart-bar" :size="20" />
               Rapports

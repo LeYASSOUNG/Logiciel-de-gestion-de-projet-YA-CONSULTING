@@ -33,7 +33,13 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'client_id',
     ];
+
+    public function client()
+    {
+        return $this->belongsTo(Client::class);
+    }
 
     /**
      * Champs masqués lors de la sérialisation (JSON/Array).

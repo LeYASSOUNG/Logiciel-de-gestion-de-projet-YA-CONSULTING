@@ -49,6 +49,11 @@ class ProjectPolicy
             return $project->created_by === $user->id;
         }
 
+        if ($user->hasRole('client')) {
+            // Restriction : le client ne voit que ses propres projets
+            return $project->client_id === $user->client_id;
+        }
+
         return $user->hasPermissionTo('view projects');
     }
 

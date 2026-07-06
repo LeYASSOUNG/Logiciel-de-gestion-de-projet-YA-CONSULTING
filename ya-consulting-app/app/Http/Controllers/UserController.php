@@ -51,12 +51,14 @@ class UserController extends Controller
                 'name'       => $u->name,
                 'email'      => $u->email,
                 'role'       => $u->roles->first()?->name, // Un seul rôle par utilisateur
+                'client_id'  => $u->client_id, // Pour l'édition
                 'created_at' => $u->created_at->format('d/m/Y'),
             ]);
 
         return Inertia::render('Users/Index', [
             'users'   => $users,
             'roles'   => Role::orderBy('name')->pluck('name'), // Liste des rôles disponibles
+            'clients' => \App\Models\Client::orderBy('name')->get(['id', 'name']),
             'filters' => $request->only(['search']),
         ]);
     }
@@ -72,18 +74,18 @@ class UserController extends Controller
         $this->authorize('manage', User::class);
 
         $validated = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|string|email|max:255|unique:users,email', // L'email doit être unique
-            // Règles standard : minimum 8 caractères
-            'password' => ['required', 'confirmed', 'min:8'],
-            'role'     => 'required|exists:roles,name',      // Le rôle doit exister en BDD
+            'name'      => 'required|string|max:255',
+            'email'     => 'required|string|email|max:255|unique:users,email',
+            'password'  => ['required', 'confirmed', 'min:8'],
+            'role'      => 'required|exists:roles,name',
+            'client_id' => 'nullable|exists:clients,id|required_if:role,client',
         ]);
 
-        // Création du compte avec le mot de passe hashé (jamais en clair en BDD)
         $user = User::create([
-            'name'     => $validated['name'],
-            'email'    => $validated['email'],
-            'password' => Hash::make($validated['password']),
+            'name'      => $validated['name'],
+            'email'     => $validated['email'],
+            'password'  => Hash::make($validated['password']),
+            'client_id' => $validated['role'] === 'client' ? $validated['client_id'] : null,
         ]);
 
         // Assignation du rôle via Spatie Permission
@@ -109,15 +111,16 @@ class UserController extends Controller
         $this->authorize('manage', User::class);
 
         $validated = $request->validate([
-            'name'  => 'required|string|max:255',
-            // L'email doit être unique SAUF pour l'utilisateur en cours de modification
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'role'  => 'required|exists:roles,name',
+            'name'      => 'required|string|max:255',
+            'email'     => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'role'      => 'required|exists:roles,name',
+            'client_id' => 'nullable|exists:clients,id|required_if:role,client',
         ]);
 
         $user->update([
-            'name'  => $validated['name'],
-            'email' => $validated['email'],
+            'name'      => $validated['name'],
+            'email'     => $validated['email'],
+            'client_id' => $validated['role'] === 'client' ? $validated['client_id'] : null,
         ]);
 
         // syncRoles() retire tous les anciens rôles et assigne le nouveau

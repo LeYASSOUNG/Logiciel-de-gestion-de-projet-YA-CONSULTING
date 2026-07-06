@@ -56,6 +56,12 @@ class RolesAndPermissionsSeeder extends Seeder
             'view clients',
         ]);
 
+        // Client — accès restreint à ses propres projets
+        $clientRole = Role::firstOrCreate(['name' => 'client']);
+        $clientRole->syncPermissions([
+            'view projects',
+        ]);
+
         $adminUser = User::updateOrCreate(
             ['email' => 'ya-consulting@ges-pro.com'],
             [

@@ -33,7 +33,7 @@
     </div>
 
     <!-- KPIs Financiers (Glassmorphism) -->
-    <div class="kpi-grid fade-in-up delay-2">
+    <div v-if="canViewFinances" class="kpi-grid fade-in-up delay-2">
       <div class="kpi-card glass">
         <div class="kpi-icon-wrapper bg-blue">
           <Icon name="banknotes" :size="24" />
@@ -106,7 +106,7 @@
       </div>
 
       <!-- Graphique Dépenses -->
-      <div class="glass-panel flex-col">
+      <div v-if="canViewFinances" class="glass-panel flex-col">
         <div class="panel-header border-b">
           <h2><Icon name="chart-pie" :size="18" class="mr-2 text-gold" /> Structure des Coûts</h2>
         </div>
@@ -127,7 +127,7 @@
     </div>
 
     <!-- Suivi Analytique du Budget -->
-    <div class="glass-panel fade-in-up delay-4 mb-xl">
+    <div v-if="canViewFinances" class="glass-panel fade-in-up delay-4 mb-xl">
       <div class="panel-header border-b">
         <h2><Icon name="calculator" :size="18" class="mr-2 text-gold" /> Suivi Analytique du Budget</h2>
       </div>
@@ -223,7 +223,7 @@
     </div>
 
     <!-- Liste des Dépenses du projet -->
-    <div class="glass-panel fade-in-up delay-5 mb-xl">
+    <div v-if="canViewFinances" class="glass-panel fade-in-up delay-5 mb-xl">
       <div class="panel-header border-b">
         <h2>
           <Icon name="queue-list" :size="18" class="mr-2 text-gold" />
@@ -349,6 +349,10 @@ const canAddExpense = computed(() => {
 
 const canDelete = computed(() => {
   return user.value.roles?.includes('admin');
+});
+
+const canViewFinances = computed(() => {
+  return !user.value.roles?.includes('client');
 });
 
 // ─── Fonctions de Formatage ─────────────────────────────────────────

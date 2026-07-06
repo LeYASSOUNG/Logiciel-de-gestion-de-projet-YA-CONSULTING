@@ -35,6 +35,10 @@ class ProjectController extends Controller
             ->when($user && $user->hasRole('chef_projet'), fn ($q) =>
                 // Si l'utilisateur est un chef de projet, on filtre pour ne récupérer que les projets qu'il a créés
                 $q->where('created_by', Auth::id())
+            )
+            ->when($user && $user->hasRole('client'), fn ($q) =>
+                // Si l'utilisateur est un client, on ne montre que SES projets
+                $q->where('client_id', Auth::user()->client_id)
             );
 
         // Application dynamique des filtres de recherche si présents dans la requête

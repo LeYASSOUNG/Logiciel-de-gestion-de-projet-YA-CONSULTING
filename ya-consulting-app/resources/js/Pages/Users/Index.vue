@@ -115,6 +115,15 @@
               </select>
             </FormField>
 
+            <FormField v-if="form.role === 'client'" label="Client Associé" :error="errors.client_id" required>
+              <select v-model="form.client_id" class="form-control" :class="{ error: errors.client_id }" required>
+                <option value="">Sélectionner le client...</option>
+                <option v-for="client in clients" :key="client.id" :value="client.id">
+                  {{ client.name }}
+                </option>
+              </select>
+            </FormField>
+
             <div v-if="!editingUserId" class="form-group">
               <FormField label="Mot de passe" :error="errors.password" required>
                 <input v-model="form.password" type="password" class="form-control" :class="{ error: errors.password }" required />
@@ -159,6 +168,7 @@ import Icon from '@/Components/Icon.vue';
 const props = defineProps({
   users:   Object,
   roles:   Array,
+  clients: Array,
   filters: Object,
 });
 
@@ -170,6 +180,7 @@ const form = useForm({
   name:                  '',
   email:                 '',
   role:                  '',
+  client_id:             '',
   password:              '',
   password_confirmation: '',
 });
@@ -181,6 +192,7 @@ const roleLabels = {
   admin:         'Administrateur',
   chef_projet:   'Chef de Projet',
   collaborateur: 'Collaborateur',
+  client:        'Client',
 };
 
 const getRoleLabel = (roleName) => roleLabels[roleName] || roleName;
@@ -209,15 +221,17 @@ const clearFilters = () => {
 const openCreateModal = () => {
   editingUserId.value = null;
   form.reset();
+  form.client_id = '';
   form.clearErrors();
   showModal.value = true;
 };
 
 const openEditModal = (user) => {
   editingUserId.value = user.id;
-  form.name = user.name;
-  form.email = user.email;
-  form.role = user.role || '';
+  form.name           = user.name;
+  form.email          = user.email;
+  form.role           = user.role || '';
+  form.client_id      = user.client_id || '';
   form.clearErrors();
   showModal.value = true;
 };

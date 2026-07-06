@@ -46,6 +46,11 @@ class DashboardController extends Controller
             $projectsQuery->where('created_by', $user->id);
         }
 
+        // Restriction pour les clients : ils ne voient que leurs projets
+        if ($user->hasRole('client')) {
+            $projectsQuery->where('client_id', $user->client_id);
+        }
+
         // ─── KPIs de comptage ─────────────────────────────────────
         $totalProjects     = $projectsQuery->count();
         $activeProjects    = (clone $projectsQuery)->enCours()->count();
