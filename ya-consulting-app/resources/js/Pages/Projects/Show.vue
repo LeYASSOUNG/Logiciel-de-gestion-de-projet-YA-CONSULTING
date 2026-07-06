@@ -1,311 +1,313 @@
 <template>
   <AppLayout :title="`Projet : ${project.name}`">
-    <div class="animate-fade-up" style="animation-delay:.03s">
-      <!-- En-tête -->
-      <PageHeader :title="project.name" :description="project.client ? `Client : ${project.client.name}` : 'Pas de client associé'">
-        <template v-slot:badge>
-          <StatusBadge :status="project.status" />
-        </template>
-        <template v-slot:actions>
-          <Button as="Link" :href="route('projects.index')" variant="outline">
-            Retour
-          </Button>
-          <Button v-if="canEdit" as="Link" :href="route('projects.edit', project.id)" variant="primary">
-            Modifier le projet
-          </Button>
-          <Button v-if="canAddExpense" as="Link" :href="route('expenses.create-for-project', project.id)" variant="accent">
-            <template v-slot:icon-left>
-              <Icon name="plus" :size="16" />
-            </template>
-            Ajouter une dépense
-          </Button>
-        </template>
-      </PageHeader>
+    <!-- En-tête Premium Animé -->
+    <div class="page-header-premium slide-down">
+      <div class="header-content">
+        <div class="header-subtitle">
+          <span class="modern-badge" :class="getStatusBadge(project.status)">
+            {{ getStatusLabel(project.status) }}
+          </span>
+          <span class="client-name" v-if="project.client">
+            <Icon name="building-office" :size="14" /> {{ project.client.name }}
+          </span>
+        </div>
+        <h1 class="text-gradient">{{ project.name }}</h1>
+      </div>
+      <div class="header-actions">
+        <Link :href="route('projects.index')" class="btn-action-outline" title="Retour aux projets">
+          <Icon name="arrow-left" :size="16" /> Retour
+        </Link>
+        <Link v-if="canEdit" :href="route('projects.edit', project.id)" class="btn-action-outline">
+          <Icon name="pencil-square" :size="16" /> Modifier
+        </Link>
+        <Link v-if="canAddExpense" :href="route('expenses.create-for-project', project.id)" class="btn-premium">
+          <Icon name="plus" :size="16" /> <span>Ajouter une dépense</span>
+        </Link>
+      </div>
+    </div>
 
-      <!-- Erreurs éventuelles (par ex. impossibilité de supprimer) -->
-      <div v-if="$page.props.errors.delete" class="alert alert-danger mb-lg">
-        {{ $page.props.errors.delete }}
+    <!-- Alertes -->
+    <div v-if="$page.props.errors.delete" class="alert-premium slide-down delay-1">
+      <Icon name="exclamation-circle" :size="20" />
+      <span>{{ $page.props.errors.delete }}</span>
+    </div>
+
+    <!-- KPIs Financiers (Glassmorphism) -->
+    <div class="kpi-grid fade-in-up delay-2">
+      <div class="kpi-card glass">
+        <div class="kpi-icon-wrapper bg-blue">
+          <Icon name="banknotes" :size="24" />
+        </div>
+        <div class="kpi-info">
+          <div class="kpi-label">Budget Alloué</div>
+          <div class="kpi-value text-slate">{{ formatAmount(project.budget) }}</div>
+        </div>
       </div>
 
-      <!-- KPIs Financiers -->
-      <div class="stats-grid mb-xl">
-        <StatCard
-          class="stagger-1"
-          label="Budget alloué"
-          :value="formatAmount(project.budget)"
-          icon="banknotes"
-          color="accent"
-        />
-
-        <StatCard
-          class="stagger-2"
-          label="Dépenses cumulées"
-          :value="formatAmount(project.total_expenses)"
-          icon="credit-card"
-          color="danger"
-          colorValueClass="text-danger"
-        />
-
-        <StatCard
-          class="stagger-3"
-          label="Marge brute"
-          :value="(project.gross_gain >= 0 ? '+' : '') + formatAmount(project.gross_gain)"
-          icon="presentation-chart-line"
-          :color="project.is_profitable ? 'success' : 'danger'"
-          :colorValueClass="project.is_profitable ? 'text-success' : 'text-danger'"
-        >
-          <template v-slot:footer>
-            <div :class="project.is_profitable ? 'text-success' : 'text-danger'" style="font-weight: 600; font-size: 0.85rem;">
-              {{ project.is_profitable ? '+' : '' }}{{ project.profitability }}% rentabilité
-            </div>
-          </template>
-        </StatCard>
+      <div class="kpi-card glass">
+        <div class="kpi-icon-wrapper bg-red">
+          <Icon name="credit-card" :size="24" />
+        </div>
+        <div class="kpi-info">
+          <div class="kpi-label">Dépenses Cumulées</div>
+          <div class="kpi-value text-red">{{ formatAmount(project.total_expenses) }}</div>
+        </div>
       </div>
 
-      <!-- Informations Projet + Graphique répartition -->
-      <div class="grid-3 mb-xl">
-        <!-- Infos Détails (Col 1 & 2) -->
-        <Card title="Description & Planning" style="grid-column: span 2">
-          <p v-if="project.description" style="margin-top:0; white-space:pre-line; color:var(--color-text)">
-            {{ project.description }}
-          </p>
-          <p v-else style="margin-top:0; color:var(--color-text-muted); font-style:italic">
-            Aucune description fournie.
-          </p>
+      <div class="kpi-card glass">
+        <div class="kpi-icon-wrapper" :class="project.is_profitable ? 'bg-emerald' : 'bg-red'">
+          <Icon name="presentation-chart-line" :size="24" />
+        </div>
+        <div class="kpi-info">
+          <div class="kpi-label">Marge Brute</div>
+          <div class="kpi-value" :class="project.is_profitable ? 'text-emerald' : 'text-red'">
+            {{ project.gross_gain >= 0 ? '+' : '' }}{{ formatAmount(project.gross_gain) }}
+          </div>
+          <div class="kpi-subtext" :class="project.is_profitable ? 'text-emerald' : 'text-red'">
+            {{ project.is_profitable ? '+' : '' }}{{ project.profitability }}% de rentabilité
+          </div>
+        </div>
+      </div>
+    </div>
 
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-lg); margin-top:var(--space-lg); border-top:1px solid var(--color-border); padding-top:var(--space-md)">
-            <div>
-              <span style="font-size:.75rem; color:var(--color-text-muted); text-transform:uppercase; font-weight:600">Calendrier</span>
-              <div style="margin-top:4px; font-size:.875rem">
-                <div>Début : <strong>{{ formatDate(project.start_date) }}</strong></div>
-                <div>Fin prévisionnelle : <strong>{{ formatDate(project.planned_end_date) }}</strong></div>
-                <div v-if="project.actual_end_date">Fin réelle : <strong class="text-success">{{ formatDate(project.actual_end_date) }}</strong></div>
-              </div>
+    <!-- Section 2: Détails et Graphique -->
+    <div class="details-grid fade-in-up delay-3">
+      <!-- Informations Projet -->
+      <div class="glass-panel col-span-2 flex-col">
+        <div class="panel-header border-b">
+          <h2><Icon name="document-text" :size="18" class="mr-2 text-gold" /> Description & Planning</h2>
+        </div>
+        <div class="panel-body flex-1">
+          <div class="description-box">
+            <p v-if="project.description">{{ project.description }}</p>
+            <p v-else class="text-muted italic">Aucune description fournie pour ce projet.</p>
+          </div>
+
+          <div class="info-split mt-lg pt-lg border-t">
+            <div class="info-block">
+              <span class="info-label">Calendrier</span>
+              <ul class="info-list">
+                <li><Icon name="calendar" :size="14" /> Début : <strong>{{ formatDate(project.start_date) }}</strong></li>
+                <li><Icon name="clock" :size="14" /> Fin prévue : <strong>{{ formatDate(project.planned_end_date) }}</strong></li>
+                <li v-if="project.actual_end_date"><Icon name="check-circle" :size="14" class="text-emerald" /> Fin réelle : <strong class="text-emerald">{{ formatDate(project.actual_end_date) }}</strong></li>
+              </ul>
             </div>
-            <div>
-              <span style="font-size:.75rem; color:var(--color-text-muted); text-transform:uppercase; font-weight:600">Contacts clés</span>
-              <div style="margin-top:4px; font-size:.875rem">
-                <div v-if="project.client?.contact_email">Client email : <strong>{{ project.client.contact_email }}</strong></div>
-                <div v-if="project.client?.contact_phone">Client tél : <strong>{{ project.client.contact_phone }}</strong></div>
-                <div v-if="project.supplier_contact">Fournisseur : <strong>{{ project.supplier_contact }}</strong></div>
-              </div>
+            <div class="info-block">
+              <span class="info-label">Contacts Clés</span>
+              <ul class="info-list">
+                <li v-if="project.client?.contact_email"><Icon name="envelope" :size="14" /> {{ project.client.contact_email }}</li>
+                <li v-if="project.client?.contact_phone"><Icon name="phone" :size="14" /> {{ project.client.contact_phone }}</li>
+                <li v-if="project.supplier_contact"><Icon name="truck" :size="14" /> Fournisseur: <strong>{{ project.supplier_contact }}</strong></li>
+                <li v-if="!project.client?.contact_email && !project.client?.contact_phone && !project.supplier_contact" class="text-muted">Aucun contact enregistré</li>
+              </ul>
             </div>
           </div>
-        </Card>
+        </div>
+      </div>
 
-        <!-- Graphique Dépenses par catégorie (Col 3) -->
-        <Card title="Structure des Coûts">
+      <!-- Graphique Dépenses -->
+      <div class="glass-panel flex-col">
+        <div class="panel-header border-b">
+          <h2><Icon name="chart-pie" :size="18" class="mr-2 text-gold" /> Structure des Coûts</h2>
+        </div>
+        <div class="panel-body flex-1 flex-center">
           <apexchart
             v-if="expenses_by_category.length"
             type="donut"
-            height="200"
+            height="250"
             :options="chartOptions"
             :series="chartSeries"
           />
-          <div v-else style="text-align:center; color:var(--color-text-muted); padding: 40px 0;">
-            Aucune dépense enregistrée sur ce projet.
+          <div v-else class="empty-state-mini">
+            <Icon name="chart-pie" :size="32" class="text-muted mb-xs" />
+            <p>Aucune dépense enregistrée</p>
           </div>
-        </Card>
-      </div>
-
-      <!-- Suivi Analytique du Budget -->
-      <Card title="Suivi Analytique du Budget" class="mb-xl">
-        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:var(--space-lg);">
-
-          <!-- Main d'oeuvre — Indigo -->
-          <div class="analytics-card ax-indigo">
-            <div class="analytics-card-header">
-              <div>
-                <div class="analytics-card-label">Main d'œuvre</div>
-              </div>
-              <div style="display:flex; align-items:center; gap:8px;">
-                <span class="analytics-card-pct">{{ pct(project.expenses_labor, project.budget_labor) }}%</span>
-                <div class="analytics-card-icon">
-                  <Icon name="user-group" :size="16" />
-                </div>
-              </div>
-            </div>
-            <div class="analytics-card-value">{{ formatAmount(project.expenses_labor) }}</div>
-            <div class="analytics-card-sub">Budget : {{ formatAmount(project.budget_labor) }}</div>
-            <div class="analytics-bar">
-              <div class="analytics-bar-fill" :class="{ overrun: Number(project.expenses_labor) > Number(project.budget_labor) }"
-                :style="`width: ${Math.min(pct(project.expenses_labor, project.budget_labor), 100)}%`" />
-            </div>
-            <div v-if="Number(project.expenses_labor) > Number(project.budget_labor)" class="analytics-overrun">
-              <Icon name="exclamation-triangle" :size="11" />
-              Dépassement de {{ formatAmount(project.expenses_labor - project.budget_labor) }}
-            </div>
-          </div>
-
-          <!-- Matériel — Amber -->
-          <div class="analytics-card ax-amber">
-            <div class="analytics-card-header">
-              <div>
-                <div class="analytics-card-label">Matériel</div>
-              </div>
-              <div style="display:flex; align-items:center; gap:8px;">
-                <span class="analytics-card-pct">{{ pct(project.expenses_material, project.budget_material) }}%</span>
-                <div class="analytics-card-icon">
-                  <Icon name="wrench-screwdriver" :size="16" />
-                </div>
-              </div>
-            </div>
-            <div class="analytics-card-value">{{ formatAmount(project.expenses_material) }}</div>
-            <div class="analytics-card-sub">Budget : {{ formatAmount(project.budget_material) }}</div>
-            <div class="analytics-bar">
-              <div class="analytics-bar-fill" :class="{ overrun: Number(project.expenses_material) > Number(project.budget_material) }"
-                :style="`width: ${Math.min(pct(project.expenses_material, project.budget_material), 100)}%`" />
-            </div>
-            <div v-if="Number(project.expenses_material) > Number(project.budget_material)" class="analytics-overrun">
-              <Icon name="exclamation-triangle" :size="11" />
-              Dépassement de {{ formatAmount(project.expenses_material - project.budget_material) }}
-            </div>
-          </div>
-
-          <!-- Transport — Emerald -->
-          <div class="analytics-card ax-emerald">
-            <div class="analytics-card-header">
-              <div>
-                <div class="analytics-card-label">Transport</div>
-              </div>
-              <div style="display:flex; align-items:center; gap:8px;">
-                <span class="analytics-card-pct">{{ pct(project.expenses_transport, project.budget_transport) }}%</span>
-                <div class="analytics-card-icon">
-                  <Icon name="truck" :size="16" />
-                </div>
-              </div>
-            </div>
-            <div class="analytics-card-value">{{ formatAmount(project.expenses_transport) }}</div>
-            <div class="analytics-card-sub">Budget : {{ formatAmount(project.budget_transport) }}</div>
-            <div class="analytics-bar">
-              <div class="analytics-bar-fill" :class="{ overrun: Number(project.expenses_transport) > Number(project.budget_transport) }"
-                :style="`width: ${Math.min(pct(project.expenses_transport, project.budget_transport), 100)}%`" />
-            </div>
-            <div v-if="Number(project.expenses_transport) > Number(project.budget_transport)" class="analytics-overrun">
-              <Icon name="exclamation-triangle" :size="11" />
-              Dépassement de {{ formatAmount(project.expenses_transport - project.budget_transport) }}
-            </div>
-          </div>
-
-          <!-- Autres — Slate -->
-          <div class="analytics-card ax-slate">
-            <div class="analytics-card-header">
-              <div>
-                <div class="analytics-card-label">Autres coûts</div>
-              </div>
-              <div style="display:flex; align-items:center; gap:8px;">
-                <span class="analytics-card-pct">{{ pct(project.expenses_other, project.budget_other) }}%</span>
-                <div class="analytics-card-icon">
-                  <Icon name="ellipsis-horizontal-circle" :size="16" />
-                </div>
-              </div>
-            </div>
-            <div class="analytics-card-value">{{ formatAmount(project.expenses_other) }}</div>
-            <div class="analytics-card-sub">Budget : {{ formatAmount(project.budget_other) }}</div>
-            <div class="analytics-bar">
-              <div class="analytics-bar-fill" :class="{ overrun: Number(project.expenses_other) > Number(project.budget_other) }"
-                :style="`width: ${Math.min(pct(project.expenses_other, project.budget_other), 100)}%`" />
-            </div>
-            <div v-if="Number(project.expenses_other) > Number(project.budget_other)" class="analytics-overrun">
-              <Icon name="exclamation-triangle" :size="11" />
-              Dépassement de {{ formatAmount(project.expenses_other - project.budget_other) }}
-            </div>
-          </div>
-
         </div>
-      </Card>
-
-      <!-- Liste des Dépenses du projet -->
-      <Card :title="`Dépenses Enregistrées (${project.expenses.length})`" class="mb-xl">
-        <div class="table-container">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Catégorie</th>
-                <th>Description</th>
-                <th>Auteur</th>
-                <th>Justificatif</th>
-                <th class="text-right">Montant</th>
-                <th v-if="canAddExpense" style="width:120px"></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="exp in project.expenses" :key="exp.id">
-                <td>{{ formatDate(exp.date) }}</td>
-                <td>
-                  <span style="display:inline-flex; align-items:center; gap:6px;">
-                    <span :style="`width:10px; height:10px; border-radius:50%; background-color:${exp.category?.color || '#ccc'}`"></span>
-                    {{ exp.category?.name || 'N/A' }}
-                  </span>
-                </td>
-                <td>{{ exp.description || '—' }}</td>
-                <td>{{ exp.creator?.name || '—' }}</td>
-                <td>
-                  <a v-if="exp.receipt_path" :href="`/storage/${exp.receipt_path}`" target="_blank"
-                    style="color:var(--color-accent-dark); font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:4px;">
-                    <Icon name="document-arrow-down" :size="14" />
-                    Justificatif
-                  </a>
-                  <span v-else style="color:var(--color-text-light);">Aucun</span>
-                </td>
-                <td class="amount-neutral text-right">{{ formatAmount(exp.amount) }}</td>
-                <td v-if="canAddExpense" style="text-align:right">
-                  <div style="display:flex; gap:6px; justify-content:flex-end;">
-                    <Button as="Link" :href="route('expenses.edit', exp.id)" variant="outline" size="sm" style="padding: 6px 10px;">
-                      <Icon name="pencil-square" :size="14" />
-                    </Button>
-                    <Button variant="outline" size="sm" class="text-danger" style="padding: 6px 10px;" @click="deleteExpense(exp.id)">
-                      <Icon name="trash" :size="14" />
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-              <tr v-if="!project.expenses.length">
-                <td colspan="7" style="text-align:center; color:var(--color-text-muted); padding:30px 0;">
-                  Aucune dépense enregistrée sur ce projet.
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </Card>
-
-      <!-- Section de suppression (admin uniquement) -->
-      <div v-if="canDelete" style="margin-top:var(--space-2xl); border-top:1px solid var(--color-border); padding-top:var(--space-xl)">
-        <Card class="danger-zone-card">
-          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:var(--space-md)">
-            <div>
-              <div class="danger-zone-header">
-                <div class="danger-zone-icon">
-                  <Icon name="shield-exclamation" :size="18" />
-                </div>
-                <h3 style="margin:0; color:var(--color-danger); font-size:1rem; font-weight:700;">Zone de danger</h3>
-              </div>
-              <p style="margin:0 0 0 46px; font-size:.875rem; color:var(--color-text-muted); line-height:1.5;">
-                La suppression du projet est <strong>définitive et irréversible</strong>. Cette action est impossible si des dépenses sont rattachées au projet.
-              </p>
-            </div>
-            <Button variant="danger" @click="deleteProject">
-              <template v-slot:icon-left><Icon name="trash" :size="15" /></template>
-              Supprimer le projet
-            </Button>
-          </div>
-        </Card>
       </div>
     </div>
+
+    <!-- Suivi Analytique du Budget -->
+    <div class="glass-panel fade-in-up delay-4 mb-xl">
+      <div class="panel-header border-b">
+        <h2><Icon name="calculator" :size="18" class="mr-2 text-gold" /> Suivi Analytique du Budget</h2>
+      </div>
+      <div class="panel-body">
+        <div class="analytics-grid">
+
+          <!-- Main d'oeuvre -->
+          <div class="analytics-item glass">
+            <div class="ax-header text-blue">
+              <span class="ax-title">Main d'œuvre</span>
+              <span class="ax-pct">{{ pct(project.expenses_labor, project.budget_labor) }}%</span>
+            </div>
+            <div class="ax-amounts">
+              <div class="ax-spent">{{ formatAmount(project.expenses_labor) }}</div>
+              <div class="ax-budget">sur {{ formatAmount(project.budget_labor) }}</div>
+            </div>
+            <div class="progress-track mt-sm">
+              <div class="progress-fill animated bg-blue"
+                   :class="{ 'bg-red': Number(project.expenses_labor) > Number(project.budget_labor) }"
+                   :style="{ '--target-width': Math.min(pct(project.expenses_labor, project.budget_labor), 100) + '%' }">
+              </div>
+            </div>
+            <div v-if="Number(project.expenses_labor) > Number(project.budget_labor)" class="ax-overrun text-red mt-xs">
+              <Icon name="exclamation-triangle" :size="12" /> Dépassement : {{ formatAmount(project.expenses_labor - project.budget_labor) }}
+            </div>
+          </div>
+
+          <!-- Matériel -->
+          <div class="analytics-item glass">
+            <div class="ax-header text-gold">
+              <span class="ax-title">Matériel</span>
+              <span class="ax-pct">{{ pct(project.expenses_material, project.budget_material) }}%</span>
+            </div>
+            <div class="ax-amounts">
+              <div class="ax-spent">{{ formatAmount(project.expenses_material) }}</div>
+              <div class="ax-budget">sur {{ formatAmount(project.budget_material) }}</div>
+            </div>
+            <div class="progress-track mt-sm">
+              <div class="progress-fill animated bg-gold"
+                   :class="{ 'bg-red': Number(project.expenses_material) > Number(project.budget_material) }"
+                   :style="{ '--target-width': Math.min(pct(project.expenses_material, project.budget_material), 100) + '%' }">
+              </div>
+            </div>
+            <div v-if="Number(project.expenses_material) > Number(project.budget_material)" class="ax-overrun text-red mt-xs">
+              <Icon name="exclamation-triangle" :size="12" /> Dépassement : {{ formatAmount(project.expenses_material - project.budget_material) }}
+            </div>
+          </div>
+
+          <!-- Transport -->
+          <div class="analytics-item glass">
+            <div class="ax-header text-emerald">
+              <span class="ax-title">Transport</span>
+              <span class="ax-pct">{{ pct(project.expenses_transport, project.budget_transport) }}%</span>
+            </div>
+            <div class="ax-amounts">
+              <div class="ax-spent">{{ formatAmount(project.expenses_transport) }}</div>
+              <div class="ax-budget">sur {{ formatAmount(project.budget_transport) }}</div>
+            </div>
+            <div class="progress-track mt-sm">
+              <div class="progress-fill animated bg-emerald"
+                   :class="{ 'bg-red': Number(project.expenses_transport) > Number(project.budget_transport) }"
+                   :style="{ '--target-width': Math.min(pct(project.expenses_transport, project.budget_transport), 100) + '%' }">
+              </div>
+            </div>
+            <div v-if="Number(project.expenses_transport) > Number(project.budget_transport)" class="ax-overrun text-red mt-xs">
+              <Icon name="exclamation-triangle" :size="12" /> Dépassement : {{ formatAmount(project.expenses_transport - project.budget_transport) }}
+            </div>
+          </div>
+
+          <!-- Autres -->
+          <div class="analytics-item glass">
+            <div class="ax-header text-slate">
+              <span class="ax-title">Autres Coûts</span>
+              <span class="ax-pct">{{ pct(project.expenses_other, project.budget_other) }}%</span>
+            </div>
+            <div class="ax-amounts">
+              <div class="ax-spent">{{ formatAmount(project.expenses_other) }}</div>
+              <div class="ax-budget">sur {{ formatAmount(project.budget_other) }}</div>
+            </div>
+            <div class="progress-track mt-sm">
+              <div class="progress-fill animated bg-slate"
+                   :class="{ 'bg-red': Number(project.expenses_other) > Number(project.budget_other) }"
+                   :style="{ '--target-width': Math.min(pct(project.expenses_other, project.budget_other), 100) + '%' }">
+              </div>
+            </div>
+            <div v-if="Number(project.expenses_other) > Number(project.budget_other)" class="ax-overrun text-red mt-xs">
+              <Icon name="exclamation-triangle" :size="12" /> Dépassement : {{ formatAmount(project.expenses_other - project.budget_other) }}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Liste des Dépenses du projet -->
+    <div class="glass-panel fade-in-up delay-5 mb-xl">
+      <div class="panel-header border-b">
+        <h2>
+          <Icon name="queue-list" :size="18" class="mr-2 text-gold" />
+          Dépenses Enregistrées
+          <span class="badge-count">{{ project.expenses.length }}</span>
+        </h2>
+      </div>
+
+      <div class="table-container">
+        <table class="modern-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Catégorie</th>
+              <th>Description</th>
+              <th>Auteur</th>
+              <th>Justificatif</th>
+              <th class="text-right">Montant</th>
+              <th v-if="canAddExpense" class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="exp in project.expenses" :key="exp.id" class="table-row-animate">
+              <td class="text-muted text-xs font-medium">{{ formatDate(exp.date) }}</td>
+              <td>
+                <span class="category-tag">
+                  <span class="color-dot" :style="{ backgroundColor: exp.category?.color || '#ccc' }"></span>
+                  {{ exp.category?.name || 'N/A' }}
+                </span>
+              </td>
+              <td>{{ exp.description || '—' }}</td>
+              <td><span class="user-tag"><Icon name="user" :size="12"/> {{ exp.creator?.name || '—' }}</span></td>
+              <td>
+                <a v-if="exp.receipt_path" :href="`/storage/${exp.receipt_path}`" target="_blank" class="receipt-link">
+                  <Icon name="document-arrow-down" :size="14" /> Télécharger
+                </a>
+                <span v-else class="text-muted text-xs italic">Aucun</span>
+              </td>
+              <td class="text-right font-bold text-slate">{{ formatAmount(exp.amount) }}</td>
+              <td v-if="canAddExpense" class="text-right">
+                <div class="action-buttons">
+                  <Link :href="route('expenses.edit', exp.id)" class="btn-action edit" title="Modifier">
+                    <Icon name="pencil-square" :size="14" />
+                  </Link>
+                  <button class="btn-action delete" title="Supprimer" @click="deleteExpense(exp.id)">
+                    <Icon name="trash" :size="14" />
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr v-if="!project.expenses.length">
+              <td :colspan="canAddExpense ? 7 : 6" class="empty-state">
+                <Icon name="inbox" :size="32" class="mb-sm text-muted" />
+                <p>Aucune dépense enregistrée sur ce projet pour le moment.</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Zone de danger (Admin uniquement) -->
+    <div v-if="canDelete" class="fade-in-up delay-6" style="margin-top: 3rem;">
+      <div class="danger-zone glass">
+        <div class="danger-info">
+          <div class="danger-icon"><Icon name="shield-exclamation" :size="24" /></div>
+          <div>
+            <h3>Zone de Danger</h3>
+            <p>La suppression du projet est <strong>définitive et irréversible</strong>. Vous ne pouvez pas supprimer un projet contenant des dépenses actives.</p>
+          </div>
+        </div>
+        <button class="btn-danger" @click="deleteProject">
+          <Icon name="trash" :size="16" /> Supprimer le projet
+        </button>
+      </div>
+    </div>
+
   </AppLayout>
 </template>
 
 <script setup>
 import { computed } from 'vue';
-import { usePage, router } from '@inertiajs/vue3';
+import { usePage, router, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
-import StatusBadge from '@/Components/StatusBadge.vue';
-import PageHeader from '@/Components/PageHeader.vue';
-import Button from '@/Components/Button.vue';
-import Card from '@/Components/Card.vue';
-import StatCard from '@/Components/StatCard.vue';
 import Icon from '@/Components/Icon.vue';
 
 const props = defineProps({
@@ -316,7 +318,15 @@ const props = defineProps({
 const page = usePage();
 const user = computed(() => page.props.auth?.user);
 
-// ─── Autorisations ──────────────────────────────────────────────
+// ─── Autorisations et Sécurité ──────────────────────────────────────
+// Ces propriétés calculées déterminent dynamiquement si l'utilisateur
+// a le droit d'effectuer certaines actions en fonction de son rôle.
+
+/**
+ * Détermine si l'utilisateur peut modifier les informations du projet.
+ * - L'admin a tous les droits.
+ * - Le chef de projet ne peut modifier que les projets qu'il a lui-même créés.
+ */
 const canEdit = computed(() => {
   if (user.value.roles?.includes('admin')) return true;
   if (user.value.roles?.includes('chef_projet')) {
@@ -325,6 +335,10 @@ const canEdit = computed(() => {
   return false;
 });
 
+/**
+ * Détermine si l'utilisateur peut ajouter de nouvelles dépenses au projet.
+ * Les règles sont identiques à celles de l'édition du projet.
+ */
 const canAddExpense = computed(() => {
   if (user.value.roles?.includes('admin')) return true;
   if (user.value.roles?.includes('chef_projet')) {
@@ -337,7 +351,13 @@ const canDelete = computed(() => {
   return user.value.roles?.includes('admin');
 });
 
-// ─── Formatage ──────────────────────────────────────────────────
+// ─── Fonctions de Formatage ─────────────────────────────────────────
+
+/**
+ * Formate un nombre en devise locale (Franc CFA - XOF).
+ * @param {Number|String} v Le montant à formater
+ * @returns {String} Le montant formaté (ex: 15 000 F CFA) ou '—' si null
+ */
 const formatAmount = (v) => {
   if (v == null) return '—';
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(v);
@@ -354,9 +374,27 @@ const pct = (expenses, budget) => {
   return Math.round((Number(expenses) / Number(budget)) * 100);
 };
 
-// ─── Actions ────────────────────────────────────────────────────
+// Statuts
+const getStatusBadge = (status) => {
+  switch (status) {
+    case 'en_cours': return 'status-blue';
+    case 'termine':  return 'status-emerald';
+    case 'en_pause': return 'status-gold';
+    default:         return 'status-gray';
+  }
+};
+const getStatusLabel = (status) => {
+  switch (status) {
+    case 'en_cours': return 'En cours';
+    case 'termine':  return 'Terminé';
+    case 'en_pause': return 'En pause';
+    default:         return status;
+  }
+};
+
+// Actions
 const deleteProject = () => {
-  if (confirm('Voulez-vous vraiment supprimer ce projet ?')) {
+  if (confirm('Voulez-vous vraiment supprimer ce projet de façon permanente ?')) {
     router.delete(route('projects.destroy', props.project.id));
   }
 };
@@ -367,16 +405,445 @@ const deleteExpense = (expenseId) => {
   }
 };
 
-// ─── ApexCharts options ─────────────────────────────────────────
+// Graphiques
 const chartSeries = computed(() => props.expenses_by_category.map(c => Number(c.total)));
-
 const chartOptions = computed(() => ({
   labels: props.expenses_by_category.map(c => c.name),
   colors: props.expenses_by_category.map(c => c.color),
-  legend: { position: 'bottom', fontSize: '11px', fontFamily: 'Inter' },
+  legend: { position: 'bottom', fontSize: '12px', fontFamily: "'Times New Roman', Times, serif", markers: { radius: 12 } },
   dataLabels: { enabled: false },
-  stroke: { width: 1.5 },
-  tooltip: { y: { formatter: v => formatAmount(v) } },
-  plotOptions: { pie: { donut: { size: '60%' } } },
+  stroke: { width: 0 },
+  tooltip: {
+    y: { formatter: v => formatAmount(v) },
+    theme: 'light',
+  },
+  plotOptions: {
+    pie: {
+      donut: {
+        size: '75%',
+        labels: {
+          show: true,
+          name: { show: true, fontSize: '14px', color: '#64748b' },
+          value: { show: true, fontSize: '20px', fontWeight: 800, color: '#1a2b4a', formatter: v => formatAmount(v) },
+          total: { show: true, label: 'Dépenses', color: '#64748b', fontSize: '14px', formatter: () => formatAmount(props.project.total_expenses) }
+        }
+      }
+    }
+  },
 }));
 </script>
+
+<style scoped>
+/* =========================================
+   PREMIUM DESIGN & GLASSMORPHISM
+========================================= */
+
+/* Header */
+.page-header-premium {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+.header-subtitle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.client-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #64748b;
+  background: rgba(255,255,255,0.6);
+  padding: 4px 10px;
+  border-radius: 0;
+  border: 1px solid rgba(0,0,0,0.05);
+}
+.text-gradient {
+  background: linear-gradient(135deg, #1a2b4a 0%, #C9A84C 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+  margin: 0;
+  font-size: 2.2rem;
+  line-height: 1.2;
+}
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+.btn-action-outline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 0;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #475569;
+  background: rgba(255,255,255,0.7);
+  border: 1px solid rgba(0,0,0,0.1);
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.btn-action-outline:hover {
+  background: white;
+  color: #1a2b4a;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+}
+.btn-premium {
+  background: linear-gradient(135deg, #C9A84C 0%, #b4933a 100%);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 0;
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  box-shadow: 0 4px 15px rgba(201, 168, 76, 0.3);
+  transition: all 0.3s ease;
+}
+.btn-premium:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(201, 168, 76, 0.4);
+  color: white;
+}
+
+/* Alertes */
+.alert-premium {
+  background: rgba(239, 68, 68, 0.1);
+  border-left: 4px solid #ef4444;
+  color: #b91c1c;
+  padding: 1rem 1.5rem;
+  border-radius: 0;
+  margin-bottom: 2rem;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 600;
+}
+
+/* KPI Grid */
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+.kpi-card {
+  padding: 1.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.kpi-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08);
+}
+.kpi-icon-wrapper {
+  width: 56px;
+  height: 56px;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.kpi-label {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #64748b;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.kpi-value {
+  font-size: 1.7rem;
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 5px;
+}
+.kpi-subtext {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* Layout Details */
+.details-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+@media (max-width: 1024px) {
+  .details-grid { grid-template-columns: 1fr; }
+}
+
+/* Glass Panels */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border-radius: 0;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.panel-header {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+}
+.panel-header h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a2b4a;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+.badge-count {
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 0.8rem;
+  padding: 2px 8px;
+  border-radius: 0;
+  margin-left: 10px;
+}
+.border-b { border-bottom: 1px solid rgba(0,0,0,0.06); }
+.border-t { border-top: 1px solid rgba(0,0,0,0.06); }
+.panel-body { padding: 1.5rem; }
+
+/* Info Project */
+.description-box p {
+  color: #334155;
+  line-height: 1.6;
+  margin: 0;
+  font-size: 0.95rem;
+  white-space: pre-line;
+}
+.info-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+.mt-lg { margin-top: 1.5rem; }
+.pt-lg { padding-top: 1.5rem; }
+.info-label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #94a3b8;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.info-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.info-list li {
+  font-size: 0.9rem;
+  color: #475569;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.info-list li strong { color: #1a2b4a; }
+
+/* Analytics Budget */
+.analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+}
+.analytics-item {
+  padding: 1.25rem;
+}
+.ax-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.ax-pct {
+  background: rgba(0,0,0,0.05);
+  padding: 2px 8px;
+  border-radius: 0;
+  font-size: 0.75rem;
+}
+.ax-amounts { margin-bottom: 12px; }
+.ax-spent { font-size: 1.25rem; font-weight: 800; color: #1a2b4a; }
+.ax-budget { font-size: 0.8rem; color: #94a3b8; font-weight: 600; }
+.ax-overrun { font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+.mt-sm { margin-top: 0.75rem; }
+.mt-xs { margin-top: 0.5rem; }
+
+/* Table */
+.table-container { overflow-x: auto; }
+.modern-table { width: 100%; border-collapse: collapse; }
+.modern-table th {
+  background: rgba(248, 250, 252, 0.6);
+  padding: 14px 1.5rem;
+  text-align: left;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: #64748b;
+  font-weight: 700;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+.modern-table td {
+  padding: 16px 1.5rem;
+  font-size: 0.85rem;
+  border-bottom: 1px solid rgba(0,0,0,0.03);
+  color: #334155;
+  vertical-align: middle;
+}
+.table-row-animate { transition: background 0.2s; }
+.table-row-animate:hover { background: rgba(248, 250, 252, 0.8); }
+
+.category-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(241, 245, 249, 0.8);
+  padding: 4px 10px;
+  border-radius: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.color-dot { width: 10px; height: 10px; border-radius: 0; }
+.user-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #64748b;
+  font-size: 0.8rem;
+}
+.receipt-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #C9A84C;
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 0.8rem;
+  transition: color 0.2s;
+}
+.receipt-link:hover { color: #a38531; }
+
+.action-buttons { display: flex; justify-content: flex-end; gap: 8px; }
+.btn-action {
+  width: 32px; height: 32px;
+  border-radius: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(241, 245, 249, 0.8);
+  color: #64748b;
+  border: none; cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-action.edit:hover { background: #eff6ff; color: #3b82f6; }
+.btn-action.delete:hover { background: #fee2e2; color: #ef4444; }
+
+/* Danger Zone */
+.danger-zone {
+  background: rgba(254, 226, 226, 0.5);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.danger-info { display: flex; align-items: flex-start; gap: 1rem; }
+.danger-icon { color: #ef4444; }
+.danger-zone h3 { margin: 0 0 4px 0; color: #b91c1c; font-size: 1.1rem; }
+.danger-zone p { margin: 0; color: #7f1d1d; font-size: 0.9rem; }
+.btn-danger {
+  background: #ef4444; color: white;
+  border: none; padding: 10px 20px;
+  border-radius: 0; font-weight: 600;
+  display: inline-flex; align-items: center; gap: 8px;
+  cursor: pointer; transition: all 0.2s;
+}
+.btn-danger:hover { background: #dc2626; box-shadow: 0 4px 12px rgba(239,68,68,0.3); }
+
+/* Progress Bars */
+.progress-track { width: 100%; background: #e2e8f0; border-radius: 0; height: 6px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 0; }
+.progress-fill.animated { animation: loadBar 1s cubic-bezier(0.4, 0, 0.2, 1) forwards; width: 0 !important; }
+@keyframes loadBar { to { width: var(--target-width); } }
+
+/* Badges */
+.modern-badge { padding: 4px 10px; border-radius: 0; font-size: 0.75rem; font-weight: 600; }
+.status-blue { background: #eff6ff; color: #2563eb; }
+.status-emerald { background: #ecfdf5; color: #059669; }
+.status-gold { background: #fefce8; color: #ca8a04; }
+.status-gray { background: #f1f5f9; color: #475569; }
+
+/* Utils */
+.text-slate { color: #334155; }
+.text-emerald { color: #10b981; }
+.text-gold { color: #C9A84C; }
+.text-red { color: #ef4444; }
+.text-blue { color: #3b82f6; }
+.text-muted { color: #94a3b8; }
+.bg-blue { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+.bg-emerald { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+.bg-gold { background: rgba(201, 168, 76, 0.1); color: #C9A84C; }
+.bg-red { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+.bg-slate { background: rgba(100, 116, 139, 0.1); color: #64748b; }
+
+.font-medium { font-weight: 500; }
+.font-bold { font-weight: 700; }
+.text-right { text-align: right; }
+.text-xs { font-size: 0.75rem; }
+.italic { font-style: italic; }
+.mr-2 { margin-right: 0.5rem; }
+.mb-xl { margin-bottom: 2rem; }
+.mb-xs { margin-bottom: 0.5rem; }
+
+.flex-1 { flex: 1; }
+.flex-col { display: flex; flex-direction: column; }
+.flex-center { display: flex; align-items: center; justify-content: center; }
+
+/* Empty States */
+.empty-state { padding: 3rem 1rem; text-align: center; color: #94a3b8; }
+.empty-state-mini { text-align: center; color: #94a3b8; padding: 2rem; }
+
+/* Animations */
+.slide-down { animation: slideDown 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+.fade-in-up { animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.2s; }
+.delay-3 { animation-delay: 0.3s; }
+.delay-4 { animation-delay: 0.4s; }
+.delay-5 { animation-delay: 0.5s; }
+.delay-6 { animation-delay: 0.6s; }
+
+@keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+</style>

@@ -179,7 +179,7 @@ class ExpenseController extends Controller
             'category_id'  => 'required|exists:expense_categories,id',
             'date'         => 'required|date',
             'amount'       => 'required|numeric|min:0.01',
-            'description'  => 'nullable|string',
+            'description'  => 'nullable|string|max:1000',
             // Justificatif : optionnel, max 5 Mo, formats acceptés : PDF, JPEG, PNG, WebP
             'receipt'      => 'nullable|file|max:5120|mimes:pdf,jpeg,png,jpg,webp',
         ]);
@@ -212,8 +212,9 @@ class ExpenseController extends Controller
 
         if ($request->hasFile('receipt')) {
             $file = $request->file('receipt');
-            // Stockage dans le disque 'public' → accessible via /storage/receipts/...
-            $receiptPath = $file->store('receipts', 'public');
+            // Stockage sur le disque 'local' (privé) → NON accessible publiquement.
+            // Les justificatifs sont servis via la route protégée 'expenses.receipt'.
+            $receiptPath = $file->store('receipts', 'local');
             $receiptOriginalName = $file->getClientOriginalName();
         }
 
@@ -275,7 +276,7 @@ class ExpenseController extends Controller
             'category_id'  => 'required|exists:expense_categories,id',
             'date'         => 'required|date',
             'amount'       => 'required|numeric|min:0.01',
-            'description'  => 'nullable|string',
+            'description'  => 'nullable|string|max:1000',
             'receipt'      => 'nullable|file|max:5120|mimes:pdf,jpeg,png,jpg,webp',
         ]);
 
@@ -298,12 +299,12 @@ class ExpenseController extends Controller
 
         // ─── Remplacement du justificatif ─────────────────────────
         if ($request->hasFile('receipt')) {
-            // Supprimer l'ancien fichier du disque pour éviter les fichiers orphelins
+            // Supprimer l'ancien fichier du disque privé pour éviter les fichiers orphelins
             if ($expense->receipt_path) {
-                Storage::disk('public')->delete($expense->receipt_path);
+                Storage::disk('local')->delete($expense->receipt_path);
             }
             $file = $request->file('receipt');
-            $expense->receipt_path = $file->store('receipts', 'public');
+            $expense->receipt_path = $file->store('receipts', 'local');
             $expense->receipt_original_name = $file->getClientOriginalName();
         }
 
@@ -338,9 +339,9 @@ class ExpenseController extends Controller
         // On mémorise l'ID du projet avant suppression pour la redirection
         $projectId = $expense->project_id;
 
-        // Suppression du fichier justificatif du disque public si présent
+        // Suppression du fichier justificatif du disque privé si présent
         if ($expense->receipt_path) {
-            Storage::disk('public')->delete($expense->receipt_path);
+            Storage::disk('local')->delete($expense->receipt_path);
         }
 
         // Journalisation avant la suppression
@@ -352,5 +353,29 @@ class ExpenseController extends Controller
 
         return redirect()->route('projects.show', $projectId)
             ->with('success', 'Dépense supprimée.');
+    }
+
+    /**
+     * Télécharge le justificatif d'une dépense via une route protégée.
+     *
+     * Le fichier est stocké sur le disque 'local' (privé), donc non accessible
+     * directement depuis le web. Cette méthode vérifie l'autorisation avant
+     * de servir le fichier, garantissant que seuls les utilisateurs ayant
+     * le droit de voir la dépense peuvent accéder à son justificatif.
+     */
+    public function downloadReceipt(Expense $expense)
+    {
+        // Vérifier que l'utilisateur a le droit de voir cette dépense
+        $this->authorize('view', $expense);
+
+        // Vérifier que la dépense a bien un justificatif
+        if (!$expense->receipt_path || !Storage::disk('local')->exists($expense->receipt_path)) {
+            abort(404, 'Justificatif introuvable.');
+        }
+
+        $absolutePath = Storage::disk('local')->path($expense->receipt_path);
+        $downloadName = $expense->receipt_original_name ?? basename($expense->receipt_path);
+
+        return response()->download($absolutePath, $downloadName);
     }
 }

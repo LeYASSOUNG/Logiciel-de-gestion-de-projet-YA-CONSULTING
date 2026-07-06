@@ -35,7 +35,7 @@
             <tbody>
               <tr v-for="cat in categories" :key="cat.id">
                 <td>
-                  <span :style="`display:inline-block; width:24px; height:24px; border-radius:50%; background-color:${cat.color}; border: 1px solid var(--color-border);`" />
+                  <span :style="`display:inline-block; width:24px; height:24px; border-radius: 0; background-color:${cat.color}; border: 1px solid var(--color-border);`" />
                 </td>
                 <td><strong>{{ cat.name }}</strong></td>
                 <td>
@@ -90,7 +90,7 @@
 
             <FormField label="Couleur d'identification" :error="errors.color" required>
               <div style="display:flex; gap:12px; align-items:center;">
-                <input v-model="form.color" type="color" style="width: 48px; height: 38px; padding: 2px; border: 1px solid var(--color-border); border-radius: 6px; cursor: pointer;" />
+                <input v-model="form.color" type="color" style="width: 48px; height: 38px; padding: 2px; border: 1px solid var(--color-border); border-radius: 0; cursor: pointer;" />
                 <input v-model="form.color" type="text" class="form-control" placeholder="#ffffff" style="max-width: 120px;" required />
               </div>
             </FormField>

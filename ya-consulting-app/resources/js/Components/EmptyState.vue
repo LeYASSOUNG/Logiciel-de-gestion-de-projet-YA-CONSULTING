@@ -50,7 +50,7 @@ defineProps({
   content: '';
   position: absolute;
   inset: 0;
-  border-radius: 50%;
+  border-radius: 0;
   background: rgba(26,43,74,.06);
 }
 
@@ -58,7 +58,7 @@ defineProps({
   content: '';
   position: absolute;
   inset: 12px;
-  border-radius: 50%;
+  border-radius: 0;
   background: rgba(26,43,74,.07);
 }
 

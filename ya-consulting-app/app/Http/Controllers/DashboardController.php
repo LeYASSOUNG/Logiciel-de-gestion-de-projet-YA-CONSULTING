@@ -161,6 +161,19 @@ class DashboardController extends Controller
                 'start_date'   => $p->start_date->format('d/m/Y'),
             ]);
 
+        // ─── Graphique Budget vs Dépenses (Projets en cours) ──────
+        $activeProjectsForChart = (clone $projectsQuery)
+            ->enCours()
+            ->get()
+            ->sortByDesc('budget')
+            ->take(10)
+            ->values()
+            ->map(fn ($p) => [
+                'name' => $p->name,
+                'budget' => $p->budget,
+                'expenses' => $p->total_expenses,
+            ]);
+
         // ─── Rendu Inertia ────────────────────────────────────────
         // Toutes les données sont transmises comme props au composant Vue Dashboard.vue
         return Inertia::render('Dashboard', [
@@ -181,6 +194,7 @@ class DashboardController extends Controller
             'expenses_by_category' => $expensesByCategory,
             'monthly_trend'        => $monthlyTrend,
             'recent_projects'      => $recentProjects,
+            'projects_budget_chart'=> $activeProjectsForChart,
         ]);
     }
 }

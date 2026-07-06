@@ -5,7 +5,7 @@
       <!-- En-tête -->
       <PageHeader title="Tableau de bord" description="Vue d'ensemble de la rentabilité de vos projets">
         <template v-slot:actions>
-          <Button as="Link" :href="route('projects.create')" variant="accent">
+          <Button v-if="!$page.props.auth.user.roles?.includes('collaborateur')" as="Link" :href="route('projects.create')" variant="accent">
             <template v-slot:icon-left>
               <Icon name="plus" :size="16" />
             </template>
@@ -59,8 +59,8 @@
         </StatCard>
       </div>
 
-      <!-- Graphiques -->
-      <div class="grid-2 stagger-5">
+      <!-- Graphiques (Ligne 1 : 12 mois & Donut) -->
+      <div class="grid-2 mt-lg stagger-5">
         <Card title="Évolution des dépenses par axe (12 mois)">
           <apexchart type="bar" height="230" :options="monthlyChartOptions" :series="monthlySeries" />
         </Card>
@@ -82,8 +82,15 @@
         </Card>
       </div>
 
+      <!-- Graphiques (Ligne 2 : Nouveau Graphique Full width) -->
+      <div class="mt-lg mb-lg stagger-6" v-if="projects_budget_chart && projects_budget_chart.length > 0">
+        <Card title="Comparatif : Budget vs Dépenses (Projets majeurs en cours)">
+          <apexchart type="bar" height="300" :options="budgetChartOptions" :series="budgetSeries" />
+        </Card>
+      </div>
+
       <!-- Projets récents + Analyse rentabilité -->
-      <div class="grid-2 mt-lg">
+      <div class="grid-2 stagger-7" :class="{'mt-lg': !projects_budget_chart || projects_budget_chart.length === 0}">
 
         <!-- Projets récents — liste visuelle (plus lisible que la table) -->
         <Card title="Projets récents">
@@ -220,6 +227,7 @@ const props = defineProps({
   expenses_by_category: Array,
   monthly_trend:        Array,
   recent_projects:      Array,
+  projects_budget_chart:Array,
 });
 
 const showLeastProfitable = ref(false);
@@ -242,8 +250,40 @@ const monthlySeries = computed(() => [
   { name: "Autres",       data: props.monthly_trend.map(m => m.autres) },
 ]);
 
+// ─── Graphique Budget vs Dépenses ─────────────────────────────────
+const budgetSeries = computed(() => [
+  { name: 'Budget Alloué', data: (props.projects_budget_chart || []).map(p => p.budget) },
+  { name: 'Dépenses Réelles', data: (props.projects_budget_chart || []).map(p => p.expenses) }
+]);
+
+const budgetChartOptions = computed(() => ({
+  chart: { type: 'bar', toolbar: { show: false }, fontFamily: "'Times New Roman', Times, serif" },
+  colors: ['#1A2B4A', '#EF4444'], // Bleu nuit pour le budget, rouge pour les dépenses
+  plotOptions: {
+    bar: { horizontal: false, columnWidth: '55%', borderRadius: 2 }
+  },
+  dataLabels: { enabled: false },
+  stroke: { show: true, width: 2, colors: ['transparent'] },
+  xaxis: {
+    categories: (props.projects_budget_chart || []).map(p => p.name),
+    labels: { style: { colors: '#64748B', fontSize: '11px', fontWeight: 500 } }
+  },
+  yaxis: {
+    labels: {
+      style: { colors: '#64748B', fontSize: '11px', fontWeight: 500 },
+      formatter: v => v >= 1000 ? `${(v/1000).toFixed(0)}k` : v
+    }
+  },
+  grid: { borderColor: '#F1F5F9', strokeDashArray: 4 },
+  tooltip: { theme: 'light', y: { formatter: v => formatAmount(v) } },
+  legend: {
+    position: 'top', horizontalAlign: 'right', fontSize: '12px',
+    fontFamily: "'Times New Roman', Times, serif", fontWeight: 500
+  }
+}));
+
 const monthlyChartOptions = computed(() => ({
-  chart: { toolbar: { show: false }, stacked: true, fontFamily: 'Inter, sans-serif' },
+  chart: { toolbar: { show: false }, stacked: true, fontFamily: "'Times New Roman', Times, serif" },
   colors: ['#1A2B4A', '#C9A84C', '#10B981', '#94A3B8'],
   plotOptions: {
     bar: { horizontal: false, columnWidth: '40%', borderRadius: 5, borderRadiusApplication: 'end', borderRadiusWhenStacked: 'last' }
@@ -264,7 +304,7 @@ const monthlyChartOptions = computed(() => ({
   tooltip: { theme: 'light', y: { formatter: v => formatAmount(v) } },
   legend: {
     position: 'top', horizontalAlign: 'right', fontSize: '12px',
-    fontFamily: 'Inter, sans-serif', fontWeight: 500,
+    fontFamily: "'Times New Roman', Times, serif", fontWeight: 500,
     markers: { radius: 12 }, itemMargin: { horizontal: 10, vertical: 0 }
   }
 }));
@@ -275,7 +315,7 @@ const categorySeries = computed(() => props.expenses_by_category.map(c => Number
 const categoryChartOptions = computed(() => ({
   labels:  props.expenses_by_category.map(c => c.name),
   colors:  props.expenses_by_category.map(c => c.color),
-  legend:  { position: 'bottom', fontSize: '12px', fontFamily: 'Inter, sans-serif', fontWeight: 500, itemMargin: { horizontal: 8, vertical: 4 } },
+  legend:  { position: 'bottom', fontSize: '12px', fontFamily: "'Times New Roman', Times, serif", fontWeight: 500, itemMargin: { horizontal: 8, vertical: 4 } },
   dataLabels: { enabled: false },
   stroke:  { width: 2, colors: ['#fff'] },
   tooltip: { theme: 'light', y: { formatter: v => formatAmount(v) } },
@@ -285,10 +325,10 @@ const categoryChartOptions = computed(() => ({
         size: '72%',
         labels: {
           show: true,
-          name:  { show: true, fontSize: '13px', fontFamily: 'Inter, sans-serif', fontWeight: 500, color: '#64748B', offsetY: -6 },
-          value: { show: true, fontSize: '17px', fontFamily: 'Inter, sans-serif', fontWeight: 800, color: '#1E293B', offsetY: 6, formatter: v => formatAmount(v) },
+          name:  { show: true, fontSize: '13px', fontFamily: "'Times New Roman', Times, serif", fontWeight: 500, color: '#64748B', offsetY: -6 },
+          value: { show: true, fontSize: '17px', fontFamily: "'Times New Roman', Times, serif", fontWeight: 800, color: '#1E293B', offsetY: 6, formatter: v => formatAmount(v) },
           total: {
-            show: true, label: 'Total dépenses', fontFamily: 'Inter, sans-serif', color: '#64748B', fontWeight: 500,
+            show: true, label: 'Total dépenses', fontFamily: "'Times New Roman', Times, serif", color: '#64748B', fontWeight: 500,
             formatter: (w) => { const t = w.globals.seriesTotals.reduce((a, b) => a + b, 0); return formatAmount(t); }
           }
         }
@@ -312,19 +352,22 @@ const categoryChartOptions = computed(() => ({
   display: flex;
   align-items: center;
   gap: var(--space-md);
-  padding: 9px var(--space-md);
-  border-radius: var(--radius-md);
+  padding: 0.75rem 1.25rem;
+  border-radius: 0;
   text-decoration: none;
-  transition: background .15s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   margin: 0 calc(-1 * var(--space-md));
 }
 
-.recent-row:hover { background: rgba(26,43,74,.04); }
+.recent-row:hover { 
+  background: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 12px rgba(201, 168, 76, 0.1);
+}
 
 .recent-avatar {
   width: 36px;
   height: 36px;
-  border-radius: var(--radius-sm);
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;

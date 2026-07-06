@@ -56,10 +56,12 @@
             <Icon name="users" :size="22" />
             Clients
           </Link>
-          <Link :href="route('reports.index')" class="navbar-link" :class="{ active: $page.url.startsWith('/reports') }">
-            <Icon name="chart-bar" :size="22" />
-            Rapports
-          </Link>
+          <template v-if="!$page.props.auth.user.roles?.includes('collaborateur')">
+            <Link :href="route('reports.index')" class="navbar-link" :class="{ active: $page.url.startsWith('/reports') }">
+              <Icon name="chart-bar" :size="22" />
+              Rapports
+            </Link>
+          </template>
 
           <!-- Admin uniquement -->
           <template v-if="$page.props.auth.user.roles?.includes('admin')">
@@ -205,10 +207,12 @@
             <Icon name="users" :size="20" />
             Clients
           </Link>
-          <Link :href="route('reports.index')" class="navbar-mobile-link" :class="{ active: $page.url.startsWith('/reports') }">
-            <Icon name="chart-bar" :size="20" />
-            Rapports
-          </Link>
+          <template v-if="!$page.props.auth.user.roles?.includes('collaborateur')">
+            <Link :href="route('reports.index')" class="navbar-mobile-link" :class="{ active: $page.url.startsWith('/reports') }">
+              <Icon name="chart-bar" :size="20" />
+              Rapports
+            </Link>
+          </template>
           <template v-if="$page.props.auth.user.roles?.includes('admin')">
             <div class="navbar-mobile-divider"></div>
             <span class="navbar-mobile-section">Administration</span>

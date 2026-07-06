@@ -93,7 +93,7 @@
                 </td>
                 <td>
                   <span style="display:inline-flex; align-items:center; gap:6px;">
-                    <span :style="`width:10px; height:10px; border-radius:50%; background-color:${expense.category?.color || '#ccc'}`"></span>
+                    <span :style="`width:10px; height:10px; border-radius: 0; background-color:${expense.category?.color || '#ccc'}`"></span>
                     {{ expense.category?.name || 'N/A' }}
                   </span>
                 </td>

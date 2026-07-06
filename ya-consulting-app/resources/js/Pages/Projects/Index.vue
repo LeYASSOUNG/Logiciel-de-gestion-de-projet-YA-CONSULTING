@@ -1,124 +1,154 @@
 <template>
   <AppLayout title="Projets">
-    <div class="animate-fade-up">
-      <!-- En-tête -->
-      <PageHeader title="Projets" :description="`${projects.total} projet${projects.total > 1 ? 's' : ''} au total`">
-        <template v-slot:actions>
-          <Button v-if="can.create" as="Link" :href="route('projects.create')" variant="accent">
-            <template v-slot:icon-left>
-              <Icon name="plus" :size="16" />
-            </template>
-            Nouveau projet
-          </Button>
-        </template>
-      </PageHeader>
+    <!-- En-tête avec animation d'entrée -->
+    <div class="page-header-premium slide-down">
+      <div class="header-content">
+        <h1 class="text-gradient">Gestion des Projets</h1>
+        <p>Gérez et analysez vos {{ projects.total }} projets en cours et terminés.</p>
+      </div>
+      <div class="header-actions">
+        <Link v-if="can.create" :href="route('projects.create')" class="btn-premium">
+          <Icon name="plus" :size="16" />
+          <span>Nouveau projet</span>
+        </Link>
+      </div>
+    </div>
 
-      <!-- Filtres -->
-      <div class="filters-bar">
-        <div style="position: relative; flex: 1; min-width: 200px; max-width: 300px;">
+    <!-- Filtres Modernes et Glassmorphism -->
+    <div class="glass-panel fade-in-up" style="margin-bottom: 2rem;">
+      <div class="modern-filters">
+        <!-- Recherche Globale -->
+        <div class="search-box">
+          <Icon name="magnifying-glass" :size="16" class="search-icon" />
           <input
             v-model="search"
-            class="form-control"
-            style="padding-left: 36px;"
+            class="search-input"
             placeholder="Rechercher un projet..."
             @input="applyFilters"
           />
-          <Icon name="magnifying-glass" :size="16" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-text-light);" />
         </div>
-        <select v-model="filters.status" class="form-control" @change="applyFilters">
-          <option value="">Tous les statuts</option>
-          <option value="en_cours">En cours</option>
-          <option value="termine">Terminé</option>
-          <option value="en_pause">En pause</option>
-        </select>
-        <select v-model="filters.client_id" class="form-control" @change="applyFilters">
-          <option value="">Tous les clients</option>
-          <option v-for="client in clients" :key="client.id" :value="client.id">
-            {{ client.name }}
-          </option>
-        </select>
-        <select v-model="filters.year" class="form-control" @change="applyFilters">
-          <option value="">Toutes les années</option>
-          <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
-        </select>
-        <Button v-if="hasFilters" variant="outline" size="sm" @click="clearFilters">
-          <template v-slot:icon-left>
-            <Icon name="x-mark" :size="14" />
-          </template>
-          Effacer
-        </Button>
-      </div>
 
-      <!-- Tableau / Liste -->
-      <Card>
-        <div v-if="projects.data.length" class="table-container">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Projet</th>
-                <th>Client</th>
-                <th>Statut</th>
-                <th>Budget</th>
-                <th>Dépenses</th>
-                <th>Gain / Perte</th>
-                <th>Rentabilité</th>
-                <th>Début</th>
-                <th style="width: 120px;"></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="project in projects.data" :key="project.id">
-                <td>
-                  <Link :href="route('projects.show', project.id)" class="link-primary">
-                    {{ project.name }}
-                  </Link>
-                </td>
-                <td class="text-muted">{{ project.client || '—' }}</td>
-                <td><StatusBadge :status="project.status" /></td>
-                <td class="amount-neutral">{{ fmt(project.budget) }}</td>
-                <td style="color: var(--color-danger); font-weight: 600;">{{ fmt(project.total_expenses) }}</td>
-                <td :class="project.gross_gain >= 0 ? 'amount-positive' : 'amount-negative'">
-                  {{ project.gross_gain >= 0 ? '+' : '' }}{{ fmt(project.gross_gain) }}
-                </td>
-                <td>
-                  <div style="min-width: 100px;">
-                    <div style="font-size: .8rem; font-weight: 600; margin-bottom: 4px;"
-                      :class="project.profitability >= 0 ? 'text-success' : 'text-danger'">
-                      {{ project.profitability >= 0 ? '+' : '' }}{{ project.profitability }}%
-                    </div>
-                    <div class="profit-bar">
-                      <div class="profit-bar-fill" :class="project.is_profitable ? 'positive' : 'negative'"
-                        :style="`width: ${Math.min(Math.abs(project.profitability), 100)}%`" />
-                    </div>
-                  </div>
-                </td>
-                <td class="text-muted" style="font-size: .8rem;">{{ project.start_date }}</td>
-                <td style="text-align: right;">
-                  <div style="display: flex; gap: 6px; justify-content: flex-end;">
-                    <Button as="Link" :href="route('projects.show', project.id)" variant="outline" size="sm">
-                      Voir
-                    </Button>
-                    <Button v-if="can.edit" as="Link" :href="route('projects.edit', project.id)" variant="outline" size="sm" style="padding: 6px 10px;">
-                      <Icon name="pencil-square" :size="14" />
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <!-- Filtres Déroulants -->
+        <div class="filter-group">
+          <select v-model="filters.status" @change="applyFilters">
+            <option value="">Tous les statuts</option>
+            <option value="en_cours">En cours</option>
+            <option value="termine">Terminé</option>
+            <option value="en_pause">En pause</option>
+          </select>
+          <Icon name="chevron-down" :size="14" class="select-icon" />
         </div>
-        
-        <div v-else style="padding: var(--space-xl);">
-          <EmptyState
-            title="Aucun projet trouvé"
-            description="Essayez de modifier vos filtres ou de créer un nouveau projet."
-            icon="briefcase"
+
+        <div class="filter-group">
+          <select v-model="filters.client_id" @change="applyFilters">
+            <option value="">Tous les clients</option>
+            <option v-for="client in clients" :key="client.id" :value="client.id">
+              {{ client.name }}
+            </option>
+          </select>
+          <Icon name="chevron-down" :size="14" class="select-icon" />
+        </div>
+
+        <div class="filter-group">
+          <select v-model="filters.year" @change="applyFilters">
+            <option value="">Toutes les années</option>
+            <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
+          </select>
+          <Icon name="chevron-down" :size="14" class="select-icon" />
+        </div>
+
+        <button v-if="hasFilters" class="btn-reset" @click="clearFilters" title="Effacer les filtres">
+          <Icon name="x-mark" :size="16" />
+        </button>
+      </div>
+    </div>
+
+    <!-- Tableau Premium -->
+    <div class="glass-panel fade-in-up" style="animation-delay: 0.1s;">
+      <div v-if="projects.data.length" class="table-container">
+        <table class="modern-table">
+          <thead>
+            <tr>
+              <th>Projet</th>
+              <th>Client</th>
+              <th>Statut</th>
+              <th class="text-right">Budget</th>
+              <th class="text-right">Dépenses</th>
+              <th class="text-right">Gain / Perte</th>
+              <th>Rentabilité</th>
+              <th>Début</th>
+              <th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="project in projects.data" :key="project.id" class="table-row-animate">
+              <td>
+                <Link :href="route('projects.show', project.id)" class="project-title">
+                  {{ project.name }}
+                </Link>
+              </td>
+              <td class="text-muted">{{ project.client || '—' }}</td>
+              <td>
+                <span class="modern-badge" :class="getStatusBadge(project.status)">
+                  {{ getStatusLabel(project.status) }}
+                </span>
+              </td>
+              <td class="text-right font-medium text-slate">{{ fmt(project.budget) }}</td>
+              <td class="text-right font-medium text-red">{{ fmt(project.total_expenses) }}</td>
+              <td class="text-right font-bold" :class="project.gross_gain >= 0 ? 'text-emerald' : 'text-red'">
+                {{ project.gross_gain >= 0 ? '+' : '' }}{{ fmt(project.gross_gain) }}
+              </td>
+              <td style="width: 140px;">
+                <div class="flex items-center gap-xs">
+                  <span class="font-medium text-xs" :class="project.profitability >= 0 ? 'text-emerald' : 'text-red'">
+                    {{ project.profitability >= 0 ? '+' : '' }}{{ project.profitability }}%
+                  </span>
+                  <div class="progress-track">
+                    <div class="progress-fill animated"
+                         :class="project.profitability >= 0 ? 'bg-emerald' : 'bg-red'"
+                         :style="{ '--target-width': Math.min(Math.abs(project.profitability), 100) + '%' }">
+                    </div>
+                  </div>
+                </div>
+              </td>
+              <td class="text-muted text-xs">{{ project.start_date }}</td>
+              <td>
+                <div class="action-buttons">
+                  <Link :href="route('projects.show', project.id)" class="btn-action view" title="Voir les détails">
+                    <Icon name="eye" :size="16" />
+                  </Link>
+                  <Link v-if="can.edit" :href="route('projects.edit', project.id)" class="btn-action edit" title="Modifier le projet">
+                    <Icon name="pencil-square" :size="16" />
+                  </Link>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Pagination Premium -->
+        <div class="modern-pagination" v-if="projects.links && projects.links.length > 3">
+          <Link v-for="(link, i) in projects.links" :key="i"
+                :href="link.url || '#'"
+                class="page-link"
+                :class="{ 'active': link.active, 'disabled': !link.url }"
+                v-html="link.label"
+                preserve-scroll
           />
         </div>
+      </div>
 
-        <!-- Pagination -->
-        <Pagination :links="projects.links" />
-      </Card>
+      <!-- État Vide -->
+      <div v-else class="empty-state">
+        <div class="empty-icon-wrapper">
+          <Icon name="briefcase" :size="40" class="text-gold" />
+        </div>
+        <h3>Aucun projet trouvé</h3>
+        <p>Modifiez vos filtres ou créez un nouveau projet pour commencer.</p>
+        <Link v-if="can.create" :href="route('projects.create')" class="btn-premium mt-md">
+          <Icon name="plus" :size="16" /> Créer un projet
+        </Link>
+      </div>
     </div>
   </AppLayout>
 </template>
@@ -127,13 +157,7 @@
 import { ref, computed } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
-import StatusBadge from '@/Components/StatusBadge.vue';
 import Icon from '@/Components/Icon.vue';
-import Button from '@/Components/Button.vue';
-import Card from '@/Components/Card.vue';
-import EmptyState from '@/Components/EmptyState.vue';
-import Pagination from '@/Components/Pagination.vue';
-import PageHeader from '@/Components/PageHeader.vue';
 
 const props = defineProps({
   projects: Object,
@@ -156,6 +180,24 @@ const hasFilters = computed(() =>
 
 const fmt = (v) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(v ?? 0);
 
+const getStatusBadge = (status) => {
+  switch (status) {
+    case 'en_cours': return 'status-blue';
+    case 'termine':  return 'status-emerald';
+    case 'en_pause': return 'status-gold';
+    default:         return 'status-gray';
+  }
+};
+
+const getStatusLabel = (status) => {
+  switch (status) {
+    case 'en_cours': return 'En cours';
+    case 'termine':  return 'Terminé';
+    case 'en_pause': return 'En pause';
+    default:         return status;
+  }
+};
+
 let debounce;
 const applyFilters = () => {
   clearTimeout(debounce);
@@ -172,3 +214,327 @@ const clearFilters = () => {
   router.get(route('projects.index'));
 };
 </script>
+
+<style scoped>
+/* =========================================
+   PREMIUM DESIGN & GLASSMORPHISM
+========================================= */
+
+/* Header */
+.page-header-premium {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.text-gradient {
+  background: linear-gradient(135deg, #1a2b4a 0%, #C9A84C 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-weight: 800;
+  margin-bottom: 5px;
+  font-size: 2rem;
+}
+.header-content p {
+  color: #64748b;
+  font-size: 0.95rem;
+  margin: 0;
+}
+.btn-premium {
+  background: linear-gradient(135deg, #C9A84C 0%, #b4933a 100%);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 0;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  box-shadow: 0 4px 15px rgba(201, 168, 76, 0.3);
+  transition: all 0.3s ease;
+}
+.btn-premium:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(201, 168, 76, 0.4);
+  color: white;
+}
+
+/* Glass Panels */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border-radius: 0;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+}
+
+/* Modern Filters */
+.modern-filters {
+  padding: 1.5rem;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+  border-bottom: 1px solid rgba(0,0,0,0.03);
+}
+.search-box {
+  position: relative;
+  flex: 1;
+  min-width: 250px;
+}
+.search-input {
+  width: 100%;
+  padding: 10px 10px 10px 38px;
+  border-radius: 0;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.5);
+  font-size: 0.9rem;
+  color: #334155;
+  transition: all 0.3s ease;
+}
+.search-input:focus {
+  outline: none;
+  border-color: #C9A84C;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.1);
+}
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+}
+.filter-group {
+  position: relative;
+  min-width: 160px;
+}
+.filter-group select {
+  width: 100%;
+  appearance: none;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 0;
+  padding: 10px 30px 10px 12px;
+  font-size: 0.85rem;
+  color: #334155;
+  font-weight: 500;
+  outline: none;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.filter-group select:focus, .filter-group select:hover {
+  background: #fff;
+  border-color: #C9A84C;
+}
+.select-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+}
+.btn-reset {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: none;
+  border-radius: 0;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-reset:hover {
+  background: #ef4444;
+  color: white;
+}
+
+/* Modern Table */
+.table-container {
+  overflow-x: auto;
+}
+.modern-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.modern-table th {
+  background: rgba(248, 250, 252, 0.6);
+  padding: 14px 1.5rem;
+  text-align: left;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #64748b;
+  font-weight: 700;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+.modern-table td {
+  padding: 16px 1.5rem;
+  font-size: 0.85rem;
+  border-bottom: 1px solid rgba(0,0,0,0.03);
+  color: #334155;
+  vertical-align: middle;
+}
+.table-row-animate {
+  transition: background 0.2s;
+}
+.table-row-animate:hover {
+  background: rgba(248, 250, 252, 0.8);
+}
+.project-title {
+  font-weight: 700;
+  color: #1a2b4a;
+  text-decoration: none;
+  font-size: 0.95rem;
+  transition: color 0.2s;
+}
+.project-title:hover {
+  color: #C9A84C;
+}
+
+/* Utils */
+.text-slate { color: #334155; }
+.text-emerald { color: #10b981; }
+.text-gold { color: #C9A84C; }
+.text-red { color: #ef4444; }
+.text-muted { color: #94a3b8; }
+.text-xs { font-size: 0.75rem; }
+.font-medium { font-weight: 500; }
+.font-bold { font-weight: 700; }
+.bg-emerald { background-color: #10b981; }
+.bg-red { background-color: #ef4444; }
+
+/* Badges */
+.modern-badge {
+  padding: 6px 12px;
+  border-radius: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-block;
+}
+.status-blue { background: #eff6ff; color: #2563eb; }
+.status-emerald { background: #ecfdf5; color: #059669; }
+.status-gold { background: #fefce8; color: #ca8a04; }
+.status-gray { background: #f1f5f9; color: #475569; }
+
+/* Progress Bars */
+.progress-track {
+  width: 100%;
+  background: #e2e8f0;
+  border-radius: 0;
+  height: 6px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 0;
+}
+.progress-fill.animated {
+  animation: loadBar 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  width: 0 !important;
+}
+@keyframes loadBar {
+  to { width: var(--target-width); }
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.btn-action {
+  width: 32px;
+  height: 32px;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(241, 245, 249, 0.8);
+  color: #64748b;
+  transition: all 0.2s;
+}
+.btn-action.view:hover { background: #eff6ff; color: #3b82f6; }
+.btn-action.edit:hover { background: #fefce8; color: #ca8a04; }
+
+/* Empty State */
+.empty-state {
+  padding: 4rem 2rem;
+  text-align: center;
+}
+.empty-icon-wrapper {
+  background: rgba(201, 168, 76, 0.1);
+  width: 80px;
+  height: 80px;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+}
+.empty-state h3 {
+  font-size: 1.25rem;
+  color: #1a2b4a;
+  margin: 0 0 0.5rem 0;
+}
+.empty-state p {
+  color: #64748b;
+  margin: 0;
+}
+.mt-md { margin-top: 1.5rem; }
+
+/* Pagination Premium */
+.modern-pagination {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  padding: 1.5rem;
+  flex-wrap: wrap;
+}
+.page-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  border-radius: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+  background: transparent;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.page-link:hover:not(.disabled) {
+  background: rgba(0,0,0,0.05);
+}
+.page-link.active {
+  background: #1a2b4a;
+  color: white;
+  box-shadow: 0 4px 6px rgba(26, 43, 74, 0.2);
+}
+.page-link.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Animations */
+.slide-down { animation: slideDown 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+.fade-in-up { animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>

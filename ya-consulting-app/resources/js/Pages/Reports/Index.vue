@@ -2,14 +2,16 @@
   <AppLayout title="Rapports financiers">
     <div class="animate-fade-up">
       <!-- En-tête -->
-      <PageHeader title="Rapports financiers" description="Générez et téléchargez les analyses de rentabilité mensuelles" />
+      <div class="slide-down">
+        <PageHeader title="Rapports financiers" description="Générez et téléchargez les analyses de rentabilité mensuelles" />
+      </div>
 
       <!-- Erreurs éventuelles -->
-      <div v-if="$page.props.errors.error" class="alert alert-danger mb-lg">
+      <div v-if="$page.props.errors.error" class="alert alert-danger mb-lg slide-down delay-1">
         {{ $page.props.errors.error }}
       </div>
 
-      <div class="grid-3 mb-xl">
+      <div class="grid-3 fade-in-up delay-1" style="margin-bottom: 4rem;">
         <!-- Formulaire de génération (Col 1) -->
         <Card title="Générer un rapport" style="grid-column: span 1">
           <form @submit.prevent="generateReport">
@@ -100,62 +102,67 @@
         </div>
       </div>
 
+      <!-- Séparateur visuel -->
+      <div style="width: 100%; height: 1px; background: rgba(0,0,0,0.06); margin-bottom: 2rem;"></div>
+
       <!-- Historique des rapports -->
-      <Card :title="`Historique des rapports archivés (${reports.total})`">
-        <div v-if="reports.data.length" class="table-container">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Nom du rapport</th>
-                <th>Période</th>
-                <th>Format</th>
-                <th>Créateur</th>
-                <th>Généré le</th>
-                <th class="text-right">Budget global</th>
-                <th class="text-right">Dépenses globales</th>
-                <th class="text-right">Bénéfice Net</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="rep in reports.data" :key="rep.id">
-                <td>
-                  <strong style="color:var(--color-primary);">{{ rep.name }}</strong>
-                </td>
-                <td style="font-weight:600;">{{ rep.month }} {{ rep.year }}</td>
-                <td>
-                  <span class="badge" :class="rep.file_type === 'pdf' ? 'badge-info' : 'badge-neutral'">
-                    {{ rep.file_type.toUpperCase() }}
-                  </span>
-                </td>
-                <td class="text-muted">{{ rep.generated_by }}</td>
-                <td class="text-muted" style="font-size:.8rem;">{{ rep.generated_at }}</td>
-                <td class="amount-neutral text-right">{{ fmt(rep.total_budget) }}</td>
-                <td style="color:var(--color-danger);" class="text-right">{{ fmt(rep.total_expenses) }}</td>
-                <td :class="rep.net_profit >= 0 ? 'amount-positive' : 'amount-negative'" class="text-right">
-                  {{ rep.net_profit >= 0 ? '+' : '' }}{{ fmt(rep.net_profit) }}
-                </td>
-                <td style="text-align:right">
-                  <Button as="a" :href="route('reports.download', rep.id)" variant="primary" size="sm">
-                    Télécharger
-                  </Button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+      <div class="fade-in-up delay-2">
+        <Card :title="`Historique des rapports archivés (${reports.total})`">
+          <div v-if="reports.data.length" class="table-container">
+            <table class="table modern-table-hover">
+              <thead>
+                <tr>
+                  <th>Nom du rapport</th>
+                  <th>Période</th>
+                  <th>Format</th>
+                  <th>Créateur</th>
+                  <th>Généré le</th>
+                  <th class="text-right">Budget global</th>
+                  <th class="text-right">Dépenses globales</th>
+                  <th class="text-right">Bénéfice Net</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="rep in reports.data" :key="rep.id" class="table-row-animate">
+                  <td>
+                    <strong style="color:var(--color-primary);">{{ rep.name }}</strong>
+                  </td>
+                  <td style="font-weight:600;">{{ rep.month }} {{ rep.year }}</td>
+                  <td>
+                    <span class="badge" :class="rep.file_type === 'pdf' ? 'badge-info' : 'badge-neutral'">
+                      {{ rep.file_type.toUpperCase() }}
+                    </span>
+                  </td>
+                  <td class="text-muted">{{ rep.generated_by }}</td>
+                  <td class="text-muted" style="font-size:.8rem;">{{ rep.generated_at }}</td>
+                  <td class="amount-neutral text-right">{{ fmt(rep.total_budget) }}</td>
+                  <td style="color:var(--color-danger);" class="text-right">{{ fmt(rep.total_expenses) }}</td>
+                  <td :class="rep.net_profit >= 0 ? 'amount-positive' : 'amount-negative'" class="text-right">
+                    {{ rep.net_profit >= 0 ? '+' : '' }}{{ fmt(rep.net_profit) }}
+                  </td>
+                  <td style="text-align:right">
+                    <Button as="a" :href="route('reports.download', rep.id)" variant="primary" size="sm">
+                      Télécharger
+                    </Button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
-        <div v-else style="padding: var(--space-xl);">
-          <EmptyState
-            title="Aucun rapport généré pour le moment"
-            description="Utilisez le formulaire ci-dessus pour configurer et générer votre premier rapport financier."
-            icon="document-text"
-          />
-        </div>
+          <div v-else style="padding: var(--space-xl);">
+            <EmptyState
+              title="Aucun rapport généré pour le moment"
+              description="Utilisez le formulaire ci-dessus pour configurer et générer votre premier rapport financier."
+              icon="document-text"
+            />
+          </div>
 
-        <!-- Pagination -->
-        <Pagination :links="reports.links" />
-      </Card>
+          <!-- Pagination -->
+          <Pagination :links="reports.links" />
+        </Card>
+      </div>
     </div>
   </AppLayout>
 </template>
@@ -189,3 +196,16 @@ const generateReport = () => {
   form.post(route('reports.generate'));
 };
 </script>
+
+<style scoped>
+/* Animations and subtle hover enhancements ONLY */
+.slide-down { animation: slideDown 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+.fade-in-up { animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.2s; }
+@keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+.modern-table-hover tr.table-row-animate { transition: background 0.2s; }
+.modern-table-hover tr.table-row-animate:hover { background: rgba(248, 250, 252, 0.8); }
+</style>

@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Validation\Rules\Password;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -73,7 +74,18 @@ class UserController extends Controller
         $validated = $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => 'required|string|email|max:255|unique:users,email', // L'email doit être unique
-            'password' => 'required|string|min:8|confirmed', // Confirmation obligatoire
+            // Règles renforcées : min 10 caractères, majuscules + minuscules, chiffres,
+            // symboles, et vérification contre les bases de mots de passe compromis (HIBP).
+            'password' => [
+                'required',
+                'confirmed',
+                Password::min(10)
+                    ->letters()
+                    ->mixedCase()
+                    ->numbers()
+                    ->symbols()
+                    ->uncompromised(),
+            ],
             'role'     => 'required|exists:roles,name',      // Le rôle doit exister en BDD
         ]);
 

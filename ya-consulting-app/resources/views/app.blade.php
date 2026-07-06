@@ -7,6 +7,7 @@
         <meta name="description" content="YA Consulting — Logiciel de gestion et suivi de la rentabilité des projets">
 
         <title inertia>YA Consulting</title>
+        <link rel="icon" href="/images/favicon-ya.png" type="image/png">
 
         <!-- Google Fonts -->
         <link rel="preconnect" href="https://fonts.googleapis.com">

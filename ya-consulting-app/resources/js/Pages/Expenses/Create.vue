@@ -89,27 +89,46 @@ import Card from '@/Components/Card.vue';
 import FormField from '@/Components/FormField.vue';
 import Icon from '@/Components/Icon.vue';
 
+// ─── Propriétés Injectées par le Contrôleur ────────────────────────
+// Ces variables sont passées depuis Laravel (ExpenseController@create)
 const props = defineProps({
-  projects:         Array,
-  categories:       Array,
-  selected_project: Object,
+  projects:         Array,   // Liste déroulante : tous les projets accessibles
+  categories:       Array,   // Liste déroulante : toutes les catégories de dépenses
+  selected_project: Object,  // Projet sélectionné par défaut si l'utilisateur vient depuis une vue Projet
 });
 
+// ─── État du Formulaire (Inertia useForm) ──────────────────────────
+// useForm gère l'état, les erreurs de validation et la soumission AJAX
 const form = useForm({
-  project_id:  props.selected_project?.id || '',
+  project_id:  props.selected_project?.id || '', // On auto-sélectionne le projet s'il est fourni
   category_id: '',
-  date:        new Date().toISOString().split('T')[0],
+  date:        new Date().toISOString().split('T')[0], // Pré-remplit la date du jour (format YYYY-MM-DD)
   amount:      '',
   description: '',
-  receipt:     null,
+  receipt:     null, // Champ fichier : accueillera l'image/PDF du justificatif
 });
 
+// Alias pratique pour accéder aux erreurs de validation renvoyées par le backend
 const errors = form.errors;
 
+// ─── Méthodes Utilitaires ──────────────────────────────────────────
+/**
+ * Formate un nombre pour l'affichage en devise (Franc CFA).
+ * Permet de montrer un aperçu du montant en dessous de l'input pendant la saisie.
+ * 
+ * @param {Number|String} v Valeur numérique à formater
+ * @returns {String} La valeur monétaire formatée
+ */
 const fmt = (v) => v ? new Intl.NumberFormat('fr-FR', {
   style: 'currency', currency: 'XOF', maximumFractionDigits: 0
 }).format(v) : '';
 
+// ─── Soumission des Données ────────────────────────────────────────
+/**
+ * Soumet les données du formulaire à la route 'expenses.store' (POST).
+ * L'option 'forceFormData: true' est indispensable car le formulaire
+ * contient un champ de téléchargement de fichier (receipt).
+ */
 const submit = () => {
   form.post(route('expenses.store'), {
     forceFormData: true,

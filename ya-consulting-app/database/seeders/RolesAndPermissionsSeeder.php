@@ -44,7 +44,7 @@ class RolesAndPermissionsSeeder extends Seeder
         $chef->syncPermissions([
             'view projects', 'create projects', 'edit projects',
             'view expenses', 'create expenses', 'edit expenses', 'delete expenses',
-            'view clients',
+            'view clients', 'create clients', 'edit clients', 'delete clients',
             'view reports', 'generate reports',
         ]);
 

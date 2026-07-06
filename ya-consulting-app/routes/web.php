@@ -6,6 +6,7 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\HistoryStatsController;
 use Illuminate\Support\Facades\Route;
 
 // ─── Redirection racine ───────────────────────────────────────────
@@ -42,8 +43,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/projects/{project}/expenses/create', [ExpenseController::class, 'createForProject'])
         ->name('expenses.create-for-project');
 
+    // Route sécurisée pour télécharger un justificatif de dépense.
+    // Les fichiers sont stockés sur le disque privé 'local' (non accessible via URL directe).
+    // L'accès passe obligatoirement par cette route, qui vérifie l'autorisation via ExpensePolicy::view().
+    Route::get('/expenses/{expense}/receipt', [ExpenseController::class, 'downloadReceipt'])
+        ->name('expenses.receipt');
+
     // Clients : CRUD complet (accessible par admin et chef de projet)
     Route::resource('clients', ClientController::class);
+
+    // ─── Historique et Statistiques ──────────────────────────────
+    Route::get('/history-stats', [HistoryStatsController::class, 'index'])->name('history-stats.index');
 
     // ─── Rapports (admin + chef de projet uniquement) ─────────────
     // Le middleware 'role:admin|chef_projet' bloque les collaborateurs.

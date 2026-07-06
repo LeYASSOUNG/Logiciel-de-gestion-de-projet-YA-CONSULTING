@@ -60,9 +60,18 @@ class HandleInertiaRequests extends Middleware
                     if ($project->total_expenses > $project->budget) {
                         $notifications[] = [
                             'id' => 'budget-' . $project->id,
-                            'type' => 'warning',
+                            'type' => 'danger',
                             'title' => 'Dépassement de budget',
                             'message' => "Le budget du projet {$project->name} a été dépassé (" . number_format($project->total_expenses, 0, ',', ' ') . " / " . number_format($project->budget, 0, ',', ' ') . " FCFA).",
+                            'link' => route('projects.show', $project->id),
+                            'created_at' => \Illuminate\Support\Carbon::now()->diffForHumans(),
+                        ];
+                    } elseif ($project->budget > 0 && $project->total_expenses >= ($project->budget * 0.8)) {
+                        $notifications[] = [
+                            'id' => 'budget-warn-' . $project->id,
+                            'type' => 'warning',
+                            'title' => 'Budget critique (80% atteint)',
+                            'message' => "Attention, le projet {$project->name} a consommé plus de 80% de son budget (" . number_format($project->total_expenses, 0, ',', ' ') . " / " . number_format($project->budget, 0, ',', ' ') . " FCFA).",
                             'link' => route('projects.show', $project->id),
                             'created_at' => \Illuminate\Support\Carbon::now()->diffForHumans(),
                         ];

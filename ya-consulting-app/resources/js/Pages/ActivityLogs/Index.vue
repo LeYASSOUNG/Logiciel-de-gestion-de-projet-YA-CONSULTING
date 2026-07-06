@@ -114,7 +114,7 @@ const translateSubjectType = (type) => {
   background: rgba(26, 43, 74, 0.04);
   color: var(--color-text);
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: 0;
   border: 1px solid rgba(26, 43, 74, 0.08);
 }
 </style>

@@ -25,9 +25,13 @@ Cette application web est la solution interne de gestion opérationnelle et fina
     *   `chef_projet` (ne peut voir/modifier que ses propres projets)
     *   `collaborateur` (lecture seule globale)
 2.  **Suivi de Projets** : Budget initial, statut (en cours, en pause, terminé), date de fin prévisionnelle et réelle, contact fournisseur.
+    *   🚨 **Système d'alerte proactive** : Notification et mise en évidence visuelle (cloche) dès qu'un projet dépasse **80% de son budget alloué**.
 3.  **Gestion Financière (Dépenses)** : Saisie catégorisée des dépenses, calcul de rentabilité automatique (Gain Brut, Taux de rentabilité %), stockage de justificatifs de paiement (PDF, images).
 4.  **Rapports Statistiques & Graphiques** :
-    *   Dashboard réactif (ApexCharts) : répartition des coûts, tendances mensuelles.
+    *   Dashboard réactif (ApexCharts) avec :
+        *   Graphique comparatif : Budget alloué vs Dépenses réelles pour le top 10 des projets.
+        *   Répartition des coûts par catégorie (Donut).
+        *   Tendances mensuelles des dépenses (Barres).
     *   Génération de rapports mensuels PDF / CSV avec comparatifs N vs N-1.
 5.  **Audit Complet** : Suivi rigoureux de toutes les actions sensibles (créations, éditions, suppressions) via un journal d'activité.
 

@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use Spatie\Activitylog\Models\Activity;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -31,6 +33,13 @@ class ActivityLogController extends Controller
      */
     public function index(Request $request): Response
     {
+        // Sécurité défensive : double vérification que l'utilisateur est bien admin,
+        // même si le middleware 'role:admin' de la route est la première ligne de défense.
+        // Cela protège contre toute erreur de configuration future des routes.
+        /** @var User|null $authUser */
+        $authUser = Auth::user();
+        abort_unless($authUser?->hasRole('admin'), 403, 'Accès réservé aux administrateurs.');
+
         // Chargement eager du 'causer' (l'utilisateur auteur de l'action)
         // pour éviter le problème N+1 (une requête par ligne sinon)
         $activities = Activity::with('causer')
