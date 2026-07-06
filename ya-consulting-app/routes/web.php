@@ -60,6 +60,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Clients : CRUD complet (accessible par admin et chef de projet)
     Route::resource('clients', ClientController::class);
+    Route::post('/clients/{client}/send-invitation', [ClientController::class, 'sendInvitation'])
+        ->name('clients.send-invitation');
 
     // ─── Historique et Statistiques ──────────────────────────────
     Route::get('/history-stats', [HistoryStatsController::class, 'index'])->name('history-stats.index');

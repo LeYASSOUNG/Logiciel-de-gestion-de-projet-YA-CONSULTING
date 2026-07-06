@@ -68,6 +68,9 @@
                 </td>
                 <td v-if="canManage" style="text-align:right">
                   <div style="display:flex; gap:6px; justify-content:flex-end;">
+                    <Button v-if="client.contact_email" variant="outline" size="sm" style="padding: 6px 10px;" @click="sendInvitationEmail(client)" title="Envoyer le lien par e-mail">
+                      <Icon name="envelope" :size="14" />
+                    </Button>
                     <Button variant="outline" size="sm" style="padding: 6px 10px;" @click="copyInvitationLink(client)" title="Copier le lien d'invitation magique">
                       <Icon name="link" :size="14" />
                     </Button>
@@ -203,6 +206,19 @@ const copyInvitationLink = (client) => {
     navigator.clipboard.writeText(client.invitation_link)
       .then(() => alert(`Lien d'invitation copié pour ${client.name} !`))
       .catch(() => alert("Impossible de copier le lien."));
+  }
+};
+
+const sendInvitationEmail = (client) => {
+  if (confirm(`Voulez-vous envoyer l'invitation à ${client.contact_email} ?`)) {
+    router.post(route('clients.send-invitation', client.id), {}, {
+      preserveScroll: true,
+      onSuccess: () => alert("E-mail envoyé avec succès !"),
+      onError: (err) => {
+        if (err.email) alert(err.email);
+        else alert("Une erreur est survenue lors de l'envoi de l'e-mail.");
+      }
+    });
   }
 };
 

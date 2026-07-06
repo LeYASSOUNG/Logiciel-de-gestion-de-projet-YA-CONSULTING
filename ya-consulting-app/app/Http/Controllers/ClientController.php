@@ -5,6 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ClientInvitationMail;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -142,5 +145,28 @@ class ClientController extends Controller
 
         return redirect()->route('clients.index')
             ->with('success', 'Client supprimé avec succès.');
+    }
+
+    /**
+     * Envoie le lien magique d'invitation par e-mail au client.
+     */
+    public function sendInvitation(Client $client)
+    {
+        $this->authorize('update', $client); // Vérifier si l'utilisateur a le droit de gérer ce client
+
+        if (!$client->contact_email) {
+            return back()->withErrors(['email' => "Ce client n'a pas d'adresse e-mail renseignée."]);
+        }
+
+        $invitationLink = URL::signedRoute('client.register', ['client' => $client->id]);
+
+        Mail::to($client->contact_email)->send(new ClientInvitationMail($client, $invitationLink));
+
+        // On peut aussi logger cette action
+        activity()->causedBy(Auth::user())
+            ->performedOn($client)
+            ->log('Invitation envoyée par e-mail');
+
+        return back()->with('success', "L'invitation a été envoyée avec succès à {$client->contact_email}.");
     }
 }
