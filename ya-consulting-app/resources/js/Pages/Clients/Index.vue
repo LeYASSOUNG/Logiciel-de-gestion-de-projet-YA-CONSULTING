@@ -68,6 +68,9 @@
                 </td>
                 <td v-if="canManage" style="text-align:right">
                   <div style="display:flex; gap:6px; justify-content:flex-end;">
+                    <Button variant="outline" size="sm" style="padding: 6px 10px;" @click="copyInvitationLink(client)" title="Copier le lien d'invitation magique">
+                      <Icon name="link" :size="14" />
+                    </Button>
                     <Button variant="outline" size="sm" style="padding: 6px 10px;" @click="openEditModal(client)">
                       <Icon name="pencil-square" :size="14" />
                     </Button>
@@ -189,12 +192,18 @@ const errors = form.errors;
 
 let debounce;
 const applyFilters = () => {
-  clearTimeout(debounce);
-  debounce = setTimeout(() => {
-    router.get(route('clients.index'), { search: search.value }, {
-      preserveState: true, replace: true,
-    });
-  }, 350);
+  router.get(route('clients.index'), { search: search.value }, {
+    preserveState: true,
+    replace: true,
+  });
+};
+
+const copyInvitationLink = (client) => {
+  if (client.invitation_link) {
+    navigator.clipboard.writeText(client.invitation_link)
+      .then(() => alert(`Lien d'invitation copié pour ${client.name} !`))
+      .catch(() => alert("Impossible de copier le lien."));
+  }
 };
 
 const clearFilters = () => {

@@ -41,7 +41,17 @@ class ClientController extends Controller
 
         $clients = $query->orderBy('name')
             ->paginate(15)
-            ->withQueryString(); // Préserve les filtres dans les liens de pagination
+            ->withQueryString() // Préserve les filtres dans les liens de pagination
+            ->through(fn ($client) => [
+                'id'              => $client->id,
+                'name'            => $client->name,
+                'contact_email'   => $client->contact_email,
+                'contact_phone'   => $client->contact_phone,
+                'company'         => $client->company,
+                'address'         => $client->address,
+                'notes'           => $client->notes,
+                'invitation_link' => \Illuminate\Support\Facades\URL::signedRoute('client.register', ['client' => $client->id]),
+            ]);
 
         return Inertia::render('Clients/Index', [
             'clients' => $clients,

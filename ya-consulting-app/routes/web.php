@@ -18,6 +18,15 @@ Route::get('/', fn() => redirect()->route('dashboard'));
 // (login, register, logout, forgot-password, reset-password...)
 require __DIR__.'/auth.php';
 
+// Route publique avec signature pour l'inscription d'un client
+Route::get('/client-invite/{client}', [\App\Http\Controllers\Auth\ClientRegistrationController::class, 'create'])
+    ->name('client.register')
+    ->middleware('signed');
+
+Route::post('/client-invite/{client}', [\App\Http\Controllers\Auth\ClientRegistrationController::class, 'store'])
+    ->name('client.register.store')
+    ->middleware('signed');
+
 // ─── Routes protégées (authentifié + email vérifié) ───────────────
 // Toutes les routes ci-dessous nécessitent d'être connecté ET d'avoir
 // vérifié son adresse email. Si non, redirection vers /login ou /verify-email.
