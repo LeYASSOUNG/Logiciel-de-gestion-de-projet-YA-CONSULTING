@@ -29,6 +29,10 @@ return Application::configure(basePath: dirname(__DIR__))
     
     // 3. Configuration des Middlewares (Intercepteurs de requêtes HTTP)
     ->withMiddleware(function (Middleware $middleware) {
+        
+        // Dire à Laravel de faire confiance aux proxys de Render (pour que le HTTPS fonctionne correctement)
+        $middleware->trustProxies(at: '*');
+
         // Middlewares appliqués à TOUTES les routes du groupe "web"
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class, // Bridge entre Laravel et Vue.js (Inertia)
