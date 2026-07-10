@@ -160,13 +160,18 @@ class ClientController extends Controller
 
         $invitationLink = URL::signedRoute('client.register', ['client' => $client->id]);
 
-        Mail::to($client->contact_email)->send(new ClientInvitationMail($client, $invitationLink));
+        try {
+            Mail::to($client->contact_email)->send(new ClientInvitationMail($client, $invitationLink));
 
-        // On peut aussi logger cette action
-        activity()->causedBy(Auth::user())
-            ->performedOn($client)
-            ->log('Invitation envoyée par e-mail');
+            // On peut aussi logger cette action
+            activity()->causedBy(Auth::user())
+                ->performedOn($client)
+                ->log('Invitation envoyée par e-mail');
 
-        return back()->with('success', "L'invitation a été envoyée avec succès à {$client->contact_email}.");
+            return back()->with('success', "L'invitation a été envoyée avec succès à {$client->contact_email}.");
+        } catch (\Exception $e) {
+            // Retourner l'erreur exacte pour aider au débogage en production
+            return back()->withErrors(['email' => "Erreur d'envoi d'e-mail : " . $e->getMessage()]);
+        }
     }
 }
