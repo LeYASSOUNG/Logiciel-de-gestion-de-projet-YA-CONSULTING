@@ -5,7 +5,7 @@
       <!-- En-tête -->
       <PageHeader title="Tableau de bord" description="Vue d'ensemble de la rentabilité de vos projets">
         <template v-slot:actions>
-          <Button v-if="!$page.props.auth.user.roles?.includes('collaborateur')" as="Link" :href="route('projects.create')" variant="accent">
+          <Button v-if="$page.props.auth.user.roles?.includes('admin') || $page.props.auth.user.roles?.includes('chef_projet')" as="Link" :href="route('projects.create')" variant="accent">
             <template v-slot:icon-left>
               <Icon name="plus" :size="16" />
             </template>
@@ -43,24 +43,47 @@
           footer="Enveloppe allouée aux projets"
         />
 
-        <StatCard
-          class="stagger-4"
-          label="Gain brut total"
-          :value="formatAmount(stats.total_gain)"
-          icon="arrow-trending-up"
-          :color="stats.total_gain >= 0 ? 'success' : 'danger'"
-          :colorValueClass="stats.total_gain >= 0 ? 'text-success' : 'text-danger'"
-        >
-          <template v-slot:footer>
-            <span :class="stats.profitability_rate >= 0 ? 'text-success' : 'text-danger'" style="font-weight:600;">
-              {{ stats.profitability_rate >= 0 ? '+' : '' }}{{ stats.profitability_rate }}% rentabilité globale
-            </span>
-          </template>
-        </StatCard>
+        <!-- Dashboard admin/chef de projet -->
+        <template v-if="!$page.props.auth.user.roles?.includes('client')">
+          <StatCard
+            class="stagger-4"
+            label="Gain brut total"
+            :value="formatAmount(stats.total_gain)"
+            icon="arrow-trending-up"
+            :color="stats.total_gain >= 0 ? 'success' : 'danger'"
+            :colorValueClass="stats.total_gain >= 0 ? 'text-success' : 'text-danger'"
+          >
+            <template v-slot:footer>
+              <span :class="stats.profitability_rate >= 0 ? 'text-success' : 'text-danger'" style="font-weight:600;">
+                {{ stats.profitability_rate >= 0 ? '+' : '' }}{{ stats.profitability_rate }}% rentabilité globale
+              </span>
+            </template>
+          </StatCard>
+        </template>
+
+        <!-- Dashboard Client -->
+        <template v-else>
+          <StatCard
+            class="stagger-4"
+            label="Montant réglé"
+            :value="formatAmount(stats.total_paid)"
+            icon="check-badge"
+            color="success"
+            footer="Total des factures acquittées"
+          />
+          <StatCard
+            class="stagger-5"
+            label="Reste à payer"
+            :value="formatAmount(stats.total_budget - stats.total_paid)"
+            icon="clock"
+            color="warning"
+            footer="Montant restant dû"
+          />
+        </template>
       </div>
 
-      <!-- Graphiques (Ligne 1 : 12 mois & Donut) -->
-      <div class="grid-2 mt-lg stagger-5">
+      <!-- Graphiques (Ligne 1 : 12 mois & Donut) - Cachés pour les clients -->
+      <div v-if="!$page.props.auth.user.roles?.includes('client')" class="grid-2 mt-lg stagger-5">
         <Card title="Évolution des dépenses par axe (12 mois)">
           <apexchart type="bar" height="230" :options="monthlyChartOptions" :series="monthlySeries" />
         </Card>
@@ -82,8 +105,8 @@
         </Card>
       </div>
 
-      <!-- Graphiques (Ligne 2 : Nouveau Graphique Full width) -->
-      <div class="mt-lg mb-lg stagger-6" v-if="projects_budget_chart && projects_budget_chart.length > 0">
+      <!-- Graphiques (Ligne 2 : Nouveau Graphique Full width) - Cachés pour les clients -->
+      <div class="mt-lg mb-lg stagger-6" v-if="!$page.props.auth.user.roles?.includes('client') && projects_budget_chart && projects_budget_chart.length > 0">
         <Card title="Comparatif : Budget vs Dépenses (Projets majeurs en cours)">
           <apexchart type="bar" height="300" :options="budgetChartOptions" :series="budgetSeries" />
         </Card>
@@ -119,7 +142,7 @@
               <!-- Statut + gain -->
               <div class="recent-right">
                 <StatusBadge :status="project.status" />
-                <span :class="project.gross_gain >= 0 ? 'amount-positive' : 'amount-negative'" style="font-size:.82rem;">
+                <span v-if="!$page.props.auth.user.roles?.includes('client')" :class="project.gross_gain >= 0 ? 'amount-positive' : 'amount-negative'" style="font-size:.82rem;">
                   {{ project.gross_gain >= 0 ? '+' : '' }}{{ formatAmount(project.gross_gain) }}
                 </span>
               </div>
@@ -135,7 +158,7 @@
         </Card>
 
         <!-- Analyse de rentabilité -->
-        <Card>
+        <Card v-if="!$page.props.auth.user.roles?.includes('client')">
           <template v-slot:header>
             <h2 class="card-title">Analyse de Rentabilité</h2>
           </template>

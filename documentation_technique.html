@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 
 <head>
@@ -744,6 +744,11 @@
       background: #fef08a;
     }
 
+    .usecase-actor-client {
+      background: rgba(236,72,153,0.1);
+      color: #ec4899;
+    }
+
     .usecase-actor-mb {
       margin-bottom: 16px;
     }
@@ -1213,6 +1218,7 @@
         Admin((Administrateur))
         Chef((Chef de Projet))
         Collab((Collaborateur))
+        ClientActor((Client))
 
         subgraph System ["YA CONSULTING Project Manager"]
         UC1(Gérer les utilisateurs)
@@ -1226,6 +1232,7 @@
         UC9(Consulter le dashboard de ses projets)
         UC10(Modifier son profil)
         UC11(Consulter en lecture seule<br />projets, dépenses et clients)
+        UC12(Consulter ses propres projets<br />et dépenses)
         end
 
         %% Liens Administrateur
@@ -1248,6 +1255,11 @@
         %% Liens Collaborateur
         Collab --> UC11
         Collab --> UC10
+
+        %% Liens Client
+        ClientActor --> UC12
+        ClientActor --> UC9
+        ClientActor --> UC10
       </div>
     </div>
 
@@ -1302,6 +1314,20 @@
           </div>
         </div>
 
+        <div>
+          <div class="usecase-actor usecase-actor-mb">
+            <div class="usecase-actor-icon usecase-actor-client">🤝</div>
+            <div class="usecase-actor-name">Client</div>
+            <div class="usecase-actor-role">Consultation de ses projets</div>
+          </div>
+          <div class="usecase-cases">
+            <div class="usecase-item">Consulter <strong>SES</strong> projets</div>
+            <div class="usecase-item">Consulter les dépenses de <strong>SES</strong> projets</div>
+            <div class="usecase-item">Dashboard filtré (ses projets)</div>
+            <div class="usecase-item">Modifier son profil personnel</div>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -1318,8 +1344,10 @@
         +string name
         +string email
         +string password
+        +bigint client_id
         +projects() HasMany
         +expenses() HasMany
+        +client() BelongsTo
         }
         class Client {
         +bigint id
@@ -1387,6 +1415,7 @@
 
         User "1" --> "*" Project : "crée (created_by)"
         User "1" --> "*" Expense : "crée (created_by)"
+        User "*" --> "1" Client : "appartient à (client_id)"
         Client "1" --> "*" Project : "possède"
         Project "1" --> "*" Expense : "contient"
         ExpenseCategory "1" --> "*" Expense : "catégorise"
@@ -1405,10 +1434,12 @@
             <div class="class-attr"><span class="type">string</span> name</div>
             <div class="class-attr"><span class="type">string</span> email</div>
             <div class="class-attr"><span class="type">string</span> password</div>
+            <div class="class-attr"><span class="type">bigint</span> client_id <span class="er-field-fk">FK</span></div>
           </div>
           <div class="class-box-section">
             <div class="class-attr class-method">projects() : HasMany</div>
             <div class="class-attr class-method">expenses() : HasMany</div>
+            <div class="class-attr class-method">client() : BelongsTo</div>
             <div class="class-attr class-method">hasRole(r) : bool</div>
           </div>
         </div>
@@ -2302,11 +2333,13 @@ composer run dev
           <th>Admin</th>
           <th>Chef de projet</th>
           <th>Collaborateur</th>
+          <th>Client</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td><code>viewAny</code></td>
+          <td>✅</td>
           <td>✅</td>
           <td>✅</td>
           <td>✅</td>
@@ -2316,11 +2349,13 @@ composer run dev
           <td>✅ Tous</td>
           <td>✅ <strong>Ses projets uniquement</strong></td>
           <td>✅ <strong>Tous</strong></td>
+          <td>✅ <strong>Ses projets uniquement</strong></td>
         </tr>
         <tr>
           <td><code>create</code></td>
           <td>✅</td>
           <td>✅</td>
+          <td>❌</td>
           <td>❌</td>
         </tr>
         <tr>
@@ -2328,10 +2363,12 @@ composer run dev
           <td>✅ Tous</td>
           <td>✅ <strong>Ses projets uniquement</strong></td>
           <td>❌</td>
+          <td>❌</td>
         </tr>
         <tr>
           <td><code>delete</code></td>
           <td>✅</td>
+          <td>❌</td>
           <td>❌</td>
           <td>❌</td>
         </tr>
@@ -2346,11 +2383,13 @@ composer run dev
           <th>Admin</th>
           <th>Chef de projet</th>
           <th>Collaborateur</th>
+          <th>Client</th>
         </tr>
       </thead>
       <tbody>
         <tr>
           <td><code>viewAny</code></td>
+          <td>✅</td>
           <td>✅</td>
           <td>✅</td>
           <td>✅</td>
@@ -2360,11 +2399,13 @@ composer run dev
           <td>✅ Tous</td>
           <td>✅ <strong>Projets lui appartenant</strong></td>
           <td>✅ <strong>Tous</strong></td>
+          <td>✅ <strong>Ses projets uniquement</strong></td>
         </tr>
         <tr>
           <td><code>create</code></td>
           <td>✅</td>
           <td>✅</td>
+          <td>❌</td>
           <td>❌</td>
         </tr>
         <tr>
@@ -2372,11 +2413,13 @@ composer run dev
           <td>✅ Tous</td>
           <td>✅ <strong>Projets lui appartenant</strong></td>
           <td>❌</td>
+          <td>❌</td>
         </tr>
         <tr>
           <td><code>delete</code></td>
           <td>✅ Tous</td>
           <td>✅ <strong>Projets lui appartenant</strong></td>
+          <td>❌</td>
           <td>❌</td>
         </tr>
       </tbody>
@@ -2407,6 +2450,7 @@ composer run dev
           <th>Admin</th>
           <th>Chef de Projet</th>
           <th>Collaborateur</th>
+          <th>Client</th>
         </tr>
       </thead>
       <tbody>
@@ -2415,22 +2459,26 @@ composer run dev
           <td>✅ Vue globale</td>
           <td>✅ Vue filtrée (ses projets)</td>
           <td>✅ Vue globale (lecture seule)</td>
+          <td>✅ Vue filtrée (ses projets)</td>
         </tr>
         <tr>
           <td>Projets — Liste</td>
           <td>✅ Tous</td>
           <td>✅ Ses projets uniquement</td>
           <td>✅ Tous (lecture seule)</td>
+          <td>✅ Ses projets uniquement</td>
         </tr>
         <tr>
           <td>Projets — Création/Édition</td>
           <td>✅</td>
           <td>✅</td>
           <td>❌</td>
+          <td>❌</td>
         </tr>
         <tr>
           <td>Projets — Suppression</td>
           <td>✅</td>
+          <td>❌</td>
           <td>❌</td>
           <td>❌</td>
         </tr>
@@ -2439,17 +2487,20 @@ composer run dev
           <td>✅ Toutes</td>
           <td>✅ Ses projets uniquement</td>
           <td>✅ Toutes (lecture seule)</td>
+          <td>✅ Ses projets uniquement</td>
         </tr>
         <tr>
           <td>Clients</td>
           <td>✅</td>
           <td>✅</td>
           <td>✅ Liste seule</td>
+          <td>❌</td>
         </tr>
         <tr>
           <td>Rapports (génération)</td>
           <td>✅</td>
           <td>✅</td>
+          <td>❌</td>
           <td>❌</td>
         </tr>
         <tr>
@@ -2457,9 +2508,11 @@ composer run dev
           <td>✅</td>
           <td>❌</td>
           <td>❌</td>
+          <td>❌</td>
         </tr>
         <tr>
           <td>Mon Profil</td>
+          <td>✅</td>
           <td>✅</td>
           <td>✅</td>
           <td>✅</td>

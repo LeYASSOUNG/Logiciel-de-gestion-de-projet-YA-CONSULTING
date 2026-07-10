@@ -90,6 +90,7 @@ import Icon from '@/Components/Icon.vue';
 const props = defineProps({
   client: Object,
   defaultEmail: String,
+  submitUrl: String,
 });
 
 const form = useForm({
@@ -100,7 +101,7 @@ const form = useForm({
 });
 
 const submit = () => {
-  form.post(route('client.register.store', props.client.id), {
+  form.post(props.submitUrl, {
     onFinish: () => form.reset('password', 'password_confirmation'),
   });
 };

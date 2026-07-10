@@ -19,6 +19,7 @@ use App\Models\User;
  * - Admin       : accès total à toutes les dépenses.
  * - Chef Projet : accès limité aux dépenses de SES projets (created_by du projet).
  * - Collaborateur: lecture seule uniquement (viewAny/view), aucune écriture.
+ * - Client : lecture seule de SES propres projets (client_id du projet).
  */
 class ExpensePolicy
 {
@@ -47,6 +48,10 @@ class ExpensePolicy
         if ($user->hasRole('chef_projet')) {
             // Vérification de l'ownership via le projet parent
             return $expense->project?->created_by === $user->id;
+        }
+
+        if ($user->hasRole('client')) {
+            return $expense->project?->client_id === $user->client_id;
         }
 
         return $user->hasPermissionTo('view expenses');

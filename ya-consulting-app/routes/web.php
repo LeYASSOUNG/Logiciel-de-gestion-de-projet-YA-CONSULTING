@@ -3,6 +3,7 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ProfileController;
@@ -43,28 +44,29 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // L'accès à chaque action est contrôlé par ProjectPolicy.
     Route::resource('projects', ProjectController::class);
 
-    // Dépenses : CRUD complet
-    // L'accès à chaque action est contrôlé par ExpensePolicy.
-    Route::resource('expenses', ExpenseController::class);
+    // ─── Routes interdites aux clients ───────────────────────────
+    Route::middleware('role:admin|chef_projet|collaborateur')->group(function () {
+        // Dépenses : CRUD complet
+        Route::resource('expenses', ExpenseController::class);
+        Route::get('/projects/{project}/expenses/create', [ExpenseController::class, 'createForProject'])
+            ->name('expenses.create-for-project');
+        Route::get('/expenses/{expense}/receipt', [ExpenseController::class, 'downloadReceipt'])
+            ->name('expenses.receipt');
 
-    // Route spéciale : créer une dépense depuis la page d'un projet
-    // (pré-remplit le formulaire avec le projet sélectionné)
-    Route::get('/projects/{project}/expenses/create', [ExpenseController::class, 'createForProject'])
-        ->name('expenses.create-for-project');
+        // Paiements clients
+        Route::get('/projects/{project}/payments/create', [PaymentController::class, 'createForProject'])
+            ->name('payments.create-for-project');
+        Route::post('/payments', [PaymentController::class, 'store'])->name('payments.store');
+        Route::delete('/payments/{payment}', [PaymentController::class, 'destroy'])->name('payments.destroy');
 
-    // Route sécurisée pour télécharger un justificatif de dépense.
-    // Les fichiers sont stockés sur le disque privé 'local' (non accessible via URL directe).
-    // L'accès passe obligatoirement par cette route, qui vérifie l'autorisation via ExpensePolicy::view().
-    Route::get('/expenses/{expense}/receipt', [ExpenseController::class, 'downloadReceipt'])
-        ->name('expenses.receipt');
+        // Clients : CRUD complet
+        Route::resource('clients', ClientController::class);
+        Route::post('/clients/{client}/send-invitation', [ClientController::class, 'sendInvitation'])
+            ->name('clients.send-invitation');
 
-    // Clients : CRUD complet (accessible par admin et chef de projet)
-    Route::resource('clients', ClientController::class);
-    Route::post('/clients/{client}/send-invitation', [ClientController::class, 'sendInvitation'])
-        ->name('clients.send-invitation');
-
-    // ─── Historique et Statistiques ──────────────────────────────
-    Route::get('/history-stats', [HistoryStatsController::class, 'index'])->name('history-stats.index');
+        // Historique et Statistiques
+        Route::get('/history-stats', [HistoryStatsController::class, 'index'])->name('history-stats.index');
+    });
 
     // ─── Rapports (admin + chef de projet uniquement) ─────────────
     // Le middleware 'role:admin|chef_projet' bloque les collaborateurs.

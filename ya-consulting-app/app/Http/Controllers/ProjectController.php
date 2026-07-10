@@ -20,7 +20,7 @@ class ProjectController extends Controller
 
     /**
      * Affiche la liste des projets avec pagination, filtres et recherche.
-     * Accessible par tous les rôles, mais les chefs de projet ne voient que leurs propres projets.
+     * Accessible par tous les rôles, mais les chefs de projet et les clients ne voient que leurs propres projets.
      *
      * @param Request $request La requête HTTP contenant d'éventuels filtres (status, client_id, year, search)
      * @return Response Vue Inertia (Projects/Index)
@@ -31,7 +31,7 @@ class ProjectController extends Controller
         $user = Auth::user();
 
         // Initialise la requête de base en chargeant les relations nécessaires pour éviter le problème N+1
-        $query = Project::with('client', 'expenses')
+        $query = Project::with(['client', 'expenses', 'payments'])
             ->when($user && $user->hasRole('chef_projet'), fn ($q) =>
                 // Si l'utilisateur est un chef de projet, on filtre pour ne récupérer que les projets qu'il a créés
                 $q->where('created_by', Auth::id())
@@ -57,7 +57,7 @@ class ProjectController extends Controller
 
         // Récupère les résultats paginés et transforme la collection pour ne renvoyer que les données nécessaires au frontend
         $projects = $query->latest()->paginate(15)->withQueryString()
-            ->through(fn ($p) => [
+            ->through(fn (Project $p) => [
                 'id'              => $p->id,
                 'name'            => $p->name,
                 'client'          => $p->client?->name,
@@ -73,10 +73,12 @@ class ProjectController extends Controller
 
         return Inertia::render('Projects/Index', [
             'projects' => $projects,
-            'clients'  => Client::orderBy('name')->get(['id', 'name']),
+            'clients'  => ($user && $user->hasRole('client')) 
+                ? Client::where('id', $user->client_id)->get(['id', 'name']) 
+                : Client::orderBy('name')->get(['id', 'name']),
             'filters'  => $request->only(['status', 'client_id', 'year', 'search']),
             'years'    => Project::whereNotNull('start_date')->get()
-                ->map(fn($p) => $p->start_date->year)->unique()->sortDesc()->values(),
+                ->map(fn(Project $p) => $p->start_date->year)->unique()->sortDesc()->values(),
             'can'      => [
                 'create' => $user && $user->hasAnyRole(['admin', 'chef_projet']),
                 'edit'   => $user && $user->hasAnyRole(['admin', 'chef_projet']),
@@ -126,6 +128,7 @@ class ProjectController extends Controller
 
         // Calcul automatique du budget global à partir des budgets détaillés
         $validated['budget'] = (float)$validated['budget_labor'] + (float)$validated['budget_material'] + (float)$validated['budget_transport'] + (float)$validated['budget_other'];
+        $validated['initial_budget'] = $validated['budget'];
 
         $project = Project::create([
             ...$validated,
@@ -156,6 +159,7 @@ class ProjectController extends Controller
             'client',
             'expenses.category',
             'expenses.creator',
+            'payments.creator',
             'creator',
         ]);
 
@@ -172,6 +176,8 @@ class ProjectController extends Controller
         // Renvoie toutes les métriques de rentabilité et la répartition des dépenses
         return Inertia::render('Projects/Show', [
             'project'             => array_merge($project->toArray(), [
+                'total_paid'       => $project->total_paid,
+                'balance_due'      => $project->balance_due,
                 'total_expenses'   => $project->total_expenses,
                 'gross_gain'       => $project->gross_gain,
                 'profitability'    => $project->profitability_rate,

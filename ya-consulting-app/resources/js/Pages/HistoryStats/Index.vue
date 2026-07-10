@@ -135,11 +135,11 @@
               </td>
               <td style="width: 140px;">
                 <div class="flex items-center gap-xs">
-                  <span class="font-medium text-xs">{{ project.budget > 0 ? Math.round(((project.budget - project.total_expenses) / project.budget) * 100) : 0 }}%</span>
+                  <span class="font-medium text-xs">{{ project.profitability >= 0 ? '+' : '' }}{{ project.profitability }}%</span>
                   <div class="progress-track">
                     <div class="progress-fill"
-                         :class="project.budget > 0 && ((project.budget - project.total_expenses) / project.budget) >= 0 ? 'bg-emerald' : 'bg-red'"
-                         :style="{ width: Math.min(100, Math.max(0, project.budget > 0 ? ((project.budget - project.total_expenses) / project.budget) * 100 : 0)) + '%' }">
+                         :class="project.profitability >= 0 ? 'bg-emerald' : 'bg-red'"
+                         :style="{ width: Math.min(100, Math.abs(project.profitability)) + '%' }">
                     </div>
                   </div>
                 </div>
@@ -297,6 +297,7 @@ const getStatusLabel = (status) => {
 .text-gradient {
   background: linear-gradient(135deg, #1a2b4a 0%, #C9A84C 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   font-weight: 800;
   margin-bottom: 5px;

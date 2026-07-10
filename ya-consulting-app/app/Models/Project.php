@@ -27,6 +27,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int         $created_by        ID de l'utilisateur créateur
  * @property int|null    $updated_by        ID du dernier modificateur
  * @property string|null $deleted_at        Date de suppression logique (SoftDelete)
+ * @property \Illuminate\Support\Carbon|null $start_date Date de début
+ * @property \Illuminate\Support\Carbon|null $planned_end_date Date de fin prévue
+ * @property \Illuminate\Support\Carbon|null $actual_end_date Date de fin réelle
+ * @property float       $total_expenses
+ * @property float       $gross_gain
+ * @property float       $profitability_rate
+ * @property bool        $is_profitable
+ * @property float       $expenses_labor
+ * @property float       $expenses_material
+ * @property float       $expenses_transport
+ * @property float       $expenses_other
  */
 class Project extends Model
 {
@@ -45,6 +56,7 @@ class Project extends Model
         'start_date',
         'planned_end_date',
         'actual_end_date',
+        'initial_budget',
         'budget',
         'budget_labor',
         'budget_material',
@@ -65,6 +77,7 @@ class Project extends Model
         'start_date'        => 'date',
         'planned_end_date'  => 'date',
         'actual_end_date'   => 'date',
+        'initial_budget'    => 'encrypted',
         'budget'            => 'encrypted',
         'budget_labor'      => 'encrypted',
         'budget_material'   => 'encrypted',
@@ -90,6 +103,15 @@ class Project extends Model
     public function expenses(): HasMany
     {
         return $this->hasMany(Expense::class);
+    }
+
+    /**
+     * Les paiements (encaissements) enregistrés sur ce projet.
+     * Un projet peut avoir plusieurs paiements.
+     */
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
     }
 
     /**
@@ -122,6 +144,27 @@ class Project extends Model
     }
 
     /**
+     * Calcule le total encaissé (somme des paiements du client).
+     *
+     * @return float Total encaissé en FCFA
+     */
+    public function getTotalPaidAttribute(): float
+    {
+        return (float) $this->payments->sum('amount');
+    }
+
+    /**
+     * Calcule le reste à payer par le client.
+     * Formule : Reste à payer = Budget Actuel - Total Encaissé
+     *
+     * @return float Reste à payer en FCFA
+     */
+    public function getBalanceDueAttribute(): float
+    {
+        return max(0, (float) $this->budget - $this->total_paid);
+    }
+
+    /**
      * Calcule le gain brut du projet.
      * Formule : Gain Brut = Budget Total - Total Dépenses
      *
@@ -129,7 +172,7 @@ class Project extends Model
      */
     public function getGrossGainAttribute(): float
     {
-        return (float) $this->budget - $this->total_expenses;
+        return $this->total_paid - $this->total_expenses;
     }
 
     /**
@@ -141,8 +184,8 @@ class Project extends Model
      */
     public function getProfitabilityRateAttribute(): float
     {
-        if ($this->budget == 0) return 0;
-        return round(($this->gross_gain / $this->budget) * 100, 2);
+        if ($this->total_paid == 0) return 0;
+        return round(($this->gross_gain / $this->total_paid) * 100, 2);
     }
 
     /**

@@ -53,7 +53,7 @@ class ClientController extends Controller
                 'company'         => $client->company,
                 'address'         => $client->address,
                 'notes'           => $client->notes,
-                'invitation_link' => \Illuminate\Support\Facades\URL::signedRoute('client.register', ['client' => $client->id]),
+                'invitation_link' => URL::signedRoute('client.register', ['client' => $client->id]),
             ]);
 
         return Inertia::render('Clients/Index', [

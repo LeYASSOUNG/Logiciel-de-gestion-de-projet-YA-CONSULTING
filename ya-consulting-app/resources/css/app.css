@@ -1383,3 +1383,7 @@ div[style*="position: fixed"][style*="z-index:1000"] {
 .text-gradient-purple { background: var(--gradient-purple); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
 .text-gradient-ocean { background: var(--gradient-ocean); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
 .text-gradient-sunset { background: var(--gradient-sunset); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+
+.text-right { text-align: right !important; }
+.text-center { text-align: center !important; }
+.text-left { text-align: left !important; }

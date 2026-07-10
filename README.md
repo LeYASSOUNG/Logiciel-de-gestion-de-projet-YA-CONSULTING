@@ -19,7 +19,7 @@ Ce dépôt contient l'ensemble des livrables et le code source de l'application 
 *   🗂️ **Gestion Métier des Projets** : Suivi rigoureux du cycle de vie des projets (statuts, budgets en FCFA, dates clés, chefs de projets et clients associés).
 *   💰 **Gestion des Dépenses & Rentabilité** : Saisie structurée des dépenses avec archivage des pièces justificatives (PDF/Images) et calcul automatique du gain brut et du taux de rentabilité.
 *   📄 **Génération de Rapports Professionnels** : Exportation de rapports mensuels de performance en PDF (via DomPDF) et CSV, incluant des analyses comparatives (N vs N-1).
-*   🔑 **Sécurité & Rôles Fins** : Gestion des accès basée sur les rôles (`admin`, `chef_projet`, `collaborateur`) via Spatie Permission, garantissant la confidentialité des projets.
+*   🔑 **Sécurité & Rôles Fins** : Gestion des accès basée sur les rôles (`admin`, `chef_projet`, `collaborateur`, `client`) via Spatie Permission, garantissant la confidentialité des projets.
 *   📋 **Journal d'Audit & Traçabilité** : Journalisation automatique de toutes les actions sensibles (créations, modifications, suppressions) via Spatie Activitylog.
 
 ---
@@ -52,6 +52,7 @@ Logiciel-de-gestion-de-projet-YA-CONSULTING/
 | **Administrateur (`admin`)** | Accès total à la plateforme. | Gestion des utilisateurs, des clients, configuration globale, édition de tous les projets et dépenses. |
 | **Chef de Projet (`chef_projet`)** | Responsable de portefeuilles de projets. | Création et modification de ses propres projets et dépenses uniquement. Lecture seule pour le reste. |
 | **Collaborateur (`collaborateur`)** | Rôle consultatif. | Consultation générale (lecture seule) des projets et du tableau de bord. Aucune action d'écriture. |
+| **Client (`client`)** | Rôle consultatif externe. | Consultation de ses propres projets (lecture seule). Aucune action d'écriture. |
 
 ---
 
@@ -121,7 +122,7 @@ Logiciel-de-gestion-de-projet-YA-CONSULTING/
 
 
 > [!TIP]
-> Une fois connecté en tant qu'**Administrateur**, vous pouvez créer de nouveaux profils d'utilisateurs et leur affecter les rôles de **Chef de Projet** ou de **Collaborateur** directement depuis l'interface d'administration.
+> Une fois connecté en tant qu'**Administrateur**, vous pouvez créer de nouveaux profils d'utilisateurs et leur affecter les rôles de **Chef de Projet**, **Collaborateur** ou **Client** directement depuis l'interface d'administration.
 
 ---
 

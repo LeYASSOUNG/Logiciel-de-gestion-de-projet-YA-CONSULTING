@@ -58,6 +58,10 @@ class ExpenseController extends Controller
             $query->whereHas('project', function ($q) {
                 $q->where(self::COL_CREATED_BY, Auth::id());
             });
+        } elseif ($user && $user->hasRole('client')) {
+            $query->whereHas('project', function ($q) use ($user) {
+                $q->where('client_id', $user->client_id);
+            });
         }
 
         // ─── Application des filtres ───────────────────────────────
@@ -113,6 +117,8 @@ class ExpenseController extends Controller
         $projectsQuery = Project::query();
         if ($user && $user->hasRole('chef_projet')) {
             $projectsQuery->where(self::COL_CREATED_BY, Auth::id());
+        } elseif ($user && $user->hasRole('client')) {
+            $projectsQuery->where('client_id', $user->client_id);
         }
         $projects = $projectsQuery->orderBy(self::COL_NAME)->get(['id', self::COL_NAME]);
 

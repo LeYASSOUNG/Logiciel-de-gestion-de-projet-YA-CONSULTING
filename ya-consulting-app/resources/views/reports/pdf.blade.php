@@ -79,7 +79,7 @@
             border-radius: 8px;
             padding: 15px;
             text-align: center;
-            width: 33.33%;
+            width: 20%;
         }
         .kpi-title {
             font-size: 10px;
@@ -107,15 +107,13 @@
             font-size: 16px;
             font-weight: 700;
             border-bottom: 1px solid #e2e8f0;
+            border-left: 4px solid #C9A84C;
             padding-bottom: 8px;
+            padding-left: 10px;
             margin-top: 35px;
             margin-bottom: 15px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-        }
-        h2 span {
-            color: #C9A84C;
-            margin-right: 5px;
         }
 
         /* Tableaux de données */
@@ -192,12 +190,12 @@
     <table class="header-table" cellspacing="0" cellpadding="0">
         <tr>
             <td style="vertical-align: bottom;">
-                <div class="logo-text">YA<span class="logo-gold">CONSULTING</span></div>
+                <div class="logo-text">GES-<span class="logo-gold">PRO</span></div>
             </td>
             <td class="company-info" style="vertical-align: bottom;">
-                <strong>YA CONSULTING</strong><br>
+                <strong>YA-CONSULTING</strong><br>
                 Abidjan, Côte d'Ivoire<br>
-                courriel@ya-consulting.com<br>
+                ya-consulting@ges-pro.com<br>
                 +225 01 52 22 63 12 | +225 05 65 24 69 74
             </td>
         </tr>
@@ -217,6 +215,10 @@
                 <div class="kpi-value">{{ number_format($total_budget, 0, ',', ' ') }} FCFA</div>
             </td>
             <td class="kpi-card">
+                <div class="kpi-title">Montant Encaissé</div>
+                <div class="kpi-value" style="color: #10b981;">{{ number_format($total_paid, 0, ',', ' ') }} FCFA</div>
+            </td>
+            <td class="kpi-card">
                 <div class="kpi-title">Dépenses du mois</div>
                 <div class="kpi-value" style="color: #ef4444;">{{ number_format($total_expenses, 0, ',', ' ') }} FCFA</div>
             </td>
@@ -226,11 +228,17 @@
                     {{ number_format($net_profit, 0, ',', ' ') }} FCFA
                 </div>
             </td>
+            <td class="kpi-card">
+                <div class="kpi-title">Rentabilité Globale</div>
+                <div class="kpi-value {{ $profitability_rate >= 0 ? 'profit' : 'loss' }}">
+                    {{ $profitability_rate }}%
+                </div>
+            </td>
         </tr>
     </table>
 
     <!-- Comparatifs -->
-    <h2><span>&#9632;</span> Synthèse & Comparatif (N / N-1)</h2>
+    <h2>Synthèse & Comparatif (N / N-1)</h2>
     <table class="data-table">
         <thead>
             <tr>
@@ -241,6 +249,14 @@
             </tr>
         </thead>
         <tbody>
+            <tr>
+                <td><strong>Montant Encaissé</strong></td>
+                <td class="text-right text-bold">{{ number_format($total_paid, 0, ',', ' ') }} FCFA</td>
+                <td class="text-right text-muted">{{ number_format($prev_total_paid ?? 0, 0, ',', ' ') }} FCFA</td>
+                <td class="text-right text-bold {{ ($total_paid - ($prev_total_paid ?? 0)) >= 0 ? 'text-success' : 'text-danger' }}">
+                    {{ ($total_paid - ($prev_total_paid ?? 0)) >= 0 ? '+' : '' }}{{ number_format($total_paid - ($prev_total_paid ?? 0), 0, ',', ' ') }} FCFA
+                </td>
+            </tr>
             <tr>
                 <td><strong>Total des dépenses</strong></td>
                 <td class="text-right text-bold">{{ number_format($total_expenses, 0, ',', ' ') }} FCFA</td>
@@ -258,6 +274,14 @@
                 </td>
             </tr>
             <tr>
+                <td><strong>Rentabilité Globale</strong></td>
+                <td class="text-right text-bold">{{ $profitability_rate }}%</td>
+                <td class="text-right text-muted">{{ $prev_profitability_rate }}%</td>
+                <td class="text-right text-bold {{ ($profitability_rate - $prev_profitability_rate) >= 0 ? 'text-success' : 'text-danger' }}">
+                    {{ ($profitability_rate - $prev_profitability_rate) >= 0 ? '+' : '' }}{{ round($profitability_rate - $prev_profitability_rate, 2) }}%
+                </td>
+            </tr>
+            <tr>
                 <td><strong>Gains des projets clôturés ce mois</strong></td>
                 <td class="text-right text-bold text-success">{{ number_format($total_gains_completed, 0, ',', ' ') }} FCFA</td>
                 <td class="text-right text-muted"><em>Donnée cumulée</em></td>
@@ -267,7 +291,7 @@
     </table>
 
     <!-- Dépenses par Catégorie -->
-    <h2><span>&#9632;</span> Répartition des Dépenses</h2>
+    <h2>Répartition des Dépenses</h2>
     <table class="data-table">
         <thead>
             <tr>
@@ -303,7 +327,7 @@
 
     <!-- Projets Actifs -->
     <div style="page-break-before: always;"></div>
-    <h2><span>&#9632;</span> Détail des Projets Actifs</h2>
+    <h2>Détail des Projets Actifs</h2>
     <table class="data-table">
         <thead>
             <tr>
@@ -331,10 +355,10 @@
                                 {{ $p->profitability_rate }}%
                             </span>
                         </div>
-                        @if($p->budget > 0)
+                        @if(true)
                             @php
-                                $barWidth = min(100, max(0, ($p->total_expenses / $p->budget) * 100));
-                                $bgColor = $p->gross_gain >= 0 ? '#10b981' : '#ef4444';
+                                $barWidth = min(100, max(0, abs($p->profitability_rate)));
+                                $bgColor = $p->profitability_rate >= 0 ? '#10b981' : '#ef4444';
                                 $remWidth = 100 - $barWidth;
                             @endphp
                             <table width="100%" height="4" cellpadding="0" cellspacing="0" style="background: #e2e8f0; border-radius: 2px; margin-top: 4px;">

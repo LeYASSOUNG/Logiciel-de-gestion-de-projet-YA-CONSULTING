@@ -156,7 +156,7 @@ class ReportController extends Controller
                 $q->whereNull('actual_end_date')
                   ->orWhere('actual_end_date', '>=', $startDate);
             })
-            ->with(['client', 'expenses'])
+            ->with(['client', 'expenses', 'payments'])
             ->get();
 
         $totalBudget = (float) $projects->sum('budget');
@@ -166,7 +166,9 @@ class ReportController extends Controller
             ->get();
 
         $totalExpenses = (float) $monthlyExpenses->sum('amount');
-        $netProfit     = $totalBudget - $totalExpenses;
+        $totalPaid     = (float) \App\Models\Payment::whereBetween('payment_date', [$startDate, $endDate])->get()->sum('amount');
+        $netProfit     = $totalPaid - $totalExpenses;
+        $profitabilityRate = $totalPaid > 0 ? round(($netProfit / $totalPaid) * 100, 2) : 0;
 
         $expensesByCategory = $monthlyExpenses
             ->groupBy('category_id')
@@ -187,7 +189,7 @@ class ReportController extends Controller
 
         return compact(
             'projects', 'monthlyExpenses',
-            'totalBudget', 'totalExpenses', 'netProfit',
+            'totalBudget', 'totalPaid', 'totalExpenses', 'netProfit', 'profitabilityRate',
             'expensesByCategory', 'completedProjects', 'totalGainsCompleted'
         );
     }
@@ -208,18 +210,26 @@ class ReportController extends Controller
                 $q->whereNull('actual_end_date')
                   ->orWhere('actual_end_date', '>=', $prevStartDate);
             })
+            ->with('payments')
             ->get();
 
         $prevTotalBudget   = (float) $prevProjects->sum('budget');
         $prevTotalExpenses = (float) Expense::whereBetween('date', [$prevStartDate, $prevEndDate])
             ->get()->sum('amount');
+        $prevTotalPaid = (float) \App\Models\Payment::whereBetween('payment_date', [$prevStartDate, $prevEndDate])
+            ->get()->sum('amount');
+
+        $prevNetProfit = $prevTotalPaid - $prevTotalExpenses;
+        $prevProfitabilityRate = $prevTotalPaid > 0 ? round(($prevNetProfit / $prevTotalPaid) * 100, 2) : 0;
 
         return [
             'month'         => $prevMonthDate->month,
             'year'          => $prevMonthDate->year,
             'totalBudget'   => $prevTotalBudget,
+            'totalPaid'     => $prevTotalPaid,
             'totalExpenses' => $prevTotalExpenses,
-            'netProfit'     => $prevTotalBudget - $prevTotalExpenses,
+            'netProfit'     => $prevNetProfit,
+            'profitabilityRate' => $prevProfitabilityRate,
         ];
     }
 
@@ -237,16 +247,20 @@ class ReportController extends Controller
             'monthName'                => $monthName,
             'year'                     => $year,
             'total_budget'             => $monthData['totalBudget'],
+            'total_paid'               => $monthData['totalPaid'],
             'total_expenses'           => $monthData['totalExpenses'],
             'net_profit'               => $monthData['netProfit'],
+            'profitability_rate'       => $monthData['profitabilityRate'],
             'projects'                 => $monthData['projects'],
             'expenses_by_category'     => $monthData['expensesByCategory'],
             'generated_by'             => Auth::user()?->name ?? 'Système',
             'generated_at'             => $now,
             'prevMonthName'            => $prevMonthName,
             'prevYear'                 => $prevData['year'],
+            'prev_total_paid'          => $prevData['totalPaid'],
             'prev_total_expenses'      => $prevData['totalExpenses'],
             'prev_net_profit'          => $prevData['netProfit'],
+            'prev_profitability_rate'  => $prevData['profitabilityRate'],
             'total_gains_completed'    => $monthData['totalGainsCompleted'],
             'completed_projects_count' => $monthData['completedProjects']->count(),
         ]);
@@ -274,12 +288,19 @@ class ReportController extends Controller
         fputcsv($handle, ['1. RÉSUMÉ DES INDICATEURS DE PERFORMANCE'], $delimiter);
         fputcsv($handle, ['Indicateur', 'Valeur (FCFA)'], $delimiter);
         fputcsv($handle, ['Budget Total des projets actifs', $monthData['totalBudget']], $delimiter);
+        fputcsv($handle, ['Montant Encaissé',               $monthData['totalPaid']], $delimiter);
         fputcsv($handle, ['Dépenses Totales',               $monthData['totalExpenses']], $delimiter);
         fputcsv($handle, ['Bénéfice Net Global',            $monthData['netProfit']], $delimiter);
+        fputcsv($handle, ['Taux de Rentabilité',            $monthData['profitabilityRate'] . '%'], $delimiter);
         fputcsv($handle, [], $delimiter);
         
         fputcsv($handle, ['2. COMPARAISON MOIS N vs N-1'], $delimiter);
         fputcsv($handle, ['Indicateur', "Mois en cours ({$monthName} {$year})", "Mois précédent ({$prevMonthName} {$prevData['year']})", 'Évolution'], $delimiter);
+
+        $paidDiff = $monthData['totalPaid'] - $prevData['totalPaid'];
+        $paidPct  = $prevData['totalPaid'] > 0 ? round(($paidDiff / $prevData['totalPaid']) * 100, 2) : 0;
+        fputcsv($handle, ['Montant Encaissé', $monthData['totalPaid'], $prevData['totalPaid'],
+            $paidDiff . ' (' . ($paidPct >= 0 ? '+' : '') . $paidPct . '%)'], $delimiter);
 
         $expDiff = $monthData['totalExpenses'] - $prevData['totalExpenses'];
         $expPct  = $prevData['totalExpenses'] > 0 ? round(($expDiff / $prevData['totalExpenses']) * 100, 2) : 0;
@@ -290,6 +311,11 @@ class ReportController extends Controller
         $profPct  = $prevData['netProfit'] != 0 ? round(($profDiff / abs($prevData['netProfit'])) * 100, 2) : 0;
         fputcsv($handle, ['Bénéfice Net', $monthData['netProfit'], $prevData['netProfit'],
             $profDiff . ' (' . ($profPct >= 0 ? '+' : '') . $profPct . '%)'], $delimiter);
+
+        $rateDiff = round($monthData['profitabilityRate'] - $prevData['profitabilityRate'], 2);
+        fputcsv($handle, ['Taux de Rentabilité', $monthData['profitabilityRate'] . '%', $prevData['profitabilityRate'] . '%',
+            ($rateDiff >= 0 ? '+' : '') . $rateDiff . '%'], $delimiter);
+            
         fputcsv($handle, [], $delimiter);
 
         fputcsv($handle, ['3. DÉTAIL DES PROJETS ACTIFS'], $delimiter);

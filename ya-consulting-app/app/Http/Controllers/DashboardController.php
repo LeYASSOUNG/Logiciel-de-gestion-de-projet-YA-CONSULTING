@@ -34,22 +34,10 @@ class DashboardController extends Controller
      */
     public function index(): Response
     {
-        $user = auth()->user();
+        /** @var \App\Models\User $user */
+        $user = \Illuminate\Support\Facades\Auth::user();
 
-        // ─── Construction de la requête de base des projets ───────
-        // On clone cette requête pour l'utiliser plusieurs fois avec des filtres différents
-        // sans avoir à la reconstruire (amélioration des performances).
-        $projectsQuery = Project::query();
-
-        // Restriction pour les chefs de projet : ils ne voient que leurs propres projets
-        if ($user->hasRole('chef_projet')) {
-            $projectsQuery->where('created_by', $user->id);
-        }
-
-        // Restriction pour les clients : ils ne voient que leurs projets
-        if ($user->hasRole('client')) {
-            $projectsQuery->where('client_id', $user->client_id);
-        }
+        $projectsQuery = $this->getBaseQuery($user);
 
         // ─── KPIs de comptage ─────────────────────────────────────
         $totalProjects     = $projectsQuery->count();
@@ -58,17 +46,51 @@ class DashboardController extends Controller
         $completedProjects = (clone $projectsQuery)->termine()->count();
 
         // ─── Calcul de la rentabilité globale ─────────────────────
-        // On charge les dépenses en eager loading pour éviter le problème N+1
-        $projects = (clone $projectsQuery)->with('expenses')->get();
+        $projects = (clone $projectsQuery)->with(['expenses', 'payments'])->get();
 
         $totalBudget   = $projects->sum('budget');
+        $totalPaid     = $projects->sum(fn ($p) => $p->total_paid);
         $totalExpenses = $projects->sum(fn ($p) => $p->total_expenses);
-        $totalGain     = $totalBudget - $totalExpenses;
+        $totalGain     = $totalPaid - $totalExpenses;
 
-        // ─── Top 5 projets les plus rentables ─────────────────────
-        // Tri en PHP car le gain brut est un accesseur calculé (non stocké en BDD)
-        $topProfitable = (clone $projectsQuery)
-            ->with('expenses', 'client')
+        // ─── Rendu Inertia ────────────────────────────────────────
+        return Inertia::render('Dashboard', [
+            'stats' => [
+                'total_projects'     => $totalProjects,
+                'active_projects'    => $activeProjects,
+                'paused_projects'    => $pausedProjects,
+                'completed_projects' => $completedProjects,
+                'total_budget'       => $totalBudget,
+                'total_paid'         => $totalPaid,
+                'total_expenses'     => $totalExpenses,
+                'total_gain'         => $totalGain,
+                'profitability_rate' => $totalPaid > 0
+                    ? round(($totalGain / $totalPaid) * 100, 2) : 0,
+            ],
+            'top_profitable'       => $this->getTopProfitable(clone $projectsQuery),
+            'top_least_profitable' => $this->getTopLeastProfitable(clone $projectsQuery),
+            'expenses_by_category' => $this->getExpensesByCategory($user),
+            'monthly_trend'        => $this->getMonthlyTrend($user),
+            'recent_projects'      => $this->getRecentProjects(clone $projectsQuery),
+            'projects_budget_chart'=> $this->getActiveProjectsChart(clone $projectsQuery),
+        ]);
+    }
+
+    private function getBaseQuery(\App\Models\User $user)
+    {
+        $query = Project::query();
+        if ($user->hasRole('chef_projet')) {
+            $query->where('created_by', $user->id);
+        }
+        if ($user->hasRole('client')) {
+            $query->where('client_id', $user->client_id);
+        }
+        return $query;
+    }
+
+    private function getTopProfitable(\Illuminate\Database\Eloquent\Builder $query)
+    {
+        return $query->with(['expenses', 'payments', 'client'])
             ->get()
             ->sortByDesc(fn ($p) => $p->gross_gain)
             ->take(5)
@@ -82,60 +104,13 @@ class DashboardController extends Controller
                 'profitability' => $p->profitability_rate,
                 'status'       => $p->status,
             ]);
+    }
 
-        // ─── Dépenses par catégorie (pour le graphique Donut) ─────
-        $expensesByCategoryQuery = Expense::with('category');
-        if ($user->hasRole('chef_projet')) {
-            // Filtrer les dépenses des projets appartenant au chef de projet connecté
-            $expensesByCategoryQuery->whereHas('project', function ($q) use ($user) {
-                $q->where('created_by', $user->id);
-            });
-        }
-        $expensesByCategory = $expensesByCategoryQuery->get()
-            ->groupBy('category_id')
-            ->map(function ($group) {
-                $category = $group->first()->category;
-                return [
-                    'name'  => $category?->name ?? 'Sans catégorie',
-                    'color' => $category?->color ?? '#6B7280',
-                    'total' => (float) $group->sum('amount'),
-                ];
-            })
-            ->sortByDesc('total')
-            ->values();
-
-        // ─── Évolution mensuelle sur 12 mois (pour le graphique Area) ───
-        // On récupère toutes les dépenses des 12 derniers mois et on les groupe
-        // par mois puis par type de coût (main d'œuvre, matériel, transport, autres)
-        $expensesForTrend = Expense::with('category')
-            ->where('date', '>=', now()->subMonths(12)->startOfMonth())
-            ->when($user->hasRole('chef_projet'), function ($q) use ($user) {
-                $q->whereHas('project', function ($qp) use ($user) {
-                    $qp->where('created_by', $user->id);
-                });
-            })
-            ->get();
-
-        $monthlyTrend = $expensesForTrend->groupBy(function ($expense) {
-            return $expense->date->format('Y-m'); // Clé de groupement : "2026-06"
-        })->map(function ($group, $key) {
-            list($year, $month) = explode('-', $key);
-            return [
-                'year'        => (int) $year,
-                'month'       => (int) $month,
-                'main_oeuvre' => (float) $group->filter(fn($e) => $e->category?->parent_type === 'main_oeuvre')->sum('amount'),
-                'materiel'    => (float) $group->filter(fn($e) => $e->category?->parent_type === 'materiel')->sum('amount'),
-                'transport'   => (float) $group->filter(fn($e) => $e->category?->parent_type === 'transport')->sum('amount'),
-                'autres'      => (float) $group->filter(fn($e) => $e->category?->parent_type === 'autres' || is_null($e->category?->parent_type))->sum('amount'),
-                'total'       => (float) $group->sum('amount'),
-            ];
-        })->values()->sortBy(fn ($item) => $item['year'] * 100 + $item['month'])->values();
-
-        // ─── Top 5 projets les moins rentables ────────────────────
-        $topLeastProfitable = (clone $projectsQuery)
-            ->with('expenses', 'client')
+    private function getTopLeastProfitable(\Illuminate\Database\Eloquent\Builder $query)
+    {
+        return $query->with(['expenses', 'payments', 'client'])
             ->get()
-            ->sortBy(fn ($p) => $p->gross_gain) // Tri croissant (les plus mauvais en premier)
+            ->sortBy(fn ($p) => $p->gross_gain)
             ->take(5)
             ->values()
             ->map(fn ($p) => [
@@ -147,10 +122,63 @@ class DashboardController extends Controller
                 'profitability' => $p->profitability_rate,
                 'status'       => $p->status,
             ]);
+    }
 
-        // ─── 5 projets récemment créés ────────────────────────────
-        $recentProjects = (clone $projectsQuery)
-            ->with('client')
+    private function getExpensesByCategory(\App\Models\User $user)
+    {
+        $query = Expense::with('category');
+        if ($user->hasRole('chef_projet')) {
+            $query->whereHas('project', fn ($q) => $q->where('created_by', $user->id));
+        } elseif ($user->hasRole('client')) {
+            $query->whereHas('project', fn ($q) => $q->where('client_id', $user->client_id));
+        }
+        return $query->get()
+            ->groupBy('category_id')
+            ->map(function ($group) {
+                $category = $group->first()->category;
+                return [
+                    'name'  => $category?->name ?? 'Sans catégorie',
+                    'color' => $category?->color ?? '#6B7280',
+                    'total' => (float) $group->sum('amount'),
+                ];
+            })
+            ->sortByDesc('total')
+            ->values();
+    }
+
+    private function getMonthlyTrend(\App\Models\User $user)
+    {
+        $expenses = Expense::with('category')
+            ->where('date', '>=', now()->subMonths(12)->startOfMonth())
+            ->when($user->hasRole('chef_projet'), function ($q) use ($user) {
+                $q->whereHas('project', fn ($qp) => $qp->where('created_by', $user->id));
+            })
+            ->when($user->hasRole('client'), function ($q) use ($user) {
+                $q->whereHas('project', fn ($qp) => $qp->where('client_id', $user->client_id));
+            })
+            ->get();
+
+        return $expenses->groupBy(fn ($expense) => $expense->date->format('Y-m'))
+            ->map(function ($group, $key) {
+                list($year, $month) = explode('-', $key);
+                return [
+                    'year'        => (int) $year,
+                    'month'       => (int) $month,
+                    'main_oeuvre' => (float) $group->filter(fn($e) => $e->category?->parent_type === 'main_oeuvre')->sum('amount'),
+                    'materiel'    => (float) $group->filter(fn($e) => $e->category?->parent_type === 'materiel')->sum('amount'),
+                    'transport'   => (float) $group->filter(fn($e) => $e->category?->parent_type === 'transport')->sum('amount'),
+                    'autres'      => (float) $group->filter(fn($e) => in_array($e->category?->parent_type, ['autres', null]))->sum('amount'),
+                    'total'       => (float) $group->sum('amount'),
+                ];
+            })
+            ->values()
+            ->sortBy(fn ($item) => $item['year'] * 100 + $item['month'])
+            ->values();
+    }
+
+    private function getRecentProjects(\Illuminate\Database\Eloquent\Builder $query)
+    {
+        return $query->with(['client', 'payments', 'expenses'])
             ->latest()
             ->take(5)
             ->get()
@@ -165,10 +193,11 @@ class DashboardController extends Controller
                 'profitability' => $p->profitability_rate,
                 'start_date'   => $p->start_date->format('d/m/Y'),
             ]);
+    }
 
-        // ─── Graphique Budget vs Dépenses (Projets en cours) ──────
-        $activeProjectsForChart = (clone $projectsQuery)
-            ->enCours()
+    private function getActiveProjectsChart(\Illuminate\Database\Eloquent\Builder $query)
+    {
+        return $query->enCours()->with(['expenses', 'payments'])
             ->get()
             ->sortByDesc('budget')
             ->take(10)
@@ -178,28 +207,5 @@ class DashboardController extends Controller
                 'budget' => $p->budget,
                 'expenses' => $p->total_expenses,
             ]);
-
-        // ─── Rendu Inertia ────────────────────────────────────────
-        // Toutes les données sont transmises comme props au composant Vue Dashboard.vue
-        return Inertia::render('Dashboard', [
-            'stats' => [
-                'total_projects'     => $totalProjects,
-                'active_projects'    => $activeProjects,
-                'paused_projects'    => $pausedProjects,
-                'completed_projects' => $completedProjects,
-                'total_budget'       => $totalBudget,
-                'total_expenses'     => $totalExpenses,
-                'total_gain'         => $totalGain,
-                // Taux de rentabilité global en % (0 si aucun budget pour éviter division par zéro)
-                'profitability_rate' => $totalBudget > 0
-                    ? round(($totalGain / $totalBudget) * 100, 2) : 0,
-            ],
-            'top_profitable'       => $topProfitable,
-            'top_least_profitable' => $topLeastProfitable,
-            'expenses_by_category' => $expensesByCategory,
-            'monthly_trend'        => $monthlyTrend,
-            'recent_projects'      => $recentProjects,
-            'projects_budget_chart'=> $activeProjectsForChart,
-        ]);
     }
 }

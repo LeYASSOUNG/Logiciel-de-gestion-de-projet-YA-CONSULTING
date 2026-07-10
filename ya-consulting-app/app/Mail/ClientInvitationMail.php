@@ -14,8 +14,8 @@ class ClientInvitationMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $client;
-    public $invitationLink;
+    public Client $client;
+    public string $invitationLink;
 
     /**
      * Create a new message instance.

@@ -52,7 +52,7 @@ class HistoryStatsController extends Controller
      */
     private function getFilteredProjects(\App\Models\User $user, array $filters): \Illuminate\Database\Eloquent\Collection
     {
-        $query = Project::query()->with(['client', 'expenses']);
+        $query = Project::query()->with(['client', 'expenses', 'payments']);
         
         if ($user->hasRole('chef_projet')) {
             $query->where('created_by', $user->id);
@@ -81,10 +81,9 @@ class HistoryStatsController extends Controller
         $totalProjects = $projects->count();
         $completedProjectsCount = $projects->where('status', 'terminé')->count();
         
-        $totalBudget = $projects->sum('budget');
+        $totalPaid = $projects->sum(fn ($p) => $p->total_paid);
         $totalExpenses = $projects->sum('total_expenses');
-        // La rentabilité est calculée en pourcentage de marge brute par rapport au budget initial
-        $averageProfitability = $totalBudget > 0 ? (($totalBudget - $totalExpenses) / $totalBudget) * 100 : 0;
+        $averageProfitability = $totalPaid > 0 ? (($totalPaid - $totalExpenses) / $totalPaid) * 100 : 0;
         
         // Trier les projets par gain brut pour identifier les plus et moins rentables
         $profitableProjects = $projects->sortByDesc('gross_gain')->values();
@@ -159,6 +158,7 @@ class HistoryStatsController extends Controller
                 'budget' => $p->budget,
                 'total_expenses' => $p->total_expenses,
                 'gross_gain' => $p->gross_gain,
+                'profitability' => $p->profitability_rate,
                 'created_at' => $p->created_at->format('Y-m-d'),
             ];
         });
@@ -167,7 +167,7 @@ class HistoryStatsController extends Controller
     /**
      * Formate la pagination des activités pour Inertia.
      */
-    private function formatActivities($activities)
+    private function formatActivities(\Illuminate\Pagination\LengthAwarePaginator $activities)
     {
         return $activities->through(fn ($activity) => [
             'id'           => $activity->id,

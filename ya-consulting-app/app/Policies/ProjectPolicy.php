@@ -17,6 +17,7 @@ use App\Models\User;
  * - Admin       : accès total à toutes les actions sur tous les projets.
  * - Chef Projet : accès limité à SES propres projets (created_by === user->id).
  * - Collaborateur: lecture seule (view/viewAny), aucune écriture.
+ * - Client : lecture seule de SES propres projets (client_id === user->client_id), aucune écriture.
  */
 class ProjectPolicy
 {

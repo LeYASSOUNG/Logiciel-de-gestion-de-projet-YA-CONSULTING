@@ -28,6 +28,7 @@ class ClientRegistrationController extends Controller
             ],
             // On peut pré-remplir l'email si le client a un email de contact
             'defaultEmail' => $client->contact_email,
+            'submitUrl' => $request->fullUrl(),
         ]);
     }
 

@@ -20,8 +20,11 @@
         <Link v-if="canEdit" :href="route('projects.edit', project.id)" class="btn-action-outline">
           <Icon name="pencil-square" :size="16" /> Modifier
         </Link>
+        <Link v-if="canAddExpense" :href="route('payments.create-for-project', project.id)" class="btn-premium" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);">
+          <Icon name="banknotes" :size="16" /> <span>Encaisser</span>
+        </Link>
         <Link v-if="canAddExpense" :href="route('expenses.create-for-project', project.id)" class="btn-premium">
-          <Icon name="plus" :size="16" /> <span>Ajouter une dépense</span>
+          <Icon name="plus" :size="16" /> <span>Dépenser</span>
         </Link>
       </div>
     </div>
@@ -34,13 +37,49 @@
 
     <!-- KPIs Financiers (Glassmorphism) -->
     <div v-if="canViewFinances" class="kpi-grid fade-in-up delay-2">
+
+      <!-- Budget Initial -->
+      <div class="kpi-card glass">
+        <div class="kpi-icon-wrapper bg-slate">
+          <Icon name="archive-box" :size="24" />
+        </div>
+        <div class="kpi-info">
+          <div class="kpi-label">Budget Initial</div>
+          <div class="kpi-value text-slate">{{ formatAmount(project.initial_budget || project.budget) }}</div>
+        </div>
+      </div>
+
+      <!-- Budget Actuel -->
       <div class="kpi-card glass">
         <div class="kpi-icon-wrapper bg-blue">
           <Icon name="banknotes" :size="24" />
         </div>
         <div class="kpi-info">
-          <div class="kpi-label">Budget Alloué</div>
-          <div class="kpi-value text-slate">{{ formatAmount(project.budget) }}</div>
+          <div class="kpi-label">Budget Actuel</div>
+          <div class="kpi-value text-blue">{{ formatAmount(project.budget) }}</div>
+          <div v-if="project.budget != project.initial_budget" class="kpi-subtext mt-xs" :class="project.budget > project.initial_budget ? 'text-emerald' : 'text-red'">
+            {{ project.budget > project.initial_budget ? '+' : '' }}{{ formatAmount(project.budget - project.initial_budget) }}
+          </div>
+        </div>
+      </div>
+
+      <div class="kpi-card glass">
+        <div class="kpi-icon-wrapper bg-emerald">
+          <Icon name="arrow-down-tray" :size="24" />
+        </div>
+        <div class="kpi-info">
+          <div class="kpi-label">Montant Encaissé</div>
+          <div class="kpi-value text-emerald">{{ formatAmount(project.total_paid) }}</div>
+        </div>
+      </div>
+
+      <div class="kpi-card glass">
+        <div class="kpi-icon-wrapper" :class="project.balance_due == 0 ? 'bg-slate' : 'bg-red'">
+          <Icon name="scale" :size="24" />
+        </div>
+        <div class="kpi-info">
+          <div class="kpi-label">Reste à payer</div>
+          <div class="kpi-value" :class="project.balance_due == 0 ? 'text-slate' : 'text-red'">{{ formatAmount(project.balance_due) }}</div>
         </div>
       </div>
 
@@ -66,6 +105,39 @@
           <div class="kpi-subtext" :class="project.is_profitable ? 'text-emerald' : 'text-red'">
             {{ project.is_profitable ? '+' : '' }}{{ project.profitability }}% de rentabilité
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KPIs Financiers Restreints (Pour le Client) -->
+    <div v-if="!canViewFinances" class="kpi-grid fade-in-up delay-2">
+      <div class="kpi-card glass">
+        <div class="kpi-icon-wrapper bg-blue">
+          <Icon name="banknotes" :size="24" />
+        </div>
+        <div class="kpi-info">
+          <div class="kpi-label">Budget Actuel</div>
+          <div class="kpi-value text-blue">{{ formatAmount(project.budget) }}</div>
+        </div>
+      </div>
+
+      <div class="kpi-card glass">
+        <div class="kpi-icon-wrapper bg-emerald">
+          <Icon name="arrow-down-tray" :size="24" />
+        </div>
+        <div class="kpi-info">
+          <div class="kpi-label">Montant Payé</div>
+          <div class="kpi-value text-emerald">{{ formatAmount(project.total_paid) }}</div>
+        </div>
+      </div>
+
+      <div class="kpi-card glass">
+        <div class="kpi-icon-wrapper" :class="project.balance_due == 0 ? 'bg-slate' : 'bg-red'">
+          <Icon name="scale" :size="24" />
+        </div>
+        <div class="kpi-info">
+          <div class="kpi-label">Reste à payer</div>
+          <div class="kpi-value" :class="project.balance_due == 0 ? 'text-slate' : 'text-red'">{{ formatAmount(project.balance_due) }}</div>
         </div>
       </div>
     </div>
@@ -218,6 +290,62 @@
             </div>
           </div>
 
+        </div>
+      </div>
+    </div>
+
+    <!-- Liste des Paiements / Encaissements -->
+    <div v-if="canViewFinances" class="glass-panel fade-in-up delay-4 mb-xl">
+      <div class="panel-header border-b">
+        <h2>
+          <Icon name="banknotes" :size="18" class="mr-2 text-emerald" />
+          Historique des Encaissements
+          <span class="badge-count">{{ project.payments ? project.payments.length : 0 }}</span>
+        </h2>
+        <Link v-if="canAddExpense" :href="route('payments.create-for-project', project.id)" class="btn-action-outline">
+          <Icon name="plus" :size="14" /> Nouvel encaissement
+        </Link>
+      </div>
+      <div class="panel-body p-0">
+        <div class="table-container">
+          <table class="modern-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th class="text-right">Montant</th>
+                <th>Méthode</th>
+                <th>Référence</th>
+                <th>Saisi par</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="payment in project.payments" :key="payment.id" class="table-row-animate">
+                <td class="text-muted text-xs font-medium">{{ formatDate(payment.payment_date) }}</td>
+                <td class="text-right font-bold text-emerald">{{ formatAmount(payment.amount) }}</td>
+                <td>
+                  <span class="modern-badge bg-slate">{{ payment.payment_method || 'Non précisé' }}</span>
+                </td>
+                <td class="text-muted">{{ payment.reference || '—' }}</td>
+                <td>
+                  <span class="user-tag"><Icon name="user" :size="12"/> {{ payment.creator?.name || '—' }}</span>
+                </td>
+                <td class="text-right">
+                  <div class="action-buttons" style="justify-content: flex-end;">
+                    <button v-if="canEdit" @click="confirmDeletePayment(payment)" class="btn-action delete" title="Supprimer">
+                      <Icon name="trash" :size="14" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <tr v-if="!project.payments || project.payments.length === 0">
+                <td colspan="6" class="empty-state">
+                  <Icon name="inbox" :size="32" class="text-muted mb-2" />
+                  <p>Aucun paiement enregistré pour le moment.</p>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -400,6 +528,12 @@ const getStatusLabel = (status) => {
 const deleteProject = () => {
   if (confirm('Voulez-vous vraiment supprimer ce projet de façon permanente ?')) {
     router.delete(route('projects.destroy', props.project.id));
+  }
+};
+
+const confirmDeletePayment = (payment) => {
+  if (confirm(`Confirmer la suppression de cet encaissement de ${formatAmount(payment.amount)} ?`)) {
+    router.delete(route('payments.destroy', payment.id), { preserveScroll: true });
   }
 };
 
@@ -710,20 +844,22 @@ const chartOptions = computed(() => ({
 .modern-table { width: 100%; border-collapse: collapse; }
 .modern-table th {
   background: rgba(248, 250, 252, 0.6);
-  padding: 14px 1.5rem;
+  padding: 12px 1rem;
   text-align: left;
   font-size: 0.75rem;
   text-transform: uppercase;
   color: #64748b;
   font-weight: 700;
   border-bottom: 1px solid rgba(0,0,0,0.05);
+  white-space: nowrap;
 }
 .modern-table td {
-  padding: 16px 1.5rem;
+  padding: 14px 1rem;
   font-size: 0.85rem;
   border-bottom: 1px solid rgba(0,0,0,0.03);
   color: #334155;
   vertical-align: middle;
+  white-space: nowrap;
 }
 .table-row-animate { transition: background 0.2s; }
 .table-row-animate:hover { background: rgba(248, 250, 252, 0.8); }

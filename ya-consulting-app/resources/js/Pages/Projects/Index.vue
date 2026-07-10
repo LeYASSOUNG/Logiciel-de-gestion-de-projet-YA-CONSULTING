@@ -39,7 +39,7 @@
           <Icon name="chevron-down" :size="14" class="select-icon" />
         </div>
 
-        <div class="filter-group">
+        <div class="filter-group" v-if="clients && clients.length > 1">
           <select v-model="filters.client_id" @change="applyFilters">
             <option value="">Tous les clients</option>
             <option v-for="client in clients" :key="client.id" :value="client.id">
@@ -73,9 +73,9 @@
               <th>Client</th>
               <th>Statut</th>
               <th class="text-right">Budget</th>
-              <th class="text-right">Dépenses</th>
-              <th class="text-right">Gain / Perte</th>
-              <th>Rentabilité</th>
+              <th v-if="!$page.props.auth.user.roles?.includes('client')" class="text-right">Dépenses</th>
+              <th v-if="!$page.props.auth.user.roles?.includes('client')" class="text-right">Gain / Perte</th>
+              <th v-if="!$page.props.auth.user.roles?.includes('client')">Rentabilité</th>
               <th>Début</th>
               <th class="text-right">Actions</th>
             </tr>
@@ -94,24 +94,22 @@
                 </span>
               </td>
               <td class="text-right font-medium text-slate">{{ fmt(project.budget) }}</td>
-              <td class="text-right font-medium text-red">{{ fmt(project.total_expenses) }}</td>
-              <td class="text-right font-bold" :class="project.gross_gain >= 0 ? 'text-emerald' : 'text-red'">
+              <td v-if="!$page.props.auth.user.roles?.includes('client')" class="text-right font-medium text-red">{{ fmt(project.total_expenses) }}</td>
+              <td v-if="!$page.props.auth.user.roles?.includes('client')" class="text-right font-bold" :class="project.gross_gain >= 0 ? 'text-emerald' : 'text-red'">
                 {{ project.gross_gain >= 0 ? '+' : '' }}{{ fmt(project.gross_gain) }}
               </td>
-              <td style="width: 140px;">
-                <div class="flex items-center gap-xs">
-                  <span class="font-medium text-xs" :class="project.profitability >= 0 ? 'text-emerald' : 'text-red'">
+              <td v-if="!$page.props.auth.user.roles?.includes('client')">
+                <div class="profitability-cell">
+                  <div class="profit-bar-bg">
+                    <div class="profit-bar-fill" :class="project.profitability >= 0 ? 'bg-emerald' : 'bg-red'"
+                         :style="`width: ${Math.min(Math.abs(project.profitability), 100)}%`"></div>
+                  </div>
+                  <span class="profit-value" :class="project.profitability >= 0 ? 'text-emerald' : 'text-red'">
                     {{ project.profitability >= 0 ? '+' : '' }}{{ project.profitability }}%
                   </span>
-                  <div class="progress-track">
-                    <div class="progress-fill animated"
-                         :class="project.profitability >= 0 ? 'bg-emerald' : 'bg-red'"
-                         :style="{ '--target-width': Math.min(Math.abs(project.profitability), 100) + '%' }">
-                    </div>
-                  </div>
                 </div>
               </td>
-              <td class="text-muted text-xs">{{ project.start_date }}</td>
+              <td class="text-muted text-sm">{{ project.start_date }}</td>
               <td>
                 <div class="action-buttons">
                   <Link :href="route('projects.show', project.id)" class="btn-action view" title="Voir les détails">
@@ -232,6 +230,7 @@ const clearFilters = () => {
 .text-gradient {
   background: linear-gradient(135deg, #1a2b4a 0%, #C9A84C 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   font-weight: 800;
   margin-bottom: 5px;
