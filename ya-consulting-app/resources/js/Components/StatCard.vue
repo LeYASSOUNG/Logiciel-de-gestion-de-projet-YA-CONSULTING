@@ -4,34 +4,39 @@
     :style="{
       '--stat-color': themeStyles.color,
       '--stat-bg': themeStyles.bg,
-      '--stat-shadow-color': themeStyles.shadow
     }"
   >
+    <!-- Barre de couleur supérieure via ::before dans app.css -->
+
     <div class="stat-card-header">
       <div class="stat-card-main">
-        <div :class="['stat-card-value', colorValueClass]">{{ value }}</div>
         <div class="stat-card-label">{{ label }}</div>
+        <div :class="['stat-card-value', colorValueClass]">{{ value }}</div>
       </div>
       <div v-if="icon" class="stat-card-icon">
-        <Icon :name="icon" :size="24" />
+        <Icon :name="icon" :size="22" />
       </div>
     </div>
 
-    <!-- Trend indicator (optional) -->
-    <div v-if="trend" class="stat-card-trend">
+    <!-- Trend indicator -->
+    <div v-if="trend !== null" class="stat-card-trend">
       <span :class="['trend', trendClass]">
-        <span v-if="trend > 0">↑</span>
-        <span v-else-if="trend < 0">↓</span>
-        <span v-else>→</span>
+        <svg v-if="trend > 0" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="18 15 12 9 6 15"/>
+        </svg>
+        <svg v-else-if="trend < 0" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+        <svg v-else width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
         {{ Math.abs(trend) }}%
       </span>
-      <span v-if="trendLabel" style="font-size:.72rem; color:var(--color-text-muted); margin-left:4px;">{{ trendLabel }}</span>
+      <span v-if="trendLabel" class="trend-label">{{ trendLabel }}</span>
     </div>
 
     <div v-if="footer || $slots.footer" class="stat-card-footer">
-      <slot name="footer">
-        {{ footer }}
-      </slot>
+      <slot name="footer">{{ footer }}</slot>
     </div>
   </div>
 </template>
@@ -41,32 +46,45 @@ import { computed } from 'vue';
 import Icon from '@/Components/Icon.vue';
 
 const props = defineProps({
-  label:           { type: String, required: true },
+  label:           { type: String,           required: true },
   value:           { type: [String, Number], required: true },
-  icon:            { type: String, default: '' },
-  color:           { type: String, default: 'accent' }, // success, danger, warning, info, accent, primary
-  colorValueClass: { type: String, default: '' },
-  footer:          { type: String, default: '' },
-  trend:           { type: Number, default: null },      // positive = up, negative = down, 0 = flat
-  trendLabel:      { type: String, default: '' },
+  icon:            { type: String,           default: '' },
+  color:           { type: String,           default: 'accent' },
+  colorValueClass: { type: String,           default: '' },
+  footer:          { type: String,           default: '' },
+  trend:           { type: Number,           default: null },
+  trendLabel:      { type: String,           default: '' },
 });
 
-// Theme style mappings
 const themes = {
-  primary: { color: 'var(--color-primary)', bg: 'rgba(26,43,74,.1)',   shadow: 'rgba(26,43,74,.2)' },
-  accent:  { color: 'var(--color-accent)',  bg: 'rgba(201,168,76,.1)', shadow: 'rgba(201,168,76,.2)' },
-  success: { color: 'var(--color-success)', bg: 'rgba(16,185,129,.1)', shadow: 'rgba(16,185,129,.2)' },
-  danger:  { color: 'var(--color-danger)',  bg: 'rgba(239,68,68,.1)',  shadow: 'rgba(239,68,68,.2)' },
-  warning: { color: 'var(--color-warning)', bg: 'rgba(245,158,11,.1)', shadow: 'rgba(245,158,11,.2)' },
-  info:    { color: 'var(--color-info)',    bg: 'rgba(59,130,246,.1)', shadow: 'rgba(59,130,246,.2)' },
+  primary: { color: 'var(--color-primary)', bg: 'rgba(15,28,51,.1)' },
+  accent:  { color: 'var(--color-accent)',  bg: 'rgba(212,177,84,.12)' },
+  success: { color: 'var(--color-success)', bg: 'rgba(5,150,105,.1)' },
+  danger:  { color: 'var(--color-danger)',  bg: 'rgba(220,38,38,.1)' },
+  warning: { color: 'var(--color-warning)', bg: 'rgba(217,119,6,.1)' },
+  info:    { color: 'var(--color-info)',    bg: 'rgba(2,132,199,.1)' },
 };
 
 const themeStyles = computed(() => themes[props.color] || themes.accent);
 
 const trendClass = computed(() => {
   if (props.trend === null) return '';
-  if (props.trend > 0) return 'trend-up';
-  if (props.trend < 0) return 'trend-down';
+  if (props.trend > 0)  return 'trend-up';
+  if (props.trend < 0)  return 'trend-down';
   return 'trend-flat';
 });
 </script>
+
+<style scoped>
+.stat-card-trend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.trend-label {
+  font-size: .72rem;
+  color: var(--color-text-muted);
+}
+</style>

@@ -289,7 +289,12 @@ const budgetChartOptions = computed(() => ({
   stroke: { show: true, width: 2, colors: ['transparent'] },
   xaxis: {
     categories: (props.projects_budget_chart || []).map(p => p.name),
-    labels: { style: { colors: '#64748B', fontSize: '11px', fontWeight: 500 } }
+    labels: { 
+      style: { colors: '#64748B', fontSize: '11px', fontWeight: 500 },
+      formatter: function(val) {
+        return val && val.length > 15 ? val.substring(0, 15) + '...' : val;
+      }
+    }
   },
   yaxis: {
     labels: {

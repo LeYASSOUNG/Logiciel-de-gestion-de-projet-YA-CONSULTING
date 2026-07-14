@@ -49,9 +49,32 @@
               </div>
             </FormField>
 
-            <!-- Fichier justificatif -->
-            <FormField label="Justificatif (PDF, Image - max 5Mo)" :error="errors.receipt">
-              <input type="file" @input="form.receipt = $event.target.files[0]" class="form-control" :class="{ error: errors.receipt }" accept="image/*,application/pdf" />
+            <!-- Fichier justificatif amélioré -->
+            <FormField label="Justificatif (PDF, Image — max 5 Mo)" :error="errors.receipt">
+              <div class="file-drop-zone" :class="{ 'has-file': selectedFileName }">
+                <input
+                  type="file"
+                  @input="handleFile"
+                  class="file-input"
+                  accept="image/*,application/pdf"
+                />
+                <div v-if="!selectedFileName" class="file-placeholder">
+                  <div class="file-icon">
+                    <Icon name="arrow-up-tray" :size="22" />
+                  </div>
+                  <div class="file-text">
+                    <span class="file-cta">Cliquer ou glisser un fichier</span>
+                    <span class="file-sub">PDF, PNG, JPG — max 5 Mo</span>
+                  </div>
+                </div>
+                <div v-else class="file-selected">
+                  <Icon name="paper-clip" :size="18" />
+                  <span>{{ selectedFileName }}</span>
+                  <span class="file-remove" @click.prevent="removeFile">
+                    <Icon name="x-mark" :size="14" />
+                  </span>
+                </div>
+              </div>
             </FormField>
           </div>
 
@@ -62,16 +85,16 @@
           </FormField>
 
           <!-- Actions -->
-          <div style="display:flex; justify-content:flex-end; gap:var(--space-md); margin-top:var(--space-xl); padding-top:var(--space-lg); border-top:1px solid var(--color-border);">
+          <div class="form-actions">
             <Button as="Link" :href="selected_project ? route('projects.show', selected_project.id) : route('expenses.index')" variant="outline">
+              <template v-slot:icon-left><Icon name="arrow-left" :size="15" /></template>
               Annuler
             </Button>
             <Button type="submit" variant="accent" :disabled="form.processing">
-              <span v-if="form.processing">Enregistrement...</span>
-              <span v-else style="display: flex; align-items: center; gap: 8px;">
-                <Icon name="check" :size="16" />
-                Enregistrer la dépense
-              </span>
+              <template v-if="form.processing">Enregistrement...</template>
+              <template v-else>
+                <Icon name="check" :size="16" /> Enregistrer la dépense
+              </template>
             </Button>
           </div>
         </form>
@@ -81,6 +104,7 @@
 </template>
 
 <script setup>
+import { ref } from 'vue';
 import { useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import PageHeader from '@/Components/PageHeader.vue';
@@ -134,4 +158,124 @@ const submit = () => {
     forceFormData: true,
   });
 };
+
+const selectedFileName = ref('');
+
+const handleFile = (event) => {
+  const file = event.target.files[0];
+  if (file) {
+    form.receipt = file;
+    selectedFileName.value = file.name;
+  }
+};
+
+const removeFile = () => {
+  form.receipt = null;
+  selectedFileName.value = '';
+};
 </script>
+
+<style scoped>
+/* Zone de drop fichier */
+.file-drop-zone {
+  position: relative;
+  border: 2px dashed var(--color-border-light);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  cursor: pointer;
+  transition: var(--transition);
+  background: var(--color-bg-light);
+  overflow: hidden;
+}
+
+.file-drop-zone:hover {
+  border-color: var(--color-accent);
+  background: rgba(212,177,84,.04);
+}
+
+.file-drop-zone.has-file {
+  border-style: solid;
+  border-color: var(--color-success);
+  background: rgba(5,150,105,.04);
+}
+
+.file-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+
+.file-placeholder {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  pointer-events: none;
+}
+
+.file-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  background: rgba(212,177,84,.1);
+  color: var(--color-accent-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.file-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.file-cta {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+.file-sub {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.file-selected {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-success);
+  font-weight: 600;
+  font-size: 0.875rem;
+  pointer-events: none;
+}
+
+.file-selected > :last-child {
+  pointer-events: all;
+  cursor: pointer;
+  margin-left: auto;
+  color: var(--color-text-muted);
+  padding: 4px;
+  border-radius: var(--radius-xs);
+  transition: var(--transition);
+}
+
+.file-selected > :last-child:hover {
+  background: rgba(220,38,38,.1);
+  color: var(--color-danger);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-md);
+  margin-top: var(--space-xl);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--color-border-light);
+}
+</style>

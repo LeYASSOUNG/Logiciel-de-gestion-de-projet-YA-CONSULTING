@@ -342,7 +342,7 @@ const getStatusLabel = (status) => {
 .kpi-icon-wrapper {
   width: 50px;
   height: 50px;
-  border-radius: 0;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -385,14 +385,16 @@ const getStatusLabel = (status) => {
 .glass {
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 0;
+  border-radius: var(--radius-lg);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 .glass-panel {
   background: rgba(255, 255, 255, 0.8);
   backdrop-filter: blur(15px);
-  border-radius: 0;
+  -webkit-backdrop-filter: blur(15px);
+  border-radius: var(--radius-lg);
   border: 1px solid rgba(255, 255, 255, 0.6);
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
   margin-bottom: 2.5rem;
@@ -434,21 +436,22 @@ const getStatusLabel = (status) => {
 }
 .filter-group select {
   appearance: none;
-  background: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 0;
+  background: #fff;
+  border: 1.5px solid rgba(226,232,240,0.9);
+  border-radius: var(--radius-sm);
   padding: 8px 30px 8px 12px;
   font-size: 0.85rem;
-  color: #334155;
+  color: var(--color-text);
   font-weight: 500;
   outline: none;
-  transition: all 0.2s;
+  transition: var(--transition);
   cursor: pointer;
+  box-shadow: var(--shadow-xs);
 }
 .filter-group select:focus, .filter-group select:hover {
   background: #fff;
-  border-color: #C9A84C;
-  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.1);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(212,177,84,.1);
 }
 .select-icon {
   position: absolute;
@@ -459,21 +462,22 @@ const getStatusLabel = (status) => {
   pointer-events: none;
 }
 .btn-reset {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-  border: none;
-  border-radius: 0;
+  background: rgba(220, 38, 38, 0.08);
+  color: var(--color-danger);
+  border: 1.5px solid rgba(220,38,38,.2);
+  border-radius: var(--radius-sm);
   width: 34px;
   height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: var(--transition);
 }
 .btn-reset:hover {
-  background: #ef4444;
+  background: var(--color-danger);
   color: white;
+  border-color: var(--color-danger);
 }
 
 /* Modern Table */
@@ -520,27 +524,27 @@ const getStatusLabel = (status) => {
 }
 .modern-badge {
   padding: 4px 10px;
-  border-radius: 0;
+  border-radius: var(--radius-full);
   font-size: 0.75rem;
   font-weight: 600;
 }
-.status-blue { background: #eff6ff; color: #2563eb; }
-.status-emerald { background: #ecfdf5; color: #059669; }
-.status-gold { background: #fefce8; color: #ca8a04; }
-.status-gray { background: #f1f5f9; color: #475569; }
+.status-blue { background: rgba(37,99,235,.1); color: #2563eb; }
+.status-emerald { background: rgba(5,150,105,.1); color: var(--color-success); }
+.status-gold { background: rgba(212,177,84,.15); color: var(--color-accent-dark); }
+.status-gray { background: rgba(71,85,105,.1); color: #475569; }
 
 /* Progress Bars */
 .progress-track {
   width: 100%;
-  background: #e2e8f0;
-  border-radius: 0;
+  background: var(--color-bg-light);
+  border-radius: var(--radius-full);
   height: 6px;
   overflow: hidden;
 }
 .progress-track.lg { height: 8px; }
 .progress-fill {
   height: 100%;
-  border-radius: 0;
+  border-radius: var(--radius-full);
   transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .progress-fill.animated {
@@ -581,7 +585,7 @@ const getStatusLabel = (status) => {
   display: inline-block;
   width: 10px;
   height: 10px;
-  border-radius: 0;
+  border-radius: var(--radius-full);
   margin-right: 6px;
 }
 
@@ -607,10 +611,10 @@ const getStatusLabel = (status) => {
   top: 4px;
   width: 12px;
   height: 12px;
-  border-radius: 0;
-  background: #C9A84C;
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
   border: 3px solid #fff;
-  box-shadow: 0 0 0 2px rgba(201, 168, 76, 0.2);
+  box-shadow: 0 0 0 2px rgba(212,177,84,.2);
   z-index: 1;
 }
 .timeline-item:not(:last-child)::before {
@@ -631,10 +635,10 @@ const getStatusLabel = (status) => {
 .timeline-user {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #1a2b4a;
+  color: var(--color-primary);
   background: rgba(26, 43, 74, 0.05);
   padding: 2px 8px;
-  border-radius: 0;
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   gap: 4px;

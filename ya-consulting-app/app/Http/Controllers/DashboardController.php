@@ -82,9 +82,6 @@ class DashboardController extends Controller
         if ($user->hasRole('chef_projet')) {
             $query->where('created_by', $user->id);
         }
-        if ($user->hasRole('client')) {
-            $query->where('client_id', $user->client_id);
-        }
         return $query;
     }
 
@@ -129,8 +126,6 @@ class DashboardController extends Controller
         $query = Expense::with('category');
         if ($user->hasRole('chef_projet')) {
             $query->whereHas('project', fn ($q) => $q->where('created_by', $user->id));
-        } elseif ($user->hasRole('client')) {
-            $query->whereHas('project', fn ($q) => $q->where('client_id', $user->client_id));
         }
         return $query->get()
             ->groupBy('category_id')
@@ -152,9 +147,6 @@ class DashboardController extends Controller
             ->where('date', '>=', now()->subMonths(12)->startOfMonth())
             ->when($user->hasRole('chef_projet'), function ($q) use ($user) {
                 $q->whereHas('project', fn ($qp) => $qp->where('created_by', $user->id));
-            })
-            ->when($user->hasRole('client'), function ($q) use ($user) {
-                $q->whereHas('project', fn ($qp) => $qp->where('client_id', $user->client_id));
             })
             ->get();
 

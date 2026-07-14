@@ -662,7 +662,7 @@ const chartOptions = computed(() => ({
   border-left: 4px solid #ef4444;
   color: #b91c1c;
   padding: 1rem 1.5rem;
-  border-radius: 0;
+  border-radius: var(--radius-sm);
   margin-bottom: 2rem;
   display: flex;
   align-items: center;
@@ -691,7 +691,7 @@ const chartOptions = computed(() => ({
 .kpi-icon-wrapper {
   width: 56px;
   height: 56px;
-  border-radius: 0;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -731,14 +731,16 @@ const chartOptions = computed(() => ({
 .glass {
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 0;
+  border-radius: var(--radius-lg);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
 .glass-panel {
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
-  border-radius: 0;
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: var(--radius-lg);
   border: 1px solid rgba(255, 255, 255, 0.6);
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
   overflow: hidden;
@@ -763,7 +765,7 @@ const chartOptions = computed(() => ({
   color: #475569;
   font-size: 0.8rem;
   padding: 2px 8px;
-  border-radius: 0;
+  border-radius: var(--radius-full);
   margin-left: 10px;
 }
 .border-b { border-bottom: 1px solid rgba(0,0,0,0.06); }
@@ -829,7 +831,7 @@ const chartOptions = computed(() => ({
 .ax-pct {
   background: rgba(0,0,0,0.05);
   padding: 2px 8px;
-  border-radius: 0;
+  border-radius: var(--radius-sm);
   font-size: 0.75rem;
 }
 .ax-amounts { margin-bottom: 12px; }
@@ -870,11 +872,11 @@ const chartOptions = computed(() => ({
   gap: 6px;
   background: rgba(241, 245, 249, 0.8);
   padding: 4px 10px;
-  border-radius: 0;
+  border-radius: var(--radius-sm);
   font-size: 0.8rem;
   font-weight: 600;
 }
-.color-dot { width: 10px; height: 10px; border-radius: 0; }
+.color-dot { width: 10px; height: 10px; border-radius: var(--radius-full); }
 .user-tag {
   display: inline-flex;
   align-items: center;
@@ -897,7 +899,7 @@ const chartOptions = computed(() => ({
 .action-buttons { display: flex; justify-content: flex-end; gap: 8px; }
 .btn-action {
   width: 32px; height: 32px;
-  border-radius: 0;
+  border-radius: var(--radius-sm);
   display: flex; align-items: center; justify-content: center;
   background: rgba(241, 245, 249, 0.8);
   color: #64748b;
@@ -923,26 +925,26 @@ const chartOptions = computed(() => ({
 .danger-zone h3 { margin: 0 0 4px 0; color: #b91c1c; font-size: 1.1rem; }
 .danger-zone p { margin: 0; color: #7f1d1d; font-size: 0.9rem; }
 .btn-danger {
-  background: #ef4444; color: white;
+  background: var(--color-danger); color: white;
   border: none; padding: 10px 20px;
-  border-radius: 0; font-weight: 600;
+  border-radius: var(--radius-sm); font-weight: 600;
   display: inline-flex; align-items: center; gap: 8px;
   cursor: pointer; transition: all 0.2s;
 }
 .btn-danger:hover { background: #dc2626; box-shadow: 0 4px 12px rgba(239,68,68,0.3); }
 
 /* Progress Bars */
-.progress-track { width: 100%; background: #e2e8f0; border-radius: 0; height: 6px; overflow: hidden; }
-.progress-fill { height: 100%; border-radius: 0; }
+.progress-track { width: 100%; background: var(--color-bg-light); border-radius: var(--radius-full); height: 6px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: var(--radius-full); }
 .progress-fill.animated { animation: loadBar 1s cubic-bezier(0.4, 0, 0.2, 1) forwards; width: 0 !important; }
 @keyframes loadBar { to { width: var(--target-width); } }
 
 /* Badges */
-.modern-badge { padding: 4px 10px; border-radius: 0; font-size: 0.75rem; font-weight: 600; }
-.status-blue { background: #eff6ff; color: #2563eb; }
-.status-emerald { background: #ecfdf5; color: #059669; }
-.status-gold { background: #fefce8; color: #ca8a04; }
-.status-gray { background: #f1f5f9; color: #475569; }
+.modern-badge { padding: 4px 10px; border-radius: var(--radius-full); font-size: 0.75rem; font-weight: 600; }
+.status-blue { background: rgba(37,99,235,.1); color: #2563eb; }
+.status-emerald { background: rgba(5,150,105,.1); color: var(--color-success); }
+.status-gold { background: rgba(212,177,84,.15); color: var(--color-accent-dark); }
+.status-gray { background: rgba(71,85,105,.1); color: #475569; }
 
 /* Utils */
 .text-slate { color: #334155; }

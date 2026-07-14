@@ -20,22 +20,18 @@
 
       <!-- Filtres -->
       <div class="filters-bar">
-        <div style="position: relative; flex: 1; min-width: 200px; max-width: 300px;">
+        <div class="search-box" style="max-width: 320px;">
+          <Icon name="magnifying-glass" :size="16" class="search-icon" />
           <input
             v-model="search"
-            class="form-control"
-            style="padding-left: 36px;"
+            class="search-input"
             placeholder="Rechercher un client..."
             @input="applyFilters"
           />
-          <Icon name="magnifying-glass" :size="16" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-text-light);" />
         </div>
-        <Button v-if="search" variant="outline" size="sm" @click="clearFilters">
-          <template v-slot:icon-left>
-            <Icon name="x-mark" :size="14" />
-          </template>
-          Effacer
-        </Button>
+        <button v-if="search" class="btn-reset" @click="clearFilters" title="Effacer">
+          <Icon name="x-mark" :size="16" />
+        </button>
       </div>
 
       <!-- Tableau -->
@@ -44,42 +40,48 @@
           <table class="table">
             <thead>
               <tr>
-                <th>Nom</th>
-                <th>Entreprise</th>
+                <th>Client</th>
                 <th>Email de contact</th>
                 <th>Téléphone</th>
                 <th>Adresse</th>
-                <th v-if="canManage" style="width:120px"></th>
+                <th v-if="canManage" class="text-right" style="width:120px">Actions</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="client in clients.data" :key="client.id">
-                <td><strong style="color:var(--color-primary);">{{ client.name }}</strong></td>
-                <td>{{ client.company || '—' }}</td>
                 <td>
-                  <a v-if="client.contact_email" :href="`mailto:${client.contact_email}`" class="link-primary">
+                  <div class="client-cell">
+                    <div class="avatar avatar-md" :class="getAvatarColor(client.name)">
+                      {{ initials(client.name) }}
+                    </div>
+                    <div>
+                      <div class="client-name">{{ client.name }}</div>
+                      <div v-if="client.company" class="client-company">{{ client.company }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <a v-if="client.contact_email" :href="`mailto:${client.contact_email}`" class="email-link">
+                    <Icon name="envelope" :size="13" />
                     {{ client.contact_email }}
                   </a>
-                  <span v-else>—</span>
+                  <span v-else class="text-muted">—</span>
                 </td>
-                <td>{{ client.contact_phone || '—' }}</td>
-                <td class="text-muted" style="font-size:.8rem; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                  {{ client.address || '—' }}
+                <td>
+                  <a v-if="client.contact_phone" :href="`tel:${client.contact_phone}`" class="phone-link">
+                    {{ client.contact_phone }}
+                  </a>
+                  <span v-else class="text-muted">—</span>
                 </td>
-                <td v-if="canManage" style="text-align:right">
-                  <div style="display:flex; gap:6px; justify-content:flex-end;">
-                    <Button v-if="client.contact_email" variant="outline" size="sm" style="padding: 6px 10px;" @click="sendInvitationEmail(client)" title="Envoyer le lien par e-mail">
-                      <Icon name="envelope" :size="14" />
-                    </Button>
-                    <Button variant="outline" size="sm" style="padding: 6px 10px;" @click="copyInvitationLink(client)" title="Copier le lien d'invitation magique">
-                      <Icon name="link" :size="14" />
-                    </Button>
-                    <Button variant="outline" size="sm" style="padding: 6px 10px;" @click="openEditModal(client)">
+                <td class="text-muted ellipsis" style="max-width:200px;">{{ client.address || '—' }}</td>
+                <td v-if="canManage" class="text-right">
+                  <div class="action-group">
+                    <button class="action-btn" title="Modifier" @click="openEditModal(client)">
                       <Icon name="pencil-square" :size="14" />
-                    </Button>
-                    <Button variant="outline" size="sm" class="text-danger" style="padding: 6px 10px;" @click="deleteClient(client.id)">
+                    </button>
+                    <button class="action-btn danger" title="Supprimer" @click="deleteClient(client.id)">
                       <Icon name="trash" :size="14" />
-                    </Button>
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -87,12 +89,19 @@
           </table>
         </div>
 
-        <div v-else style="padding: var(--space-xl);">
+        <div v-else>
           <EmptyState
             title="Aucun client trouvé"
             description="Essayez de modifier vos filtres ou de créer un nouveau client."
             icon="users"
-          />
+          >
+            <template v-slot:action>
+              <Button v-if="canManage" variant="accent" size="sm" @click="openCreateModal">
+                <template v-slot:icon-left><Icon name="plus" :size="14" /></template>
+                Ajouter un client
+              </Button>
+            </template>
+          </EmptyState>
         </div>
 
         <!-- Pagination -->
@@ -101,54 +110,69 @@
     </div>
 
     <!-- Modal Formulaire (Créer / Modifier) -->
-    <div v-if="showModal" style="position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(15,28,51,0.5); display:flex; align-items:center; justify-content:center; z-index:1000; backdrop-filter:blur(3px);">
-      <div class="card animate-fade-up" style="width:100%; max-width:560px; margin:20px;">
-        <div class="card-header">
-          <h2 class="card-title">{{ modalTitle }}</h2>
-          <button @click="closeModal" style="background:none; border:none; font-size:1.2rem; cursor:pointer; color:var(--color-text-muted)">✕</button>
-        </div>
-        <div class="card-body">
-          <form @submit.prevent="submit">
-            <FormField label="Nom du contact" :error="errors.name" required>
-              <input v-model="form.name" type="text" class="form-control" :class="{ error: errors.name }" placeholder="Ex: Moustapha Diop" required />
-            </FormField>
-
-            <FormField label="Entreprise / Organisation">
-              <input v-model="form.company" type="text" class="form-control" placeholder="Ex: YA CONSULTING" />
-            </FormField>
-
-            <div class="form-grid">
-              <FormField label="Email de contact" :error="errors.contact_email">
-                <input v-model="form.contact_email" type="email" class="form-control" :class="{ error: errors.contact_email }" placeholder="Ex: client@entreprise.sn" />
-              </FormField>
-
-              <FormField label="Téléphone">
-                <input v-model="form.contact_phone" type="text" class="form-control" placeholder="Ex: +221 77 000 00 00" />
-              </FormField>
+    <Teleport to="body">
+      <Transition name="modal">
+        <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
+          <div class="modal-card animate-scale-in">
+            <!-- Header modal -->
+            <div class="modal-header">
+              <div class="modal-header-icon">
+                <Icon name="user-circle" :size="20" />
+              </div>
+              <h2 class="modal-title">{{ modalTitle }}</h2>
+              <button class="modal-close" @click="closeModal" title="Fermer">
+                <Icon name="x-mark" :size="18" />
+              </button>
             </div>
 
-            <FormField label="Adresse physique">
-              <input v-model="form.address" type="text" class="form-control" placeholder="Ex: Palmerai, la rue ministre, Abidjan" />
-            </FormField>
+            <div class="modal-body">
+              <form @submit.prevent="submit">
+                <FormField label="Nom du contact" :error="errors.name" required>
+                  <input v-model="form.name" type="text" class="form-control" :class="{ error: errors.name }"
+                    placeholder="Ex: Moustapha Diop" required />
+                </FormField>
 
-            <FormField label="Notes / Commentaires">
-              <textarea v-model="form.notes" class="form-control" rows="2" placeholder="Informations complémentaires sur le client..." />
-            </FormField>
+                <FormField label="Entreprise / Organisation">
+                  <input v-model="form.company" type="text" class="form-control" placeholder="Ex: YA CONSULTING" />
+                </FormField>
 
-            <div style="display:flex; justify-content:flex-end; gap:var(--space-md); margin-top:var(--space-xl); padding-top:var(--space-lg); border-top:1px solid var(--color-border);">
-              <Button type="button" variant="outline" @click="closeModal">Annuler</Button>
-              <Button type="submit" variant="accent" :disabled="form.processing">
-                <span v-if="form.processing">Enregistrement...</span>
-                <span v-else style="display: flex; align-items: center; gap: 8px;">
-                  <Icon name="check" :size="16" />
-                  Enregistrer
-                </span>
-              </Button>
+                <div class="form-grid">
+                  <FormField label="Email de contact" :error="errors.contact_email">
+                    <input v-model="form.contact_email" type="email" class="form-control"
+                      :class="{ error: errors.contact_email }" placeholder="client@entreprise.sn" />
+                  </FormField>
+
+                  <FormField label="Téléphone">
+                    <input v-model="form.contact_phone" type="text" class="form-control"
+                      placeholder="+221 77 000 00 00" />
+                  </FormField>
+                </div>
+
+                <FormField label="Adresse physique">
+                  <input v-model="form.address" type="text" class="form-control"
+                    placeholder="Ex: Plateau, Abidjan" />
+                </FormField>
+
+                <FormField label="Notes / Commentaires">
+                  <textarea v-model="form.notes" class="form-control" rows="2"
+                    placeholder="Informations complémentaires..." />
+                </FormField>
+
+                <div class="modal-actions">
+                  <Button type="button" variant="outline" @click="closeModal">Annuler</Button>
+                  <Button type="submit" variant="accent" :disabled="form.processing">
+                    <template v-if="form.processing">Enregistrement...</template>
+                    <template v-else>
+                      <Icon name="check" :size="16" /> Enregistrer
+                    </template>
+                  </Button>
+                </div>
+              </form>
             </div>
-          </form>
+          </div>
         </div>
-      </div>
-    </div>
+      </Transition>
+    </Teleport>
   </AppLayout>
 </template>
 
@@ -172,9 +196,9 @@ const props = defineProps({
 const page = usePage();
 const user = computed(() => page.props.auth?.user);
 
-const canManage = computed(() => {
-  return user.value.roles?.includes('admin') || user.value.roles?.includes('chef_projet');
-});
+const canManage = computed(() =>
+  user.value.roles?.includes('admin') || user.value.roles?.includes('chef_projet')
+);
 
 const search = ref(props.filters.search || '');
 const showModal = ref(false);
@@ -193,33 +217,13 @@ const form = useForm({
 
 const errors = form.errors;
 
-let debounce;
+// Avatars
+const avatarColors = ['avatar-primary', 'avatar-blue', 'avatar-emerald', 'avatar-purple', 'avatar-rose', 'avatar-orange', 'avatar-teal'];
+const getAvatarColor = (name) => avatarColors[(name?.charCodeAt(0) || 0) % avatarColors.length];
+const initials = (name) => (name || '?').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+
 const applyFilters = () => {
-  router.get(route('clients.index'), { search: search.value }, {
-    preserveState: true,
-    replace: true,
-  });
-};
-
-const copyInvitationLink = (client) => {
-  if (client.invitation_link) {
-    navigator.clipboard.writeText(client.invitation_link)
-      .then(() => alert(`Lien d'invitation copié pour ${client.name} !`))
-      .catch(() => alert("Impossible de copier le lien."));
-  }
-};
-
-const sendInvitationEmail = (client) => {
-  if (confirm(`Voulez-vous envoyer l'invitation à ${client.contact_email} ?`)) {
-    router.post(route('clients.send-invitation', client.id), {}, {
-      preserveScroll: true,
-      onSuccess: () => alert("E-mail envoyé avec succès !"),
-      onError: (err) => {
-        if (err.email) alert(err.email);
-        else alert("Une erreur est survenue lors de l'envoi de l'e-mail.");
-      }
-    });
-  }
+  router.get(route('clients.index'), { search: search.value }, { preserveState: true, replace: true });
 };
 
 const clearFilters = () => {
@@ -236,12 +240,12 @@ const openCreateModal = () => {
 
 const openEditModal = (client) => {
   editingClientId.value = client.id;
-  form.name = client.name;
-  form.company = client.company || '';
+  form.name          = client.name;
+  form.company       = client.company || '';
   form.contact_email = client.contact_email || '';
   form.contact_phone = client.contact_phone || '';
-  form.address = client.address || '';
-  form.notes = client.notes || '';
+  form.address       = client.address || '';
+  form.notes         = client.notes || '';
   form.clearErrors();
   showModal.value = true;
 };
@@ -254,13 +258,9 @@ const closeModal = () => {
 
 const submit = () => {
   if (editingClientId.value) {
-    form.put(route('clients.update', editingClientId.value), {
-      onSuccess: () => closeModal(),
-    });
+    form.put(route('clients.update', editingClientId.value), { onSuccess: () => closeModal() });
   } else {
-    form.post(route('clients.store'), {
-      onSuccess: () => closeModal(),
-    });
+    form.post(route('clients.store'), { onSuccess: () => closeModal() });
   }
 };
 
@@ -270,3 +270,181 @@ const deleteClient = (id) => {
   }
 };
 </script>
+
+<style scoped>
+/* Cellule Client */
+.client-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.client-name {
+  font-weight: 600;
+  color: var(--color-primary);
+  font-size: 0.9rem;
+}
+
+.client-company {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-top: 1px;
+}
+
+/* Liens */
+.email-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--color-accent-dark);
+  font-size: 0.875rem;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.email-link:hover { color: var(--color-primary); }
+
+.phone-link {
+  color: var(--color-text);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+.phone-link:hover { color: var(--color-accent-dark); }
+
+/* Boutons d'action */
+.action-group {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.action-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-light);
+  border: 1px solid var(--color-border-light);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+.action-btn:hover {
+  background: #eff6ff;
+  color: #3b82f6;
+  border-color: #bfdbfe;
+}
+.action-btn.danger:hover {
+  background: #fee2e2;
+  color: var(--color-danger);
+  border-color: #fecaca;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 28, 51, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 24px;
+}
+
+.modal-card {
+  background: #fff;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  width: 100%;
+  max-width: 560px;
+  overflow: hidden;
+  border: 1px solid var(--color-border-light);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--color-border-light);
+  background: linear-gradient(to bottom, rgba(248,250,252,0.9), white);
+}
+
+.modal-header-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-sm);
+  background: rgba(212,177,84,.12);
+  color: var(--color-accent-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.modal-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  flex: 1;
+  margin: 0;
+}
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-light);
+  background: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+  flex-shrink: 0;
+}
+.modal-close:hover {
+  background: var(--color-bg-light);
+  color: var(--color-text);
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-md);
+  margin-top: var(--space-xl);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--color-border-light);
+}
+
+/* Transition Modal */
+.modal-enter-active, .modal-leave-active {
+  transition: opacity 0.2s ease;
+}
+.modal-enter-from, .modal-leave-to {
+  opacity: 0;
+}
+.modal-enter-active .modal-card,
+.modal-leave-active .modal-card {
+  transition: transform 0.25s cubic-bezier(0.16,1,0.3,1), opacity 0.2s ease;
+}
+.modal-enter-from .modal-card {
+  transform: scale(0.96) translateY(8px);
+  opacity: 0;
+}
+.modal-leave-to .modal-card {
+  transform: scale(0.96) translateY(8px);
+  opacity: 0;
+}
+</style>

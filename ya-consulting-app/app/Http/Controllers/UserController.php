@@ -78,14 +78,12 @@ class UserController extends Controller
             'email'     => 'required|string|email|max:255|unique:users,email',
             'password'  => ['required', 'confirmed', 'min:8'],
             'role'      => 'required|exists:roles,name',
-            'client_id' => 'nullable|exists:clients,id|required_if:role,client',
         ]);
 
         $user = User::create([
             'name'      => $validated['name'],
             'email'     => $validated['email'],
             'password'  => Hash::make($validated['password']),
-            'client_id' => $validated['role'] === 'client' ? $validated['client_id'] : null,
         ]);
 
         // Assignation du rôle via Spatie Permission
@@ -114,13 +112,11 @@ class UserController extends Controller
             'name'      => 'required|string|max:255',
             'email'     => 'required|string|email|max:255|unique:users,email,' . $user->id,
             'role'      => 'required|exists:roles,name',
-            'client_id' => 'nullable|exists:clients,id|required_if:role,client',
         ]);
 
         $user->update([
             'name'      => $validated['name'],
             'email'     => $validated['email'],
-            'client_id' => $validated['role'] === 'client' ? $validated['client_id'] : null,
         ]);
 
         // syncRoles() retire tous les anciens rôles et assigne le nouveau

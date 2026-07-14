@@ -115,14 +115,16 @@
           </div>
 
           <!-- Actions -->
-          <div style="display:flex; justify-content:flex-end; gap:var(--space-md); margin-top:var(--space-xl); padding-top:var(--space-lg); border-top:1px solid var(--color-border);">
-            <Button as="Link" :href="route('projects.index')" variant="outline">Annuler</Button>
+          <div class="form-actions">
+            <Button as="Link" :href="route('projects.index')" variant="outline">
+              <template v-slot:icon-left><Icon name="arrow-left" :size="15" /></template>
+              Annuler
+            </Button>
             <Button type="submit" variant="accent" :disabled="form.processing">
-              <span v-if="form.processing">Création...</span>
-              <span v-else style="display: flex; align-items: center; gap: 8px;">
-                <Icon name="check" :size="16" />
-                Créer le projet
-              </span>
+              <template v-if="form.processing">Création en cours...</template>
+              <template v-else>
+                <Icon name="check" :size="16" /> Créer le projet
+              </template>
             </Button>
           </div>
         </form>
@@ -178,3 +180,19 @@ const fmt = (v) => v ? new Intl.NumberFormat('fr-FR', {
 
 const submit = () => form.post(route('projects.store'));
 </script>
+
+<style scoped>
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-md);
+  margin-top: var(--space-xl);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--color-border-light);
+}
+
+:deep(.card-body) {
+  padding: var(--space-xl);
+}
+</style>
