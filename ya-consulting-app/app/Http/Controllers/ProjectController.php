@@ -55,7 +55,8 @@ class ProjectController extends Controller
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
-        // Récupère les résultats paginés et transforme la collection pour ne renvoyer que les données nécessaires au frontend
+        // Récupère les résultats paginés et transforme la collection
+        // pour ne renvoyer que les données nécessaires au frontend
         $projects = $query->latest()->paginate(15)->withQueryString()
             ->through(fn (Project $p) => [
                 'id'              => $p->id,
@@ -127,7 +128,10 @@ class ProjectController extends Controller
         ]);
 
         // Calcul automatique du budget global à partir des budgets détaillés
-        $validated['budget'] = (float)$validated['budget_labor'] + (float)$validated['budget_material'] + (float)$validated['budget_transport'] + (float)$validated['budget_other'];
+        $validated['budget'] = (float)$validated['budget_labor']
+            + (float)$validated['budget_material']
+            + (float)$validated['budget_transport']
+            + (float)$validated['budget_other'];
         $validated['initial_budget'] = $validated['budget'];
 
         $project = Project::create([
@@ -241,19 +245,24 @@ class ProjectController extends Controller
         if ($project->hasPendingExpenses()) {
             if (
                 $request->client_id != $project->client_id ||
-                \Illuminate\Support\Carbon::parse($request->start_date)->toDateString() != \Illuminate\Support\Carbon::parse($project->start_date)->toDateString() ||
+                \Illuminate\Support\Carbon::parse($request->start_date)->toDateString()
+                    != \Illuminate\Support\Carbon::parse($project->start_date)->toDateString() ||
                 (float)$request->budget_labor != (float)$project->budget_labor ||
                 (float)$request->budget_material != (float)$project->budget_material ||
                 (float)$request->budget_transport != (float)$project->budget_transport ||
                 (float)$request->budget_other != (float)$project->budget_other
             ) {
                 return back()->withErrors([
-                    'budget' => 'Impossible de modifier le budget, le client ou la date de début pour un projet ayant des dépenses enregistrées.'
+                    'budget' => 'Impossible de modifier le budget, le client ou la date de début'
+                        . ' pour un projet ayant des dépenses enregistrées.'
                 ]);
             }
         }
 
-        $validated['budget'] = (float)$validated['budget_labor'] + (float)$validated['budget_material'] + (float)$validated['budget_transport'] + (float)$validated['budget_other'];
+        $validated['budget'] = (float)$validated['budget_labor']
+            + (float)$validated['budget_material']
+            + (float)$validated['budget_transport']
+            + (float)$validated['budget_other'];
 
         $project->update([
             ...$validated,

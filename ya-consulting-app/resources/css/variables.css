@@ -1,0 +1,106 @@
+﻿/* ================================================================
+   YA CONSULTING — Design System v2
+   ✨ Thème : Aurora Gold Premium
+   Palette : Bleu nuit profond, Or consul & Accents Aurora
+   Police : Inter (corps) + Outfit (titres)
+   ================================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800;900&display=swap');
+
+/* ── Variables ─────────────────────────────────────────────────── */
+:root {
+  /* ✨ Aurora Gold — Palette de Marque */
+  --color-primary:       #0F1C33;
+  --color-primary-dark:  #0A1324;
+  --color-primary-light: #1A2B4A;
+  --color-accent:        #D4B154;
+  --color-accent-light:  #EBD08C;
+  --color-accent-dark:   #B8963E;
+
+  /* Aurora — Lueurs irisées */
+  --aurora-green:   #15803D;
+  --aurora-purple:  #7C3AED;
+  --aurora-blue:    #0284C7;
+  --aurora-rose:    #BE123C;
+  --aurora-gold:    #D4B154;
+
+  /* Extended Vibrant Palette */
+  --color-indigo:   #6366F1;
+  --color-purple:   #8B5CF6;
+  --color-fuchsia:  #D946EF;
+  --color-rose:     #F43F5E;
+  --color-orange:   #F97316;
+  --color-teal:     #14B8A6;
+  --color-cyan:     #06B6D4;
+  --color-sky:      #0EA5E9;
+
+  /* Premium Gradients */
+  --gradient-primary: linear-gradient(135deg, #0F1C33 0%, #1A2B4A 100%);
+  --gradient-accent:  linear-gradient(135deg, #D4B154 0%, #EBD08C 100%);
+  --gradient-aurora:  linear-gradient(135deg, #15803D 0%, #0284C7 50%, #7C3AED 100%);
+  --gradient-gold:    linear-gradient(135deg, #B8963E 0%, #D4B154 50%, #EBD08C 100%);
+  --gradient-night:   linear-gradient(135deg, #0A1324 0%, #0F1C33 100%);
+  --gradient-purple:  linear-gradient(135deg, var(--color-purple) 0%, var(--color-fuchsia) 100%);
+  --gradient-ocean:   linear-gradient(135deg, var(--color-teal) 0%, var(--color-sky) 100%);
+  --gradient-sunset:  linear-gradient(135deg, var(--color-rose) 0%, var(--color-orange) 100%);
+
+  /* Status Colors */
+  --color-success:  #059669;
+  --color-warning:  #D97706;
+  --color-danger:   #DC2626;
+  --color-info:     #0284C7;
+
+  /* Fond */
+  --color-bg:        #F8FAFC;
+  --color-bg-light:  #F1F5F9;
+  --color-bg-card:   #FFFFFF;
+  --color-border:    rgba(212, 177, 84, 0.25);
+  --color-border-light: rgba(226, 232, 240, 0.8);
+  --color-text:      #0F1C33;
+  --color-text-muted:#64748B;
+  --color-text-light:#94A3B8;
+
+  /* Sidebar */
+  --sidebar-width:  0px;
+  --sidebar-bg:     #0F1C33;
+  --sidebar-text:   #94A3B8;
+  --sidebar-active: #D4B154;
+
+  /* Spacing */
+  --space-xs:  4px;
+  --space-sm:  8px;
+  --space-md:  16px;
+  --space-lg:  24px;
+  --space-xl:  32px;
+  --space-2xl: 48px;
+
+  /* Border Radius — Modernes */
+  --radius-xs:  4px;
+  --radius-sm:  8px;
+  --radius-md:  12px;
+  --radius-lg:  16px;
+  --radius-xl:  24px;
+  --radius-full: 9999px;
+
+  /* Shadows Premium */
+  --shadow-xs:    0 1px 2px rgba(15, 28, 51, 0.04);
+  --shadow-sm:    0 2px 8px rgba(15, 28, 51, 0.06), 0 1px 3px rgba(15, 28, 51, 0.04);
+  --shadow-md:    0 4px 16px rgba(15, 28, 51, 0.08), 0 2px 6px rgba(15, 28, 51, 0.04);
+  --shadow-lg:    0 10px 40px rgba(15, 28, 51, 0.10), 0 4px 12px rgba(15, 28, 51, 0.05);
+  --shadow-xl:    0 20px 60px rgba(15, 28, 51, 0.12), 0 8px 20px rgba(15, 28, 51, 0.06);
+  --shadow-glow:       0 0 20px rgba(212, 177, 84, 0.25), 0 4px 16px rgba(212, 177, 84, 0.15);
+  --shadow-glow-sm:    0 0 12px rgba(212, 177, 84, 0.18);
+  --shadow-glow-aurora: 0 0 30px rgba(0, 255, 194, 0.10);
+  --shadow-glow-purple: 0 0 30px rgba(139, 92, 246, 0.12);
+
+  /* Transitions */
+  --transition:      all .2s cubic-bezier(.4,0,.2,1);
+  --transition-slow: all .35s cubic-bezier(.4,0,.2,1);
+  --transition-fast: all .15s cubic-bezier(.4,0,.2,1);
+
+  /* Typography */
+  --font-body:    'Times New Roman', Times, serif;
+  --font-heading: 'Times New Roman', Times, serif;
+  --font-mono:    'Courier New', Courier, monospace;
+}
+

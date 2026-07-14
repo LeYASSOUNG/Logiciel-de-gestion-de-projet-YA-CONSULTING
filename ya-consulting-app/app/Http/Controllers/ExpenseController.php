@@ -201,14 +201,16 @@ class ExpenseController extends Controller
         // La dépense ne peut pas être antérieure au début du projet
         if ($expenseDate->lt($project->start_date)) {
             return back()->withErrors([
-                'date' => 'La date de la dépense ne peut pas être antérieure à la date de début du projet (' . \Carbon\Carbon::parse($project->start_date)->format('d/m/Y') . ').'
+                'date' => 'La date de la dépense ne peut pas être antérieure à la date de début du projet ('
+                    . \Carbon\Carbon::parse($project->start_date)->format('d/m/Y') . ').'
             ]);
         }
 
         // Si le projet est terminé, la dépense ne peut pas être postérieure à la date de fin réelle
         if ($project->actual_end_date && $expenseDate->gt($project->actual_end_date)) {
             return back()->withErrors([
-                'date' => 'La date de la dépense ne peut pas être postérieure à la date de fin réelle du projet (' . \Carbon\Carbon::parse($project->actual_end_date)->format('d/m/Y') . ').'
+                'date' => 'La date de la dépense ne peut pas être postérieure à la date de fin réelle du projet ('
+                    . \Carbon\Carbon::parse($project->actual_end_date)->format('d/m/Y') . ').'
             ]);
         }
 
@@ -293,13 +295,15 @@ class ExpenseController extends Controller
         $expenseDate = \Carbon\Carbon::parse($validated['date']);
         if ($expenseDate->lt($project->start_date)) {
             return back()->withErrors([
-                'date' => 'La date de la dépense ne peut pas être antérieure à la date de début du projet (' . \Carbon\Carbon::parse($project->start_date)->format('d/m/Y') . ').'
+                'date' => 'La date de la dépense ne peut pas être antérieure à la date de début du projet ('
+                    . \Carbon\Carbon::parse($project->start_date)->format('d/m/Y') . ').'
             ]);
         }
 
         if ($project->actual_end_date && $expenseDate->gt($project->actual_end_date)) {
             return back()->withErrors([
-                'date' => 'La date de la dépense ne peut pas être postérieure à la date de fin réelle du projet (' . \Carbon\Carbon::parse($project->actual_end_date)->format('d/m/Y') . ').'
+                'date' => 'La date de la dépense ne peut pas être postérieure à la date de fin réelle du projet ('
+                    . \Carbon\Carbon::parse($project->actual_end_date)->format('d/m/Y') . ').'
             ]);
         }
 

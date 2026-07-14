@@ -50,7 +50,10 @@ class HistoryStatsController extends Controller
     /**
      * Initialisation de la requête des projets avec filtrage par rôle et filtres URL.
      */
-    private function getFilteredProjects(\App\Models\User $user, array $filters): \Illuminate\Database\Eloquent\Collection
+    private function getFilteredProjects(
+        \App\Models\User $user,
+        array $filters
+    ): \Illuminate\Database\Eloquent\Collection
     {
         $query = Project::query()->with(['client', 'expenses', 'payments']);
         
@@ -185,7 +188,10 @@ class HistoryStatsController extends Controller
     private function getFilterData(array $filters): array
     {
         $clients = Client::orderBy('name')->get(['id', 'name']);
-        $years = Project::selectRaw('EXTRACT(YEAR FROM created_at) as year')->distinct()->orderByDesc('year')->pluck('year');
+        $years = Project::selectRaw('EXTRACT(YEAR FROM created_at) as year')
+            ->distinct()
+            ->orderByDesc('year')
+            ->pluck('year');
 
         return [
             'clients' => $clients,

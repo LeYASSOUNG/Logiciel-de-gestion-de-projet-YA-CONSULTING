@@ -236,7 +236,10 @@ class Project extends Model
      */
     public function getExpensesOtherAttribute(): float
     {
-        return (float) $this->expenses->filter(fn($e) => $e->category?->parent_type === 'autres' || is_null($e->category?->parent_type))->sum('amount');
+        return (float) $this->expenses
+            ->filter(fn($e) => $e->category?->parent_type === 'autres'
+                || is_null($e->category?->parent_type))
+            ->sum('amount');
     }
 
     /**

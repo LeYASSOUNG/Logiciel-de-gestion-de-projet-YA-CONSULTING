@@ -156,10 +156,18 @@ class DashboardController extends Controller
                 return [
                     'year'        => (int) $year,
                     'month'       => (int) $month,
-                    'main_oeuvre' => (float) $group->filter(fn($e) => $e->category?->parent_type === 'main_oeuvre')->sum('amount'),
-                    'materiel'    => (float) $group->filter(fn($e) => $e->category?->parent_type === 'materiel')->sum('amount'),
-                    'transport'   => (float) $group->filter(fn($e) => $e->category?->parent_type === 'transport')->sum('amount'),
-                    'autres'      => (float) $group->filter(fn($e) => in_array($e->category?->parent_type, ['autres', null]))->sum('amount'),
+                    'main_oeuvre' => (float) $group
+                        ->filter(fn($e) => $e->category?->parent_type === 'main_oeuvre')
+                        ->sum('amount'),
+                    'materiel'    => (float) $group
+                        ->filter(fn($e) => $e->category?->parent_type === 'materiel')
+                        ->sum('amount'),
+                    'transport'   => (float) $group
+                        ->filter(fn($e) => $e->category?->parent_type === 'transport')
+                        ->sum('amount'),
+                    'autres'      => (float) $group
+                        ->filter(fn($e) => in_array($e->category?->parent_type, ['autres', null]))
+                        ->sum('amount'),
                     'total'       => (float) $group->sum('amount'),
                 ];
             })

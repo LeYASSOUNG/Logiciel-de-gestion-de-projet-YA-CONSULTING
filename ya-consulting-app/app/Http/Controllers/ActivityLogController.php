@@ -51,7 +51,9 @@ class ActivityLogController extends Controller
                 'id'           => $activity->id,
                 'description'  => $activity->description,             // Ex: "Projet créé"
                 'causer_name'  => $activity->causer?->name ?? 'Système', // Auteur ou "Système" si action automatique
-                'subject_type' => $activity->subject_type ? class_basename($activity->subject_type) : null, // Ex: "Project"
+                'subject_type' => $activity->subject_type
+                    ? class_basename($activity->subject_type)
+                    : null, // Ex: "Project"
                 'subject_id'   => $activity->subject_id,             // ID de l'entité concernée
                 'properties'   => $activity->properties,             // Données JSON supplémentaires
                 'created_at'   => $activity->created_at->format('d/m/Y H:i:s'), // Timestamp formaté

@@ -26,10 +26,12 @@ class SecurityHeaders
 
         // 2. On injecte les en-têtes de sécurité dans l'objet réponse avant de l'envoyer au navigateur
         
-        // Empêche le site d'être intégré dans une balise <iframe /> ou <frame /> depuis un autre domaine (Protection Clickjacking)
+        // Empêche le site d'être intégré dans une balise <iframe /> ou <frame />
+        // depuis un autre domaine (Protection Clickjacking)
         $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
         
-        // Interdit au navigateur de "deviner" (sniffing) le type MIME d'un fichier, le forçant à respecter l'en-tête Content-Type
+        // Interdit au navigateur de "deviner" (sniffing) le type MIME d'un fichier,
+        // le forçant à respecter l'en-tête Content-Type
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         
         // Contrôle la quantité d'informations envoyées dans l'en-tête "Referer" lors d'un clic sortant
@@ -38,7 +40,8 @@ class SecurityHeaders
         // Active le filtre anti-XSS intégré des navigateurs plus anciens (bloque la page si une attaque XSS est détectée)
         $response->headers->set('X-XSS-Protection', '1; mode=block');
         
-        // Restreint l'accès aux fonctionnalités sensibles de l'appareil (caméra, micro, etc.)
+        // Restreint l'accès aux fonctionnalités sensibles de l'appareil
+        // (caméra, micro, etc.)
         $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
 
         // 3. On retourne la réponse modifiée et sécurisée

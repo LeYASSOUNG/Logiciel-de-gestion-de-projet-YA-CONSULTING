@@ -6,7 +6,8 @@ window.axios = axios;
 // Ajout de l'en-tête 'X-Requested-With' à toutes les requêtes Axios.
 // Cela permet au backend Laravel de reconnaître automatiquement 
 // que la requête entrante est une requête AJAX (XMLHttpRequest).
-window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+const axiosHeaders = window.axios.defaults.headers.common;
+axiosHeaders['X-Requested-With'] = 'XMLHttpRequest';
 
 // ─── Protection CSRF (Cross-Site Request Forgery) ───────────────────
 // Récupération du jeton de sécurité (token CSRF) généré par Laravel
@@ -17,7 +18,7 @@ if (token) {
     // Si le token est trouvé, on l'injecte automatiquement dans les en-têtes
     // de chaque future requête Axios. Ainsi, chaque soumission de formulaire
     // ou appel API AJAX est sécurisé.
-    window.axios.defaults.headers.common['X-CSRF-TOKEN'] = token.content;
+    axiosHeaders['X-CSRF-TOKEN'] = token.content;
 } else {
     // Avertissement dans la console si le token est introuvable (généralement un oubli de la balise meta).
     console.error('CSRF token not found: https://laravel.com/docs/csrf#csrf-x-csrf-token');

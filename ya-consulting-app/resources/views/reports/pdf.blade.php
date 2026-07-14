@@ -220,7 +220,9 @@
             </td>
             <td class="kpi-card">
                 <div class="kpi-title">Dépenses du mois</div>
-                <div class="kpi-value" style="color: #ef4444;">{{ number_format($total_expenses, 0, ',', ' ') }} FCFA</div>
+                <div class="kpi-value" style="color: #ef4444;">
+                    {{ number_format($total_expenses, 0, ',', ' ') }} FCFA
+                </div>
             </td>
             <td class="kpi-card">
                 <div class="kpi-title">Résultat (Bénéfice Net)</div>
@@ -253,37 +255,47 @@
                 <td><strong>Montant Encaissé</strong></td>
                 <td class="text-right text-bold">{{ number_format($total_paid, 0, ',', ' ') }} FCFA</td>
                 <td class="text-right text-muted">{{ number_format($prev_total_paid ?? 0, 0, ',', ' ') }} FCFA</td>
-                <td class="text-right text-bold {{ ($total_paid - ($prev_total_paid ?? 0)) >= 0 ? 'text-success' : 'text-danger' }}">
-                    {{ ($total_paid - ($prev_total_paid ?? 0)) >= 0 ? '+' : '' }}{{ number_format($total_paid - ($prev_total_paid ?? 0), 0, ',', ' ') }} FCFA
+                <td class="text-right text-bold
+                    {{ ($total_paid - ($prev_total_paid ?? 0)) >= 0 ? 'text-success' : 'text-danger' }}">
+                    {{ ($total_paid - ($prev_total_paid ?? 0)) >= 0 ? '+' : '' }}
+                    {{- number_format($total_paid - ($prev_total_paid ?? 0), 0, ',', ' ') }} FCFA
                 </td>
             </tr>
             <tr>
                 <td><strong>Total des dépenses</strong></td>
                 <td class="text-right text-bold">{{ number_format($total_expenses, 0, ',', ' ') }} FCFA</td>
                 <td class="text-right text-muted">{{ number_format($prev_total_expenses, 0, ',', ' ') }} FCFA</td>
-                <td class="text-right text-bold {{ ($total_expenses - $prev_total_expenses) <= 0 ? 'text-success' : 'text-danger' }}">
-                    {{ ($total_expenses - $prev_total_expenses) >= 0 ? '+' : '' }}{{ number_format($total_expenses - $prev_total_expenses, 0, ',', ' ') }} FCFA
+                <td class="text-right text-bold
+                    {{ ($total_expenses - $prev_total_expenses) <= 0 ? 'text-success' : 'text-danger' }}">
+                    {{ ($total_expenses - $prev_total_expenses) >= 0 ? '+' : '' }}
+                    {{- number_format($total_expenses - $prev_total_expenses, 0, ',', ' ') }} FCFA
                 </td>
             </tr>
             <tr>
                 <td><strong>Bénéfice net global</strong></td>
                 <td class="text-right text-bold">{{ number_format($net_profit, 0, ',', ' ') }} FCFA</td>
                 <td class="text-right text-muted">{{ number_format($prev_net_profit, 0, ',', ' ') }} FCFA</td>
-                <td class="text-right text-bold {{ ($net_profit - $prev_net_profit) >= 0 ? 'text-success' : 'text-danger' }}">
-                    {{ ($net_profit - $prev_net_profit) >= 0 ? '+' : '' }}{{ number_format($net_profit - $prev_net_profit, 0, ',', ' ') }} FCFA
+                <td class="text-right text-bold
+                    {{ ($net_profit - $prev_net_profit) >= 0 ? 'text-success' : 'text-danger' }}">
+                    {{ ($net_profit - $prev_net_profit) >= 0 ? '+' : '' }}
+                    {{- number_format($net_profit - $prev_net_profit, 0, ',', ' ') }} FCFA
                 </td>
             </tr>
             <tr>
                 <td><strong>Rentabilité Globale</strong></td>
                 <td class="text-right text-bold">{{ $profitability_rate }}%</td>
                 <td class="text-right text-muted">{{ $prev_profitability_rate }}%</td>
-                <td class="text-right text-bold {{ ($profitability_rate - $prev_profitability_rate) >= 0 ? 'text-success' : 'text-danger' }}">
-                    {{ ($profitability_rate - $prev_profitability_rate) >= 0 ? '+' : '' }}{{ round($profitability_rate - $prev_profitability_rate, 2) }}%
+                <td class="text-right text-bold
+                    {{ ($profitability_rate - $prev_profitability_rate) >= 0 ? 'text-success' : 'text-danger' }}">
+                    {{ ($profitability_rate - $prev_profitability_rate) >= 0 ? '+' : '' }}
+                    {{- round($profitability_rate - $prev_profitability_rate, 2) }}%
                 </td>
             </tr>
             <tr>
                 <td><strong>Gains des projets clôturés ce mois</strong></td>
-                <td class="text-right text-bold text-success">{{ number_format($total_gains_completed, 0, ',', ' ') }} FCFA</td>
+                <td class="text-right text-bold text-success">
+                    {{ number_format($total_gains_completed, 0, ',', ' ') }} FCFA
+                </td>
                 <td class="text-right text-muted"><em>Donnée cumulée</em></td>
                 <td class="text-right"><span class="badge badge-success">Gains définitifs</span></td>
             </tr>
@@ -305,9 +317,14 @@
             @forelse($expenses_by_category as $cat)
                 <tr>
                     <td>
-                        <span style="display:inline-block; width:10px; height:10px; margin-right:8px; border-radius:2px;" bgcolor="{{ $cat['color'] }}">
+                        <span
+                            style="display:inline-block; width:10px; height:10px;
+                                   margin-right:8px; border-radius:2px;"
+                            bgcolor="{{ $cat['color'] }}">
                             <!-- Color box fallback -->
-                            <table width="10px" height="10px" cellpadding="0" cellspacing="0" style="display:inline-table;">
+                            <table width="10px" height="10px"
+                                cellpadding="0" cellspacing="0"
+                                style="display:inline-table;">
                                 <tr><td bgcolor="{{ $cat['color'] }}"></td></tr>
                             </table>
                         </span>
@@ -319,7 +336,9 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="4" class="text-center text-muted">Aucune dépense n'a été enregistrée sur cette période.</td>
+                    <td colspan="4" class="text-center text-muted">
+                        Aucune dépense n'a été enregistrée sur cette période.
+                    </td>
                 </tr>
             @endforelse
         </tbody>
@@ -361,10 +380,13 @@
                                 $bgColor = $p->profitability_rate >= 0 ? '#10b981' : '#ef4444';
                                 $remWidth = 100 - $barWidth;
                             @endphp
-                            <table width="100%" height="4" cellpadding="0" cellspacing="0" style="background: #e2e8f0; border-radius: 2px; margin-top: 4px;">
+                            <table width="100%" height="4" cellpadding="0" cellspacing="0"
+                                style="background: #e2e8f0; border-radius: 2px; margin-top: 4px;">
                                 <tr>
-                                    <td width="{{ $barWidth }}%" bgcolor="{{ $bgColor }}" style="line-height: 0; font-size: 0;">&nbsp;</td>
-                                    <td width="{{ $remWidth }}%" style="line-height: 0; font-size: 0;">&nbsp;</td>
+                                    <td width="{{ $barWidth }}%" bgcolor="{{ $bgColor }}"
+                                        style="line-height: 0; font-size: 0;">&nbsp;</td>
+                                    <td width="{{ $remWidth }}%"
+                                        style="line-height: 0; font-size: 0;">&nbsp;</td>
                                 </tr>
                             </table>
                         @endif
@@ -372,7 +394,9 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="6" class="text-center text-muted">Aucun projet n'est actif sur cette période.</td>
+                    <td colspan="6" class="text-center text-muted">
+                        Aucun projet n'est actif sur cette période.
+                    </td>
                 </tr>
             @endforelse
         </tbody>
@@ -380,7 +404,8 @@
 
     <!-- Footer -->
     <div class="footer">
-        Document financier généré le {{ $generated_at->format('d/m/Y à H:i') }} par {{ $generated_by }} &bull; Logiciel de gestion YA CONSULTING
+        Document financier généré le {{ $generated_at->format('d/m/Y \\à H:i') }}
+        par {{ $generated_by }} &bull; Logiciel de gestion YA CONSULTING
     </div>
 
 </body>

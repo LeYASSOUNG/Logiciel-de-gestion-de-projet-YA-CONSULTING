@@ -147,7 +147,11 @@ class ReportController extends Controller
     /**
      * Collecte toutes les données financières pour une période donnée.
      *
-     * @return array{projects: \Illuminate\Support\Collection, monthlyExpenses: \Illuminate\Support\Collection, totalBudget: float, totalExpenses: float, netProfit: float, expensesByCategory: array, completedProjects: \Illuminate\Support\Collection, totalGainsCompleted: float}
+     * @return array{projects: \Illuminate\Support\Collection,
+     *   monthlyExpenses: \Illuminate\Support\Collection,
+     *   totalBudget: float, totalExpenses: float, netProfit: float,
+     *   expensesByCategory: array, completedProjects: \Illuminate\Support\Collection,
+     *   totalGainsCompleted: float}
      */
     private function collectMonthData(Carbon $startDate, Carbon $endDate): array
     {
@@ -166,7 +170,9 @@ class ReportController extends Controller
             ->get();
 
         $totalExpenses = (float) $monthlyExpenses->sum('amount');
-        $totalPaid     = (float) \App\Models\Payment::whereBetween('payment_date', [$startDate, $endDate])->get()->sum('amount');
+        $totalPaid     = (float) \App\Models\Payment::whereBetween(
+            'payment_date', [$startDate, $endDate]
+        )->get()->sum('amount');
         $netProfit     = $totalPaid - $totalExpenses;
         $profitabilityRate = $totalPaid > 0 ? round(($netProfit / $totalPaid) * 100, 2) : 0;
 
@@ -295,7 +301,12 @@ class ReportController extends Controller
         fputcsv($handle, [], $delimiter);
         
         fputcsv($handle, ['2. COMPARAISON MOIS N vs N-1'], $delimiter);
-        fputcsv($handle, ['Indicateur', "Mois en cours ({$monthName} {$year})", "Mois précédent ({$prevMonthName} {$prevData['year']})", 'Évolution'], $delimiter);
+        fputcsv($handle, [
+            'Indicateur',
+            "Mois en cours ({$monthName} {$year})",
+            "Mois précédent ({$prevMonthName} {$prevData['year']})",
+            'Évolution',
+        ], $delimiter);
 
         $paidDiff = $monthData['totalPaid'] - $prevData['totalPaid'];
         $paidPct  = $prevData['totalPaid'] > 0 ? round(($paidDiff / $prevData['totalPaid']) * 100, 2) : 0;
@@ -313,13 +324,20 @@ class ReportController extends Controller
             $profDiff . ' (' . ($profPct >= 0 ? '+' : '') . $profPct . '%)'], $delimiter);
 
         $rateDiff = round($monthData['profitabilityRate'] - $prevData['profitabilityRate'], 2);
-        fputcsv($handle, ['Taux de Rentabilité', $monthData['profitabilityRate'] . '%', $prevData['profitabilityRate'] . '%',
-            ($rateDiff >= 0 ? '+' : '') . $rateDiff . '%'], $delimiter);
+        fputcsv($handle, [
+            'Taux de Rentabilité',
+            $monthData['profitabilityRate'] . '%',
+            $prevData['profitabilityRate'] . '%',
+            ($rateDiff >= 0 ? '+' : '') . $rateDiff . '%',
+        ], $delimiter);
             
         fputcsv($handle, [], $delimiter);
 
         fputcsv($handle, ['3. DÉTAIL DES PROJETS ACTIFS'], $delimiter);
-        fputcsv($handle, ['Nom du projet', 'Client', 'Budget Fixé', 'Dépenses Réelles', 'Marge brute', 'Taux de rentabilité'], $delimiter);
+        fputcsv($handle, [
+            'Nom du projet', 'Client', 'Budget Fixé',
+            'Dépenses Réelles', 'Marge brute', 'Taux de rentabilité',
+        ], $delimiter);
         foreach ($monthData['projects'] as $proj) {
             fputcsv($handle, [$proj->name, $proj->client?->name ?? 'N/A', $proj->budget,
                 $proj->total_expenses, $proj->gross_gain, $proj->profitability_rate . '%'], $delimiter);
@@ -389,7 +407,10 @@ class ReportController extends Controller
 
         if (!Storage::disk('public')->exists($report->file_path)) {
             $report->delete();
-            return back()->withErrors(['error' => 'Le fichier n\'existe plus sur le serveur. L\'entrée obsolète a été supprimée, veuillez générer un nouveau rapport.']);
+            return back()->withErrors([
+                'error' => 'Le fichier n\'existe plus sur le serveur.'
+                    . ' L\'entrée obsolète a été supprimée, veuillez générer un nouveau rapport.',
+            ]);
         }
 
         $absolutePath = Storage::disk('public')->path($report->file_path);

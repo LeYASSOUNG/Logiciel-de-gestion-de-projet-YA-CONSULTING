@@ -78,9 +78,11 @@
         <div class="content">
             <p>Bonjour,</p>
             
-            <p>Nous avons le plaisir de vous inviter à configurer votre Espace Client personnel pour <strong>{{ $client->name }}</strong>.</p>
+            <p>Nous avons le plaisir de vous inviter à configurer votre Espace Client personnel
+            pour <strong>{{ $client->name }}</strong>.</p>
             
-            <p>Cet espace sécurisé vous permettra de suivre en temps réel l'avancement de vos projets, de consulter les livrables et de rester informé.</p>
+            <p>Cet espace sécurisé vous permettra de suivre en temps réel l'avancement de vos projets,
+            de consulter les livrables et de rester informé.</p>
             
             <div class="btn-container">
                 <a href="{{ $invitationLink }}" class="btn">Configurer mon compte</a>

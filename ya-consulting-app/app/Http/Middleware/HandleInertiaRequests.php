@@ -62,7 +62,9 @@ class HandleInertiaRequests extends Middleware
                             'id' => 'budget-' . $project->id,
                             'type' => 'danger',
                             'title' => 'Dépassement de budget',
-                            'message' => "Le budget du projet {$project->name} a été dépassé (" . number_format($project->total_expenses, 0, ',', ' ') . " / " . number_format($project->budget, 0, ',', ' ') . " FCFA).",
+                            'message' => "Le budget du projet {$project->name} a été dépassé ("
+                                . number_format($project->total_expenses, 0, ',', ' ') . " / "
+                                . number_format($project->budget, 0, ',', ' ') . " FCFA).",
                             'link' => route('projects.show', $project->id),
                             'created_at' => \Illuminate\Support\Carbon::now()->diffForHumans(),
                         ];
@@ -71,7 +73,9 @@ class HandleInertiaRequests extends Middleware
                             'id' => 'budget-warn-' . $project->id,
                             'type' => 'warning',
                             'title' => 'Budget critique (80% atteint)',
-                            'message' => "Attention, le projet {$project->name} a consommé plus de 80% de son budget (" . number_format($project->total_expenses, 0, ',', ' ') . " / " . number_format($project->budget, 0, ',', ' ') . " FCFA).",
+                            'message' => "Attention, le projet {$project->name} a consommé plus de 80% de son budget ("
+                                . number_format($project->total_expenses, 0, ',', ' ') . " / "
+                                . number_format($project->budget, 0, ',', ' ') . " FCFA).",
                             'link' => route('projects.show', $project->id),
                             'created_at' => \Illuminate\Support\Carbon::now()->diffForHumans(),
                         ];
@@ -84,7 +88,8 @@ class HandleInertiaRequests extends Middleware
                             'id' => 'deadline-' . $project->id,
                             'type' => 'danger',
                             'title' => 'Échéance dépassée',
-                            'message' => "La date de fin prévisionnelle du projet {$project->name} est dépassée depuis le " . $plannedEnd->format('d/m/Y') . ".",
+                            'message' => "La date de fin prévisionnelle du projet {$project->name}"
+                                . " est dépassée depuis le " . $plannedEnd->format('d/m/Y') . ".",
                             'link' => route('projects.show', $project->id),
                             'created_at' => $plannedEnd->diffForHumans(),
                         ];
@@ -93,7 +98,8 @@ class HandleInertiaRequests extends Middleware
                             'id' => 'deadline-' . $project->id,
                             'type' => 'warning',
                             'title' => 'Échéance proche',
-                            'message' => "Le projet {$project->name} arrive à échéance le " . $plannedEnd->format('d/m/Y') . ".",
+                            'message' => "Le projet {$project->name} arrive à échéance le "
+                                . $plannedEnd->format('d/m/Y') . ".",
                             'link' => route('projects.show', $project->id),
                             'created_at' => $plannedEnd->diffForHumans(),
                         ];
@@ -110,13 +116,19 @@ class HandleInertiaRequests extends Middleware
                         $q->where('causer_id', $request->user()->id)
                           ->orWhere(function ($sq) use ($request) {
                               $sq->where('subject_type', \App\Models\Project::class)
-                                 ->whereIn('subject_id', \App\Models\Project::where('created_by', $request->user()->id)->pluck('id'));
+                                 ->whereIn(
+                                     'subject_id',
+                                     \App\Models\Project::where('created_by', $request->user()->id)->pluck('id')
+                                 );
                           })
                           ->orWhere(function ($sq) use ($request) {
                               $sq->where('subject_type', \App\Models\Expense::class)
-                                 ->whereIn('subject_id', \App\Models\Expense::whereHas('project', function ($qp) use ($request) {
-                                     $qp->where('created_by', $request->user()->id);
-                                 })->pluck('id'));
+                                 ->whereIn(
+                                     'subject_id',
+                                     \App\Models\Expense::whereHas('project', function ($qp) use ($request) {
+                                         $qp->where('created_by', $request->user()->id);
+                                     })->pluck('id')
+                                 );
                           });
                     });
                 }
@@ -138,7 +150,8 @@ class HandleInertiaRequests extends Middleware
                         'id' => 'activity-' . $activity->id,
                         'type' => 'info',
                         'title' => $activity->description,
-                        'message' => "Par " . ($activity->causer?->name ?? 'Système') . " le " . $activity->created_at->format('d/m H:i') . ".",
+                        'message' => "Par " . ($activity->causer?->name ?? 'Système')
+                            . " le " . $activity->created_at->format('d/m H:i') . ".",
                         'link' => $link,
                         'created_at' => $activity->created_at->diffForHumans(),
                     ];
