@@ -112,20 +112,7 @@ class ProjectController extends Controller
     {
         $this->authorize('create', Project::class);
 
-        // Validation stricte des données soumises par l'utilisateur
-        $validated = $request->validate([
-            'name'              => 'required|string|max:255',
-            'client_id'         => 'required|exists:clients,id',
-            'description'       => 'nullable|string|max:2000',
-            'start_date'        => 'required|date',
-            'planned_end_date'  => 'required|date|after_or_equal:start_date',
-            'budget_labor'      => 'required|numeric|min:0',
-            'budget_material'   => 'required|numeric|min:0',
-            'budget_transport'  => 'required|numeric|min:0',
-            'budget_other'      => 'required|numeric|min:0',
-            'status'            => 'required|in:en_cours,termine,en_pause',
-            'supplier_contact'  => 'nullable|string|max:255',
-        ]);
+        $validated = $this->validateProjectRequest($request);
 
         // Calcul automatique du budget global à partir des budgets détaillés
         $validated['budget'] = (float)$validated['budget_labor']
@@ -226,20 +213,7 @@ class ProjectController extends Controller
     {
         $this->authorize('update', $project);
 
-        $validated = $request->validate([
-            'name'              => 'required|string|max:255',
-            'client_id'         => 'required|exists:clients,id',
-            'description'       => 'nullable|string|max:2000',
-            'start_date'        => 'required|date',
-            'planned_end_date'  => 'required|date|after_or_equal:start_date',
-            'actual_end_date'   => 'required_if:status,termine|nullable|date|after_or_equal:start_date',
-            'budget_labor'      => 'required|numeric|min:0',
-            'budget_material'   => 'required|numeric|min:0',
-            'budget_transport'  => 'required|numeric|min:0',
-            'budget_other'      => 'required|numeric|min:0',
-            'status'            => 'required|in:en_cours,termine,en_pause',
-            'supplier_contact'  => 'nullable|string|max:255',
-        ]);
+        $validated = $this->validateProjectRequest($request);
 
         // Contrainte de modification si dépenses existantes
         if ($project->hasPendingExpenses()) {
@@ -302,5 +276,23 @@ class ProjectController extends Controller
 
         return redirect()->route('projects.index')
             ->with('success', 'Projet supprimé.');
+    }
+
+    private function validateProjectRequest(Request $request): array
+    {
+        return $request->validate([
+            'name'              => 'required|string|max:255',
+            'client_id'         => 'required|exists:clients,id',
+            'description'       => 'nullable|string|max:2000',
+            'start_date'        => 'required|date',
+            'planned_end_date'  => 'required|date|after_or_equal:start_date',
+            'actual_end_date'   => 'required_if:status,termine|nullable|date|after_or_equal:start_date',
+            'budget_labor'      => 'required|numeric|min:0',
+            'budget_material'   => 'required|numeric|min:0',
+            'budget_transport'  => 'required|numeric|min:0',
+            'budget_other'      => 'required|numeric|min:0',
+            'status'            => 'required|in:en_cours,termine,en_pause',
+            'supplier_contact'  => 'nullable|string|max:255',
+        ]);
     }
 }

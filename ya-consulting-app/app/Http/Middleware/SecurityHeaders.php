@@ -37,7 +37,8 @@ class SecurityHeaders
         // Contrôle la quantité d'informations envoyées dans l'en-tête "Referer" lors d'un clic sortant
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         
-        // Active le filtre anti-XSS intégré des navigateurs plus anciens (bloque la page si une attaque XSS est détectée)
+        // Active le filtre anti-XSS intégré des navigateurs plus anciens
+        // (bloque la page si une attaque XSS est détectée)
         $response->headers->set('X-XSS-Protection', '1; mode=block');
         
         // Restreint l'accès aux fonctionnalités sensibles de l'appareil

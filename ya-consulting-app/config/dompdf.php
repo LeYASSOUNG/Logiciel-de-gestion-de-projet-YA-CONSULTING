@@ -75,8 +75,7 @@ return [
          * allow an attacker to use dompdf to read any files on the server.  This
          * should be an absolute path.
          * This is only checked on command line call by dompdf.php, but not by
-         * direct class use like:
-         * $dompdf = new DOMPDF();  $dompdf->load_html($htmldata); $dompdf->render(); $pdfdata = $dompdf->output();
+         * direct class use (new DOMPDF / load_html / render / output).
          */
         'chroot' => realpath(base_path()),
 
@@ -136,9 +135,9 @@ return [
          * look at {@link GD_Adapter} for more information.  GD support is
          * experimental, so use it at your own risk.
          *
-         * @link http://www.pdflib.com
-         * @link http://www.ros.co.nz/pdf
-         * @link http://www.php.net/image
+         * @see https://github.com/dompdf/dompdf/blob/master/src/Adapter/PDFLib.php
+         * @see https://github.com/dompdf/dompdf/blob/master/src/Adapter/CPDF.php
+         * @see https://www.php.net/manual/en/book.image.php
          */
         'pdf_backend' => 'CPDF',
 
@@ -255,7 +254,7 @@ return [
          *
          *  ==== IMPORTANT ====
          *  This can be a security risk, in particular in combination with isPhpEnabled and
-         *  allowing remote html code to be passed to $dompdf = new DOMPDF(); $dompdf->load_html(...);
+         *  allowing remote html code to be passed to the DOMPDF load_html method.
          *  This allows anonymous users to download legally doubtful internet content which on
          *  tracing back appears to being downloaded by your server, or allows malicious php code
          *  in remote html pages to be executed by your server with your account privileges.

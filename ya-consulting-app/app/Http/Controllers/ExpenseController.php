@@ -180,38 +180,15 @@ class ExpenseController extends Controller
     {
         $this->authorize('create', Expense::class);
 
-        $validated = $request->validate([
-            'project_id'   => 'required|exists:projects,id',
-            'category_id'  => 'required|exists:expense_categories,id',
-            'date'         => 'required|date',
-            'amount'       => 'required|numeric|min:0.01',
-            'description'  => 'nullable|string|max:1000',
-            // Justificatif : optionnel, max 5 Mo, formats acceptés : PDF, JPEG, PNG, WebP
-            'receipt'      => 'nullable|file|max:5120|mimes:pdf,jpeg,png,jpg,webp',
-        ]);
+        $validated = $this->validateExpenseRequest($request);
 
         $project = Project::findOrFail($validated['project_id']);
 
         // Vérification de l'ownership : l'utilisateur peut-il modifier CE projet ?
         $this->authorize('update', $project);
 
-        // ─── Validation métier de la date ─────────────────────────
-        $expenseDate = \Carbon\Carbon::parse($validated['date']);
-
-        // La dépense ne peut pas être antérieure au début du projet
-        if ($expenseDate->lt($project->start_date)) {
-            return back()->withErrors([
-                'date' => 'La date de la dépense ne peut pas être antérieure à la date de début du projet ('
-                    . \Carbon\Carbon::parse($project->start_date)->format('d/m/Y') . ').'
-            ]);
-        }
-
-        // Si le projet est terminé, la dépense ne peut pas être postérieure à la date de fin réelle
-        if ($project->actual_end_date && $expenseDate->gt($project->actual_end_date)) {
-            return back()->withErrors([
-                'date' => 'La date de la dépense ne peut pas être postérieure à la date de fin réelle du projet ('
-                    . \Carbon\Carbon::parse($project->actual_end_date)->format('d/m/Y') . ').'
-            ]);
+        if ($error = $this->validateExpenseDate($validated['date'], $project)) {
+            return back()->withErrors($error);
         }
 
         // ─── Gestion du justificatif ──────────────────────────────
@@ -279,32 +256,13 @@ class ExpenseController extends Controller
     {
         $this->authorize('update', $expense);
 
-        $validated = $request->validate([
-            'project_id'   => 'required|exists:projects,id',
-            'category_id'  => 'required|exists:expense_categories,id',
-            'date'         => 'required|date',
-            'amount'       => 'required|numeric|min:0.01',
-            'description'  => 'nullable|string|max:1000',
-            'receipt'      => 'nullable|file|max:5120|mimes:pdf,jpeg,png,jpg,webp',
-        ]);
+        $validated = $this->validateExpenseRequest($request);
 
         $project = Project::findOrFail($validated['project_id']);
         $this->authorize('update', $project);
 
-        // Validation métier de la date (même règle qu'à la création)
-        $expenseDate = \Carbon\Carbon::parse($validated['date']);
-        if ($expenseDate->lt($project->start_date)) {
-            return back()->withErrors([
-                'date' => 'La date de la dépense ne peut pas être antérieure à la date de début du projet ('
-                    . \Carbon\Carbon::parse($project->start_date)->format('d/m/Y') . ').'
-            ]);
-        }
-
-        if ($project->actual_end_date && $expenseDate->gt($project->actual_end_date)) {
-            return back()->withErrors([
-                'date' => 'La date de la dépense ne peut pas être postérieure à la date de fin réelle du projet ('
-                    . \Carbon\Carbon::parse($project->actual_end_date)->format('d/m/Y') . ').'
-            ]);
+        if ($error = $this->validateExpenseDate($validated['date'], $project)) {
+            return back()->withErrors($error);
         }
 
         // ─── Remplacement du justificatif ─────────────────────────
@@ -387,5 +345,38 @@ class ExpenseController extends Controller
         $downloadName = $expense->receipt_original_name ?? basename($expense->receipt_path);
 
         return response()->download($absolutePath, $downloadName);
+    }
+
+    private function validateExpenseRequest(Request $request): array
+    {
+        return $request->validate([
+            'project_id'   => 'required|exists:projects,id',
+            'category_id'  => 'required|exists:expense_categories,id',
+            'date'         => 'required|date',
+            'amount'       => 'required|numeric|min:0.01',
+            'description'  => 'nullable|string|max:1000',
+            'receipt'      => 'nullable|file|max:5120|mimes:pdf,jpeg,png,jpg,webp',
+        ]);
+    }
+
+    private function validateExpenseDate(string $date, Project $project): ?array
+    {
+        $expenseDate = \Carbon\Carbon::parse($date);
+        
+        if ($expenseDate->lt($project->start_date)) {
+            return [
+                'date' => 'La date de la dépense ne peut pas être antérieure à la date de début du projet ('
+                    . \Carbon\Carbon::parse($project->start_date)->format('d/m/Y') . ').'
+            ];
+        }
+
+        if ($project->actual_end_date && $expenseDate->gt($project->actual_end_date)) {
+            return [
+                'date' => 'La date de la dépense ne peut pas être postérieure à la date de fin réelle du projet ('
+                    . \Carbon\Carbon::parse($project->actual_end_date)->format('d/m/Y') . ').'
+            ];
+        }
+        
+        return null;
     }
 }

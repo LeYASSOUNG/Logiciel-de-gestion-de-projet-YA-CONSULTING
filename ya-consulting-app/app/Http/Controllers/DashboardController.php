@@ -92,15 +92,20 @@ class DashboardController extends Controller
             ->sortByDesc(fn ($p) => $p->gross_gain)
             ->take(5)
             ->values()
-            ->map(fn ($p) => [
-                'id'           => $p->id,
-                'name'         => $p->name,
-                'client'       => $p->client->name ?? '-',
-                'budget'       => $p->budget,
-                'gross_gain'   => $p->gross_gain,
-                'profitability' => $p->profitability_rate,
-                'status'       => $p->status,
-            ]);
+            ->map(fn ($p) => $this->mapProjectSummary($p));
+    }
+
+    private function mapProjectSummary(\App\Models\Project $p): array
+    {
+        return [
+            'id'            => $p->id,
+            'name'          => $p->name,
+            'client'        => $p->client->name ?? '-',
+            'budget'        => $p->budget,
+            'gross_gain'    => $p->gross_gain,
+            'profitability' => $p->profitability_rate,
+            'status'        => $p->status,
+        ];
     }
 
     private function getTopLeastProfitable(\Illuminate\Database\Eloquent\Builder $query)
@@ -110,15 +115,7 @@ class DashboardController extends Controller
             ->sortBy(fn ($p) => $p->gross_gain)
             ->take(5)
             ->values()
-            ->map(fn ($p) => [
-                'id'           => $p->id,
-                'name'         => $p->name,
-                'client'       => $p->client->name ?? '-',
-                'budget'       => $p->budget,
-                'gross_gain'   => $p->gross_gain,
-                'profitability' => $p->profitability_rate,
-                'status'       => $p->status,
-            ]);
+            ->map(fn ($p) => $this->mapProjectSummary($p));
     }
 
     private function getExpensesByCategory(\App\Models\User $user)

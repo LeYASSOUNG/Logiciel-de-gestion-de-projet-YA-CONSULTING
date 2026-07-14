@@ -20,14 +20,37 @@ class ImperfectionCorrectionTest extends TestCase
         $this->seed();
     }
 
-    public function test_admin_can_access_activity_logs()
+    private function createAdmin(): User
     {
         $admin = User::create([
-            'name' => 'Admin Test',
-            'email' => 'admintest@yaconsulting.sn',
+            'name' => 'Admin Test ' . uniqid(),
+            'email' => 'admintest' . uniqid() . '@yaconsulting.sn',
             'password' => bcrypt('password'),
         ]);
         $admin->assignRole('admin');
+        return $admin;
+    }
+
+    private function createProject(int $clientId, int $userId, array $overrides = []): Project
+    {
+        return Project::create(array_merge([
+            'name' => 'Test Project ' . uniqid(),
+            'client_id' => $clientId,
+            'start_date' => '2026-06-01',
+            'planned_end_date' => '2026-06-30',
+            'budget' => 100000,
+            'budget_labor' => 25000,
+            'budget_material' => 25000,
+            'budget_transport' => 25000,
+            'budget_other' => 25000,
+            'status' => 'en_cours',
+            'created_by' => $userId,
+        ], $overrides));
+    }
+
+    public function test_admin_can_access_activity_logs()
+    {
+        $admin = $this->createAdmin();
 
         $response = $this->actingAs($admin)->get(route('activity-logs.index'));
         $response->assertStatus(200);
@@ -48,30 +71,13 @@ class ImperfectionCorrectionTest extends TestCase
 
     public function test_project_requires_actual_end_date_when_completed()
     {
-        $admin = User::create([
-            'name' => 'Admin Test',
-            'email' => 'admintest@yaconsulting.sn',
-            'password' => bcrypt('password'),
-        ]);
-        $admin->assignRole('admin');
+        $admin = $this->createAdmin();
 
         $client = Client::create([
             'name' => 'Test Client',
         ]);
 
-        $project = Project::create([
-            'name' => 'Test Project',
-            'client_id' => $client->id,
-            'start_date' => '2026-06-01',
-            'planned_end_date' => '2026-06-30',
-            'budget' => 100000,
-            'budget_labor' => 25000,
-            'budget_material' => 25000,
-            'budget_transport' => 25000,
-            'budget_other' => 25000,
-            'status' => 'en_cours',
-            'created_by' => $admin->id,
-        ]);
+        $project = $this->createProject($client->id, $admin->id);
 
         // Attempting to change status to termine without actual_end_date
         $response = $this->actingAs($admin)->put(route('projects.update', $project->id), [
@@ -92,28 +98,13 @@ class ImperfectionCorrectionTest extends TestCase
 
     public function test_expense_date_cannot_be_before_project_start_date()
     {
-        $admin = User::create([
-            'name' => 'Admin Test',
-            'email' => 'admintest@yaconsulting.sn',
-            'password' => bcrypt('password'),
-        ]);
-        $admin->assignRole('admin');
+        $admin = $this->createAdmin();
 
         $client = Client::create(['name' => 'Test Client']);
         $category = ExpenseCategory::first();
 
-        $project = Project::create([
-            'name' => 'Test Project',
-            'client_id' => $client->id,
+        $project = $this->createProject($client->id, $admin->id, [
             'start_date' => '2026-06-10',
-            'planned_end_date' => '2026-06-30',
-            'budget' => 100000,
-            'budget_labor' => 25000,
-            'budget_material' => 25000,
-            'budget_transport' => 25000,
-            'budget_other' => 25000,
-            'status' => 'en_cours',
-            'created_by' => $admin->id,
         ]);
 
         // Attempt to create expense with date 2026-06-05 (before start_date 2026-06-10)
@@ -130,29 +121,15 @@ class ImperfectionCorrectionTest extends TestCase
 
     public function test_expense_date_cannot_be_after_project_actual_end_date()
     {
-        $admin = User::create([
-            'name' => 'Admin Test',
-            'email' => 'admintest@yaconsulting.sn',
-            'password' => bcrypt('password'),
-        ]);
-        $admin->assignRole('admin');
+        $admin = $this->createAdmin();
 
         $client = Client::create(['name' => 'Test Client']);
         $category = ExpenseCategory::first();
 
-        $project = Project::create([
-            'name' => 'Test Project',
-            'client_id' => $client->id,
+        $project = $this->createProject($client->id, $admin->id, [
             'start_date' => '2026-06-10',
-            'planned_end_date' => '2026-06-30',
             'actual_end_date' => '2026-06-25',
-            'budget' => 100000,
-            'budget_labor' => 25000,
-            'budget_material' => 25000,
-            'budget_transport' => 25000,
-            'budget_other' => 25000,
             'status' => 'termine',
-            'created_by' => $admin->id,
         ]);
 
         // Attempt to create expense with date 2026-06-28 (after actual_end_date 2026-06-25)
@@ -169,29 +146,19 @@ class ImperfectionCorrectionTest extends TestCase
 
     public function test_user_shares_correct_inertia_notifications()
     {
-        $admin = User::create([
-            'name' => 'Admin Test',
-            'email' => 'admintest@yaconsulting.sn',
-            'password' => bcrypt('password'),
-        ]);
-        $admin->assignRole('admin');
+        $admin = $this->createAdmin();
 
         $client = Client::create(['name' => 'Test Client']);
         $category = ExpenseCategory::first();
 
         // 1. Create a project with budget overrun
-        $projectOverrun = Project::create([
+        $projectOverrun = $this->createProject($client->id, $admin->id, [
             'name' => 'Overrun Project',
-            'client_id' => $client->id,
-            'start_date' => '2026-06-01',
-            'planned_end_date' => '2026-06-30',
-            'budget' => 1000, // Very low budget to trigger overrun
+            'budget' => 1000,
             'budget_labor' => 250,
             'budget_material' => 250,
             'budget_transport' => 250,
             'budget_other' => 250,
-            'status' => 'en_cours',
-            'created_by' => $admin->id,
         ]);
 
         Expense::create([
@@ -204,18 +171,9 @@ class ImperfectionCorrectionTest extends TestCase
         ]);
 
         // 2. Create a project with exceeded deadline
-        $projectLate = Project::create([
+        $projectLate = $this->createProject($client->id, $admin->id, [
             'name' => 'Late Project',
-            'client_id' => $client->id,
-            'start_date' => '2026-06-01',
             'planned_end_date' => '2026-06-10', // Exceeded deadline (today is 2026-06-21)
-            'budget' => 100000,
-            'budget_labor' => 25000,
-            'budget_material' => 25000,
-            'budget_transport' => 25000,
-            'budget_other' => 25000,
-            'status' => 'en_cours',
-            'created_by' => $admin->id,
         ]);
 
         // Access dashboard to see Inertia shared props
@@ -261,18 +219,13 @@ class ImperfectionCorrectionTest extends TestCase
         $client = Client::create(['name' => 'Test Client']);
 
         // Chef 1 project - overrun
-        $project1 = Project::create([
+        $project1 = $this->createProject($client->id, $chef1->id, [
             'name' => 'Chef 1 Project',
-            'client_id' => $client->id,
-            'start_date' => '2026-06-01',
-            'planned_end_date' => '2026-06-30',
             'budget' => 1000,
             'budget_labor' => 250,
             'budget_material' => 250,
             'budget_transport' => 250,
             'budget_other' => 250,
-            'status' => 'en_cours',
-            'created_by' => $chef1->id,
         ]);
         
         $category = ExpenseCategory::first();
@@ -286,18 +239,13 @@ class ImperfectionCorrectionTest extends TestCase
         ]);
 
         // Chef 2 project - overrun
-        $project2 = Project::create([
+        $project2 = $this->createProject($client->id, $chef2->id, [
             'name' => 'Chef 2 Project',
-            'client_id' => $client->id,
-            'start_date' => '2026-06-01',
-            'planned_end_date' => '2026-06-30',
             'budget' => 1000,
             'budget_labor' => 250,
             'budget_material' => 250,
             'budget_transport' => 250,
             'budget_other' => 250,
-            'status' => 'en_cours',
-            'created_by' => $chef2->id,
         ]);
 
         Expense::create([

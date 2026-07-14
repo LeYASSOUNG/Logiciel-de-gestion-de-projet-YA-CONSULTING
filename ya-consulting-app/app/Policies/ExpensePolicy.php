@@ -76,15 +76,7 @@ class ExpensePolicy
      */
     public function update(User $user, Expense $expense): bool
     {
-        if ($user->hasRole('admin')) {
-            return true;
-        }
-
-        if ($user->hasRole('chef_projet')) {
-            return $expense->project?->created_by === $user->id;
-        }
-
-        return false;
+        return $this->canModify($user, $expense);
     }
 
     /**
@@ -97,6 +89,11 @@ class ExpensePolicy
      * Note : la suppression physique du justificatif est gérée dans le contrôleur.
      */
     public function delete(User $user, Expense $expense): bool
+    {
+        return $this->canModify($user, $expense);
+    }
+
+    private function canModify(User $user, Expense $expense): bool
     {
         if ($user->hasRole('admin')) {
             return true;
