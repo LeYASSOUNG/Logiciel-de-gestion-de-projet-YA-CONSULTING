@@ -48,6 +48,42 @@ class ImperfectionCorrectionTest extends TestCase
         ], $overrides));
     }
 
+    /** Cree un client de test generique. */
+    private function createTestClient(string $name = 'Test Client'): Client
+    {
+        return Client::create(['name' => $name]);
+    }
+
+    /**
+     * Cree un projet en depassement de budget et une depense excedentaire.
+     *
+     * @return array{project: Project, expense: Expense}
+     */
+    private function createOverrunExpense(int $clientId, int $userId, string $projectName, string $description): array
+    {
+        $category = ExpenseCategory::first();
+
+        $project = $this->createProject($clientId, $userId, [
+            'name' => $projectName,
+            'budget' => 1000,
+            'budget_labor' => 250,
+            'budget_material' => 250,
+            'budget_transport' => 250,
+            'budget_other' => 250,
+        ]);
+
+        $expense = Expense::create([
+            'project_id' => $project->id,
+            'category_id' => $category->id,
+            'amount' => 2000,
+            'date' => '2026-06-15',
+            'description' => $description,
+            'created_by' => $userId,
+        ]);
+
+        return ['project' => $project, 'expense' => $expense];
+    }
+
     public function test_admin_can_access_activity_logs()
     {
         $admin = $this->createAdmin();
@@ -73,10 +109,7 @@ class ImperfectionCorrectionTest extends TestCase
     {
         $admin = $this->createAdmin();
 
-        $client = Client::create([
-            'name' => 'Test Client',
-        ]);
-
+        $client = $this->createTestClient();
         $project = $this->createProject($client->id, $admin->id);
 
         // Attempting to change status to termine without actual_end_date
@@ -100,7 +133,7 @@ class ImperfectionCorrectionTest extends TestCase
     {
         $admin = $this->createAdmin();
 
-        $client = Client::create(['name' => 'Test Client']);
+        $client = $this->createTestClient();
         $category = ExpenseCategory::first();
 
         $project = $this->createProject($client->id, $admin->id, [
@@ -123,7 +156,7 @@ class ImperfectionCorrectionTest extends TestCase
     {
         $admin = $this->createAdmin();
 
-        $client = Client::create(['name' => 'Test Client']);
+        $client = $this->createTestClient();
         $category = ExpenseCategory::first();
 
         $project = $this->createProject($client->id, $admin->id, [
@@ -147,28 +180,12 @@ class ImperfectionCorrectionTest extends TestCase
     public function test_user_shares_correct_inertia_notifications()
     {
         $admin = $this->createAdmin();
-
-        $client = Client::create(['name' => 'Test Client']);
-        $category = ExpenseCategory::first();
+        $client = $this->createTestClient();
 
         // 1. Create a project with budget overrun
-        $projectOverrun = $this->createProject($client->id, $admin->id, [
-            'name' => 'Overrun Project',
-            'budget' => 1000,
-            'budget_labor' => 250,
-            'budget_material' => 250,
-            'budget_transport' => 250,
-            'budget_other' => 250,
-        ]);
-
-        Expense::create([
-            'project_id' => $projectOverrun->id,
-            'category_id' => $category->id,
-            'amount' => 2000,
-            'date' => '2026-06-15',
-            'description' => 'Overrun Expense',
-            'created_by' => $admin->id,
-        ]);
+        ['project' => $projectOverrun] = $this->createOverrunExpense(
+            $client->id, $admin->id, 'Overrun Project', 'Overrun Expense'
+        );
 
         // 2. Create a project with exceeded deadline
         $projectLate = $this->createProject($client->id, $admin->id, [
@@ -183,7 +200,7 @@ class ImperfectionCorrectionTest extends TestCase
         // Assert shared Inertia notifications prop
         $inertiaProps = $response->original->getData()['page']['props'];
         $this->assertArrayHasKey('notifications', $inertiaProps);
-        
+
         $notifications = $inertiaProps['notifications'];
         $this->assertNotEmpty($notifications);
 
@@ -191,13 +208,13 @@ class ImperfectionCorrectionTest extends TestCase
         $overrunNotif = collect($notifications)->first(fn($n) => $n['id'] === 'budget-' . $projectOverrun->id);
         $this->assertNotNull($overrunNotif);
         $this->assertEquals('warning', $overrunNotif['type']);
-        $this->assertStringContainsString('Dépassement de budget', $overrunNotif['title']);
+        $this->assertStringContainsString('Depassement de budget', $overrunNotif['title']);
 
         // Find late notification
         $lateNotif = collect($notifications)->first(fn($n) => $n['id'] === 'deadline-' . $projectLate->id);
         $this->assertNotNull($lateNotif);
         $this->assertEquals('danger', $lateNotif['type']);
-        $this->assertStringContainsString('Échéance dépassée', $lateNotif['title']);
+        $this->assertStringContainsString('Echeance depassee', $lateNotif['title']);
     }
 
     public function test_chef_projet_only_sees_their_own_inertia_notifications()
@@ -216,46 +233,17 @@ class ImperfectionCorrectionTest extends TestCase
         ]);
         $chef2->assignRole('chef_projet');
 
-        $client = Client::create(['name' => 'Test Client']);
+        $client = $this->createTestClient();
 
         // Chef 1 project - overrun
-        $project1 = $this->createProject($client->id, $chef1->id, [
-            'name' => 'Chef 1 Project',
-            'budget' => 1000,
-            'budget_labor' => 250,
-            'budget_material' => 250,
-            'budget_transport' => 250,
-            'budget_other' => 250,
-        ]);
-        
-        $category = ExpenseCategory::first();
-        Expense::create([
-            'project_id' => $project1->id,
-            'category_id' => $category->id,
-            'amount' => 2000,
-            'date' => '2026-06-15',
-            'description' => 'Chef 1 Expense',
-            'created_by' => $chef1->id,
-        ]);
+        ['project' => $project1] = $this->createOverrunExpense(
+            $client->id, $chef1->id, 'Chef 1 Project', 'Chef 1 Expense'
+        );
 
         // Chef 2 project - overrun
-        $project2 = $this->createProject($client->id, $chef2->id, [
-            'name' => 'Chef 2 Project',
-            'budget' => 1000,
-            'budget_labor' => 250,
-            'budget_material' => 250,
-            'budget_transport' => 250,
-            'budget_other' => 250,
-        ]);
-
-        Expense::create([
-            'project_id' => $project2->id,
-            'category_id' => $category->id,
-            'amount' => 2000,
-            'date' => '2026-06-15',
-            'description' => 'Chef 2 Expense',
-            'created_by' => $chef2->id,
-        ]);
+        ['project' => $project2] = $this->createOverrunExpense(
+            $client->id, $chef2->id, 'Chef 2 Project', 'Chef 2 Expense'
+        );
 
         // Access dashboard as Chef 1
         $response = $this->actingAs($chef1)->get(route('dashboard'));

@@ -138,15 +138,8 @@ class ExpenseController extends Controller
     {
         $this->authorize('create', Expense::class);
 
-        $projectsQuery = Project::query();
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
-        if ($user && $user->hasRole('chef_projet')) {
-            $projectsQuery->where(self::COL_CREATED_BY, Auth::id());
-        }
-
         return Inertia::render('Expenses/Create', [
-            'projects'   => $projectsQuery->orderBy(self::COL_NAME)->get(['id', self::COL_NAME, 'budget']),
+            'projects'   => $this->authorizedProjectsQuery()->orderBy(self::COL_NAME)->get(['id', self::COL_NAME, 'budget']),
             'categories' => ExpenseCategory::orderBy(self::COL_NAME)->get(['id', self::COL_NAME]),
         ]);
     }
@@ -232,16 +225,9 @@ class ExpenseController extends Controller
     {
         $this->authorize('update', $expense);
 
-        $projectsQuery = Project::query();
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
-        if ($user && $user->hasRole('chef_projet')) {
-            $projectsQuery->where(self::COL_CREATED_BY, Auth::id());
-        }
-
         return Inertia::render('Expenses/Edit', [
             'expense'    => $expense,
-            'projects'   => $projectsQuery->orderBy(self::COL_NAME)->get(['id', self::COL_NAME, 'budget']),
+            'projects'   => $this->authorizedProjectsQuery()->orderBy(self::COL_NAME)->get(['id', self::COL_NAME, 'budget']),
             'categories' => ExpenseCategory::orderBy(self::COL_NAME)->get(['id', self::COL_NAME]),
         ]);
     }
@@ -378,5 +364,22 @@ class ExpenseController extends Controller
         }
         
         return null;
+    }
+
+    /**
+     * Retourne un QueryBuilder de projets filtré selon le rôle de l'utilisateur connecté.
+     * Les chefs de projet ne voient que leurs propres projets.
+     *
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    private function authorizedProjectsQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        $query = Project::query();
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        if ($user && $user->hasRole('chef_projet')) {
+            $query->where(self::COL_CREATED_BY, Auth::id());
+        }
+        return $query;
     }
 }

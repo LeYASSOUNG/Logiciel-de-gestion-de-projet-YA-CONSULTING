@@ -68,14 +68,7 @@ class ClientController extends Controller
     {
         $this->authorize('create', Client::class);
 
-        $validated = $request->validate([
-            'name'          => 'required|string|max:255',
-            'contact_email' => 'nullable|email|max:255',
-            'contact_phone' => 'nullable|string|max:255',
-            'company'       => 'nullable|string|max:255',
-            'address'       => 'nullable|string',
-            'notes'         => 'nullable|string',
-        ]);
+        $validated = $request->validate($this->clientValidationRules());
 
         $client = Client::create($validated);
 
@@ -97,14 +90,7 @@ class ClientController extends Controller
     {
         $this->authorize('update', $client);
 
-        $validated = $request->validate([
-            'name'          => 'required|string|max:255',
-            'contact_email' => 'nullable|email|max:255',
-            'contact_phone' => 'nullable|string|max:255',
-            'company'       => 'nullable|string|max:255',
-            'address'       => 'nullable|string',
-            'notes'         => 'nullable|string',
-        ]);
+        $validated = $request->validate($this->clientValidationRules());
 
         $client->update($validated);
 
@@ -144,5 +130,19 @@ class ClientController extends Controller
             ->with('success', 'Client supprimé avec succès.');
     }
 
+    /**
+     * Règles de validation communes à la création et à la mise à jour d'un client.
+     */
+    private function clientValidationRules(): array
+    {
+        return [
+            'name'          => 'required|string|max:255',
+            'contact_email' => 'nullable|email|max:255',
+            'contact_phone' => 'nullable|string|max:255',
+            'company'       => 'nullable|string|max:255',
+            'address'       => 'nullable|string',
+            'notes'         => 'nullable|string',
+        ];
+    }
 
 }

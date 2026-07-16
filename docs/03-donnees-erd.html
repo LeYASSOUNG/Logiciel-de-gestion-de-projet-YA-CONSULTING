@@ -1,0 +1,183 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="doc.css" />
+</head>
+<body>
+<div style='background:#1A2B4A;color:#C9A84C;padding:12px 24px;display:flex;gap:16px;align-items:center;font-family:Inter,sans-serif;font-size:13px;flex-wrap:wrap;'><a href='index.html' style='color:#C9A84C;text-decoration:none;'>&#8962; Index</a><span style='color:#888;flex:1;text-align:center;'>Sections 5-6 — Modèle de données et ERD</span><a href='02b-architecture-sequences-etats.html' style='color:#C9A84C;text-decoration:none;'>&#8592; Précédent</a><a href='04-modules-api.html' style='color:#C9A84C;text-decoration:none;'>Suivant &#8594;</a></div>
+<div style='max-width:1200px;margin:0 auto;padding:32px 24px;'>
+    <div id="s5" class="section-header">
+      <div class="section-number">05</div>
+      <div>
+        <div class="section-title">Guide d'installation</div>
+        <div class="section-subtitle">Mise en place de l'environnement de développement</div>
+      </div>
+    </div>
+
+    <h3>Prérequis</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Outil</th>
+          <th>Version minimale</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>PHP</td>
+          <td>≥ 8.2</td>
+        </tr>
+        <tr>
+          <td>Composer</td>
+          <td>≥ 2.x</td>
+        </tr>
+        <tr>
+          <td>Node.js</td>
+          <td>≥ 18.x</td>
+        </tr>
+        <tr>
+          <td>npm</td>
+          <td>≥ 9.x</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Étapes d'installation</h3>
+    <pre>
+# 1. Cloner le dépôt
+git clone &lt;url-du-depot&gt;
+cd ya-consulting-app
+
+# 2. Dépendances PHP
+composer install
+
+# 3. Dépendances JavaScript
+npm install
+
+# 4. Configurer l'environnement
+cp .env.example .env
+php artisan key:generate
+
+# 5. Base de données SQLite
+touch database/database.sqlite
+php artisan migrate --seed
+
+# 6. Lien symbolique pour les fichiers publics
+php artisan storage:link
+
+# 7. Lancer le serveur de développement
+composer run dev
+  </pre>
+
+    <div class="callout callout-info">
+      <strong>ℹ️ Commande <code>composer run dev</code></strong>
+      Lance simultanément : serveur Laravel (port 8000) + Vite hot-reload + queue:listen + pail (logs).
+      Accès : <strong>http://localhost:8000</strong>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════ -->
+    <!--  6. BASE DE DONNÉES                                   -->
+    <!-- ══════════════════════════════════════════════════════ -->
+    <div id="s6" class="section-header">
+      <div class="section-number">06</div>
+      <div>
+        <div class="section-title">Schéma de base de données</div>
+        <div class="section-subtitle">ERD et description des tables</div>
+      </div>
+    </div>
+
+    <h2 id="s6-1">6.1 Diagramme Entité-Relation (ERD)</h2>
+
+    <div class="mermaid-container">
+      <div class="uml-title">📌 Diagramme Relationnel de la Base de Données (ERD)</div>
+      <div class="mermaid">
+        erDiagram
+        users {
+        bigint id PK
+        string name
+        string email
+        string password
+        timestamp email_verified_at
+        string remember_token
+        timestamp created_at
+        timestamp updated_at
+        }
+        clients {
+        bigint id PK
+        string name
+        timestamp created_at
+        timestamp updated_at
+        }
+        projects {
+        bigint id PK
+        string name
+        bigint client_id FK
+        text description
+        date start_date
+        date planned_end_date
+        date actual_end_date
+        decimal budget
+        string status
+        string supplier_contact
+        bigint created_by FK
+        bigint updated_by FK
+        timestamp deleted_at
+        timestamp created_at
+        timestamp updated_at
+        }
+        expenses {
+        bigint id PK
+        bigint project_id FK
+        bigint category_id FK
+        date date
+        decimal amount
+        text description
+        string receipt_path
+        string receipt_original_name
+        bigint created_by FK
+        bigint updated_by FK
+        timestamp deleted_at
+        timestamp created_at
+        timestamp updated_at
+        }
+        expense_categories {
+        bigint id PK
+        string name
+        string color
+        timestamp created_at
+        timestamp updated_at
+        }
+        monthly_reports {
+        bigint id PK
+        string name
+        tinyint month
+        smallint year
+        decimal total_budget
+        decimal total_expenses
+        decimal net_profit
+        string file_path
+        string file_type
+        bigint generated_by FK
+        datetime generated_at
+        timestamp created_at
+        timestamp updated_at
+        }
+
+        users ||--o{ projects : "crée (created_by)"
+        users ||--o{ expenses : "crée (created_by)"
+        users ||--o{ monthly_reports : "génère (generated_by)"
+        clients ||--o{ projects : "possède"
+        projects ||--o{ expenses : "contient"
+        expense_categories ||--o{ expenses : "catégorise"
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════ -->
+    <!--  7. MODÈLES ELOQUENT                                  -->
+    <!-- ══════════════════════════════════════════════════════ -->
+</div>
+<div style='background:#1A2B4A;color:#C9A84C;padding:12px 24px;display:flex;gap:16px;align-items:center;font-family:Inter,sans-serif;font-size:13px;flex-wrap:wrap;'><a href='index.html' style='color:#C9A84C;text-decoration:none;'>&#8962; Index</a><span style='color:#888;flex:1;text-align:center;'>Sections 5-6 — Modèle de données et ERD</span><a href='02b-architecture-sequences-etats.html' style='color:#C9A84C;text-decoration:none;'>&#8592; Précédent</a><a href='04-modules-api.html' style='color:#C9A84C;text-decoration:none;'>Suivant &#8594;</a></div>
+</body>
+</html>

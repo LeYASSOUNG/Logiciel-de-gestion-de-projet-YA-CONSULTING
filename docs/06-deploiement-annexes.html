@@ -1,0 +1,310 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="doc.css" />
+</head>
+<body>
+<div style='background:#1A2B4A;color:#C9A84C;padding:12px 24px;display:flex;gap:16px;align-items:center;font-family:Inter,sans-serif;font-size:13px;flex-wrap:wrap;'><a href='index.html' style='color:#C9A84C;text-decoration:none;'>&#8962; Index</a><span style='color:#888;flex:1;text-align:center;'>Sections 11-14 — Déploiement, Maintenance et Annexes</span><a href='05-securite-tests.html' style='color:#C9A84C;text-decoration:none;'>&#8592; Précédent</a><span></span></div>
+<div style='max-width:1200px;margin:0 auto;padding:32px 24px;'>
+    <div id="s11" class="section-header">
+      <div class="section-number">11</div>
+      <div>
+        <div class="section-title">Rôles & Permissions</div>
+        <div class="section-subtitle">Spatie Laravel Permission — Matrice d'accès</div>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Section</th>
+          <th>Admin</th>
+          <th>Chef de Projet</th>
+          <th>Collaborateur</th>
+          <th>Client</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Dashboard</td>
+          <td>✅ Vue globale</td>
+          <td>✅ Vue filtrée (ses projets)</td>
+          <td>✅ Vue globale (lecture seule)</td>
+          <td>✅ Vue filtrée (ses projets)</td>
+        </tr>
+        <tr>
+          <td>Projets — Liste</td>
+          <td>✅ Tous</td>
+          <td>✅ Ses projets uniquement</td>
+          <td>✅ Tous (lecture seule)</td>
+          <td>✅ Ses projets uniquement</td>
+        </tr>
+        <tr>
+          <td>Projets — Création/Édition</td>
+          <td>✅</td>
+          <td>✅</td>
+          <td>❌</td>
+          <td>❌</td>
+        </tr>
+        <tr>
+          <td>Projets — Suppression</td>
+          <td>✅</td>
+          <td>❌</td>
+          <td>❌</td>
+          <td>❌</td>
+        </tr>
+        <tr>
+          <td>Dépenses</td>
+          <td>✅ Toutes</td>
+          <td>✅ Ses projets uniquement</td>
+          <td>✅ Toutes (lecture seule)</td>
+          <td>✅ Ses projets uniquement</td>
+        </tr>
+        <tr>
+          <td>Clients</td>
+          <td>✅</td>
+          <td>✅</td>
+          <td>✅ Liste seule</td>
+          <td>❌</td>
+        </tr>
+        <tr>
+          <td>Rapports (génération)</td>
+          <td>✅</td>
+          <td>✅</td>
+          <td>❌</td>
+          <td>❌</td>
+        </tr>
+        <tr>
+          <td>Gestion Utilisateurs</td>
+          <td>✅</td>
+          <td>❌</td>
+          <td>❌</td>
+          <td>❌</td>
+        </tr>
+        <tr>
+          <td>Mon Profil</td>
+          <td>✅</td>
+          <td>✅</td>
+          <td>✅</td>
+          <td>✅</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ══════════════════════════════════════════════════════ -->
+    <!--  12. FRONTEND                                         -->
+    <!-- ══════════════════════════════════════════════════════ -->
+    <div id="s12" class="section-header">
+      <div class="section-number">12</div>
+      <div>
+        <div class="section-title">Pages Frontend Vue.js / Inertia</div>
+        <div class="section-subtitle">Composition API — Props et comportements</div>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Page</th>
+          <th>Fichier</th>
+          <th>Props principales</th>
+          <th>Fonctionnalités</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Dashboard</strong></td>
+          <td>Dashboard.vue</td>
+          <td>stats, top_profitable, expenses_by_category, monthly_trend, recent_projects</td>
+          <td>KPIs, graphiques ApexCharts (area + donut), tableaux</td>
+        </tr>
+        <tr>
+          <td><strong>Projets — Liste</strong></td>
+          <td>Projects/Index.vue</td>
+          <td>projects (paginé), clients, filters, years, can</td>
+          <td>Filtres dynamiques, pagination, indicateurs financiers</td>
+        </tr>
+        <tr>
+          <td><strong>Projet — Détail</strong></td>
+          <td>Projects/Show.vue</td>
+          <td>project, expenses_by_category</td>
+          <td>KPIs projet, graphique dépenses, liste des dépenses</td>
+        </tr>
+        <tr>
+          <td><strong>Créer un projet</strong></td>
+          <td>Projects/Create.vue</td>
+          <td>clients</td>
+          <td>Formulaire 3 sections, aperçu montant FCFA</td>
+        </tr>
+        <tr>
+          <td><strong>Modifier un projet</strong></td>
+          <td>Projects/Edit.vue</td>
+          <td>project, clients</td>
+          <td>Formulaire pré-rempli + champ date fin réelle</td>
+        </tr>
+        <tr>
+          <td><strong>Dépenses — Liste</strong></td>
+          <td>Expenses/Index.vue</td>
+          <td>expenses, projects, categories, filters</td>
+          <td>Filtres, indicateur justificatif, lien projet</td>
+        </tr>
+        <tr>
+          <td><strong>Créer une dépense</strong></td>
+          <td>Expenses/Create.vue</td>
+          <td>projects, categories, selected_project?</td>
+          <td>Upload justificatif, sélection projet/catégorie</td>
+        </tr>
+        <tr>
+          <td><strong>Rapports</strong></td>
+          <td>Reports/Index.vue</td>
+          <td>reports, months, years</td>
+          <td>Sélection mois/année/format, téléchargement</td>
+        </tr>
+        <tr>
+          <td><strong>Mon Profil</strong></td>
+          <td>Profile/Edit.vue</td>
+          <td>user</td>
+          <td>Mise à jour nom/email + changement de mot de passe</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ══════════════════════════════════════════════════════ -->
+    <!--  13. RAPPORT PDF                                      -->
+    <!-- ══════════════════════════════════════════════════════ -->
+    <div id="s13" class="section-header">
+      <div class="section-number">13</div>
+      <div>
+        <div class="section-title">Template de rapport PDF</div>
+        <div class="section-subtitle">resources/views/reports/pdf.blade.php — DomPDF</div>
+      </div>
+    </div>
+
+    <h3>Structure du rapport généré</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Section</th>
+          <th>Contenu</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>1. En-tête</strong></td>
+          <td>Logo YA CONSULTING (bleu navy + or), coordonnées, titre du rapport avec période</td>
+        </tr>
+        <tr>
+          <td><strong>2. KPIs (3 cartes)</strong></td>
+          <td>Budget Total · Dépenses Totales · Bénéfice Net (coloré vert/rouge)</td>
+        </tr>
+        <tr>
+          <td><strong>3. Comparatifs N vs N-1</strong></td>
+          <td>Tableau à 4 colonnes : indicateur, période actuelle, mois précédent, évolution colorée</td>
+        </tr>
+        <tr>
+          <td><strong>4. Projets actifs</strong></td>
+          <td>Tableau : nom, client, budget, dépenses, marge brute, badge rentabilité</td>
+        </tr>
+        <tr>
+          <td><strong>5. Dépenses par catégorie</strong></td>
+          <td>Tableau : catégorie (couleur), type, nombre, total FCFA</td>
+        </tr>
+        <tr>
+          <td><strong>6. Pied de page</strong></td>
+          <td>Générateur + date/heure + "YA CONSULTING Project Manager"</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ══════════════════════════════════════════════════════ -->
+    <!--  14. JOURNAL D'ACTIVITÉ                               -->
+    <!-- ══════════════════════════════════════════════════════ -->
+    <div id="s14" class="section-header">
+      <div class="section-number">14</div>
+      <div>
+        <div class="section-title">Journal d'activité</div>
+        <div class="section-subtitle">Spatie Activitylog — Traçabilité complète</div>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Action</th>
+          <th>Message</th>
+          <th>Subject</th>
+          <th>Propriétés</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Création projet</td>
+          <td><code>"Projet créé"</code></td>
+          <td>Project</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>Modification projet</td>
+          <td><code>"Projet modifié"</code></td>
+          <td>Project</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>Suppression projet</td>
+          <td><code>"Projet supprimé"</code></td>
+          <td>Project</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>Création dépense</td>
+          <td><code>"Dépense enregistrée"</code></td>
+          <td>Expense</td>
+          <td><code>project: nom</code></td>
+        </tr>
+        <tr>
+          <td>Modification dépense</td>
+          <td><code>"Dépense mise à jour"</code></td>
+          <td>Expense</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>Suppression dépense</td>
+          <td><code>"Dépense supprimée"</code></td>
+          <td>Expense</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>Génération rapport</td>
+          <td><code>"Rapport mensuel généré"</code></td>
+          <td>MonthlyReport</td>
+          <td>—</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-success">
+      <strong>✅ Chaque entrée du journal contient</strong>
+      <code>causer</code> (utilisateur), <code>subject</code> (entité concernée), <code>description</code> (message),
+      <code>properties</code> (JSON), et un timestamp automatique.
+    </div>
+
+    <hr>
+    <p class="text-muted footer-note">
+      Documentation technique — YA CONSULTING Project Manager — Juin 2026<br>
+      Réalisée dans le cadre d'un projet de stage · YA CONSULTING , Dakar, Sénégal
+    </p>
+
+    <div class="print-btn-wrapper">
+      <button onclick="window.print()" class="print-btn">🖨️ Imprimer / Exporter en PDF</button>
+      <p class="print-hint">
+        Utilisez Ctrl+P → "Enregistrer en PDF" dans votre navigateur
+      </p>
+    </div>
+
+  </div>
+</div>
+<div style='background:#1A2B4A;color:#C9A84C;padding:12px 24px;display:flex;gap:16px;align-items:center;font-family:Inter,sans-serif;font-size:13px;flex-wrap:wrap;'><a href='index.html' style='color:#C9A84C;text-decoration:none;'>&#8962; Index</a><span style='color:#888;flex:1;text-align:center;'>Sections 11-14 — Déploiement, Maintenance et Annexes</span><a href='05-securite-tests.html' style='color:#C9A84C;text-decoration:none;'>&#8592; Précédent</a><span></span></div>
+</body>
+</html>

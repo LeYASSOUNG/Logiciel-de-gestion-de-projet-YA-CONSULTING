@@ -1,0 +1,369 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="doc.css" />
+</head>
+<body>
+<div style='background:#1A2B4A;color:#C9A84C;padding:12px 24px;display:flex;gap:16px;align-items:center;font-family:Inter,sans-serif;font-size:13px;flex-wrap:wrap;'><a href='index.html' style='color:#C9A84C;text-decoration:none;'>&#8962; Index</a><span style='color:#888;flex:1;text-align:center;'>Section 4a — Architecture : Cas d'usage et Classes</span><a href='01-introduction.html' style='color:#C9A84C;text-decoration:none;'>&#8592; Précédent</a><a href='02b-architecture-sequences-etats.html' style='color:#C9A84C;text-decoration:none;'>Suivant &#8594;</a></div>
+<div style='max-width:1200px;margin:0 auto;padding:32px 24px;'>
+    <div id="s4" class="section-header">
+      <div class="section-number">04</div>
+      <div>
+        <div class="section-title">Diagrammes UML</div>
+        <div class="section-subtitle">Cas d'utilisation, Classes, Séquences</div>
+      </div>
+    </div>
+
+    <!-- ── 4.1 CAS D'UTILISATION ───────────────────────── -->
+    <h2 id="s4-1">4.1 Diagramme de cas d'utilisation</h2>
+
+    <div class="mermaid-container">
+      <div class="uml-title">📌 Diagramme visuel de cas d'utilisation</div>
+      <div class="mermaid">
+        graph TD
+        %% Acteurs
+        Admin((Administrateur))
+        Chef((Chef de Projet))
+        Collab((Collaborateur))
+        ClientActor((Client))
+
+        subgraph System ["YA CONSULTING Project Manager"]
+        UC1(Gérer les utilisateurs)
+        UC2(Gérer tous les projets)
+        UC3(Créer & gérer ses propres projets)
+        UC4(Gérer toutes les dépenses)
+        UC5(Saisir dépenses sur ses projets)
+        UC6(Gérer les clients)
+        UC7(Générer des rapports mensuels)
+        UC8(Consulter le dashboard global)
+        UC9(Consulter le dashboard de ses projets)
+        UC10(Modifier son profil)
+        UC11(Consulter en lecture seule<br />projets, dépenses et clients)
+        UC12(Consulter ses propres projets<br />et dépenses)
+        end
+
+        %% Liens Administrateur
+        Admin --> UC1
+        Admin --> UC2
+        Admin --> UC4
+        Admin --> UC6
+        Admin --> UC7
+        Admin --> UC8
+        Admin --> UC10
+
+        %% Liens Chef de projet
+        Chef --> UC3
+        Chef --> UC5
+        Chef --> UC6
+        Chef --> UC7
+        Chef --> UC9
+        Chef --> UC10
+
+        %% Liens Collaborateur
+        Collab --> UC11
+        Collab --> UC10
+
+        %% Liens Client
+        ClientActor --> UC12
+        ClientActor --> UC9
+        ClientActor --> UC10
+      </div>
+    </div>
+
+    <div class="uml-container">
+      <div class="uml-title">📌 Description textuelle des cas d'utilisation</div>
+      <div class="usecase-grid">
+
+        <div>
+          <div class="usecase-actor usecase-actor-mb">
+            <div class="usecase-actor-icon usecase-actor-admin">👤</div>
+            <div class="usecase-actor-name">Administrateur</div>
+            <div class="usecase-actor-role">Accès total au système</div>
+          </div>
+          <div class="usecase-cases">
+            <div class="usecase-item">Gérer tous les utilisateurs</div>
+            <div class="usecase-item">Gérer tous les projets (CRUD)</div>
+            <div class="usecase-item">Gérer toutes les dépenses</div>
+            <div class="usecase-item">Gérer les clients</div>
+            <div class="usecase-item">Générer &amp; télécharger les rapports</div>
+            <div class="usecase-item">Consulter le dashboard global</div>
+            <div class="usecase-item">Modifier son profil</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="usecase-actor usecase-actor-mb">
+            <div class="usecase-actor-icon usecase-actor-chef">👷</div>
+            <div class="usecase-actor-name">Chef de Projet</div>
+            <div class="usecase-actor-role">Accès limité à ses projets</div>
+          </div>
+          <div class="usecase-cases">
+            <div class="usecase-item">Créer et gérer <strong>SES</strong> projets</div>
+            <div class="usecase-item">Saisir des dépenses sur ses projets</div>
+            <div class="usecase-item">Gérer les clients</div>
+            <div class="usecase-item">Générer &amp; télécharger des rapports</div>
+            <div class="usecase-item">Dashboard filtré (ses projets)</div>
+            <div class="usecase-item">Modifier son profil</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="usecase-actor usecase-actor-mb">
+            <div class="usecase-actor-icon usecase-actor-collab">🔍</div>
+            <div class="usecase-actor-name">Collaborateur</div>
+            <div class="usecase-actor-role">Consultation seule (lecture seule)</div>
+          </div>
+          <div class="usecase-cases">
+            <div class="usecase-item">Consulter <strong>TOUS</strong> les projets</div>
+            <div class="usecase-item">Consulter <strong>TOUTES</strong> les dépenses</div>
+            <div class="usecase-item">Consulter <strong>TOUS</strong> les clients</div>
+            <div class="usecase-item">Modifier son profil personnel</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="usecase-actor usecase-actor-mb">
+            <div class="usecase-actor-icon usecase-actor-client">🤝</div>
+            <div class="usecase-actor-name">Client</div>
+            <div class="usecase-actor-role">Consultation de ses projets</div>
+          </div>
+          <div class="usecase-cases">
+            <div class="usecase-item">Consulter <strong>SES</strong> projets</div>
+            <div class="usecase-item">Consulter les dépenses de <strong>SES</strong> projets</div>
+            <div class="usecase-item">Dashboard filtré (ses projets)</div>
+            <div class="usecase-item">Modifier son profil personnel</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── 4.2 DIAGRAMME DE CLASSES ─────────────────── -->
+    <h2 id="s4-2">4.2 Diagramme de classes</h2>
+
+    <div class="mermaid-container">
+      <div class="uml-title">📌 Diagramme visuel de classes Eloquent &amp; Relations</div>
+      <div class="mermaid">
+        classDiagram
+        direction TB
+        class User {
+        +bigint id
+        +string name
+        +string email
+        +string password
+        +bigint client_id
+        +projects() HasMany
+        +expenses() HasMany
+        +client() BelongsTo
+        }
+        class Client {
+        +bigint id
+        +string name
+        +projects() HasMany
+        }
+        class Project {
+        +bigint id
+        +string name
+        +bigint client_id
+        +string description
+        +date start_date
+        +date planned_end_date
+        +date actual_end_date
+        +decimal budget
+        +string status
+        +string supplier_contact
+        +bigint created_by
+        +bigint updated_by
+        +client() BelongsTo
+        +expenses() HasMany
+        +creator() BelongsTo
+        +updater() BelongsTo
+        +total_expenses float
+        +gross_gain float
+        +profitability_rate float
+        +is_profitable bool
+        +hasPendingExpenses() bool
+        }
+        class Expense {
+        +bigint id
+        +bigint project_id
+        +bigint category_id
+        +date date
+        +decimal amount
+        +string description
+        +string receipt_path
+        +string receipt_original_name
+        +bigint created_by
+        +project() BelongsTo
+        +category() BelongsTo
+        +creator() BelongsTo
+        +hasReceipt() bool
+        }
+        class ExpenseCategory {
+        +bigint id
+        +string name
+        +string color
+        +expenses() HasMany
+        }
+        class MonthlyReport {
+        +bigint id
+        +string name
+        +tinyint month
+        +smallint year
+        +decimal total_budget
+        +decimal total_expenses
+        +decimal net_profit
+        +string file_path
+        +string file_type
+        +bigint generated_by
+        +datetime generated_at
+        +generator() BelongsTo
+        }
+
+        User "1" --> "*" Project : "crée (created_by)"
+        User "1" --> "*" Expense : "crée (created_by)"
+        User "*" --> "1" Client : "appartient à (client_id)"
+        Client "1" --> "*" Project : "possède"
+        Project "1" --> "*" Expense : "contient"
+        ExpenseCategory "1" --> "*" Expense : "catégorise"
+        User "1" --> "*" MonthlyReport : "génère (generated_by)"
+      </div>
+    </div>
+
+    <div class="uml-container">
+      <div class="uml-title">📌 Modèles Eloquent et relations (Détail)</div>
+      <div class="class-diagram">
+
+        <div class="class-box">
+          <div class="class-box-header">User</div>
+          <div class="class-box-section">
+            <div class="class-attr"><span class="type">bigint</span> id <span class="er-field-pk">PK</span></div>
+            <div class="class-attr"><span class="type">string</span> name</div>
+            <div class="class-attr"><span class="type">string</span> email</div>
+            <div class="class-attr"><span class="type">string</span> password</div>
+            <div class="class-attr"><span class="type">bigint</span> client_id <span class="er-field-fk">FK</span></div>
+          </div>
+          <div class="class-box-section">
+            <div class="class-attr class-method">projects() : HasMany</div>
+            <div class="class-attr class-method">expenses() : HasMany</div>
+            <div class="class-attr class-method">client() : BelongsTo</div>
+            <div class="class-attr class-method">hasRole(r) : bool</div>
+          </div>
+        </div>
+
+        <div class="class-box">
+          <div class="class-box-header">Client</div>
+          <div class="class-box-section">
+            <div class="class-attr"><span class="type">bigint</span> id <span class="er-field-pk">PK</span></div>
+            <div class="class-attr"><span class="type">string</span> name</div>
+          </div>
+          <div class="class-box-section">
+            <div class="class-attr class-method">projects() : HasMany</div>
+          </div>
+        </div>
+
+        <div class="class-box">
+          <div class="class-box-header">Project</div>
+          <div class="class-box-section">
+            <div class="class-attr"><span class="type">bigint</span> id <span class="er-field-pk">PK</span></div>
+            <div class="class-attr"><span class="type">string</span> name</div>
+            <div class="class-attr"><span class="type">decimal</span> budget</div>
+            <div class="class-attr"><span class="type">enum</span> status</div>
+            <div class="class-attr"><span class="type">date</span> start_date</div>
+            <div class="class-attr"><span class="type">date</span> planned_end_date</div>
+            <div class="class-attr"><span class="type">date?</span> actual_end_date</div>
+            <div class="class-attr"><span class="type">string?</span> supplier_contact</div>
+            <div class="class-attr"><span class="type">bigint</span> created_by <span class="er-field-fk">FK</span>
+            </div>
+            <div class="class-attr"><span class="type">bigint?</span> updated_by <span class="er-field-fk">FK</span>
+            </div>
+          </div>
+          <div class="class-box-section">
+            <div class="class-attr class-method">client() : BelongsTo</div>
+            <div class="class-attr class-method">expenses() : HasMany</div>
+            <div class="class-attr class-method">creator() : BelongsTo</div>
+            <div class="class-attr class-method">updater() : BelongsTo</div>
+            <div class="class-attr class-method">hasPendingExpenses() : bool</div>
+            <div class="class-attr class-accessor">total_expenses : float</div>
+            <div class="class-attr class-accessor">gross_gain : float</div>
+            <div class="class-attr class-accessor">profitability_rate : float</div>
+            <div class="class-attr class-accessor">is_profitable : bool</div>
+          </div>
+        </div>
+
+        <div class="class-box">
+          <div class="class-box-header">Expense</div>
+          <div class="class-box-section">
+            <div class="class-attr"><span class="type">bigint</span> id <span class="er-field-pk">PK</span></div>
+            <div class="class-attr"><span class="type">date</span> date</div>
+            <div class="class-attr"><span class="type">decimal</span> amount</div>
+            <div class="class-attr"><span class="type">string?</span> receipt_path</div>
+            <div class="class-attr"><span class="type">string?</span> receipt_original_name</div>
+            <div class="class-attr"><span class="type">bigint</span> created_by <span class="er-field-fk">FK</span>
+            </div>
+          </div>
+          <div class="class-box-section">
+            <div class="class-attr class-method">project() : BelongsTo</div>
+            <div class="class-attr class-method">category() : BelongsTo</div>
+            <div class="class-attr class-method">creator() : BelongsTo</div>
+            <div class="class-attr class-method">hasReceipt() : bool</div>
+          </div>
+        </div>
+
+        <div class="class-box">
+          <div class="class-box-header">ExpenseCategory</div>
+          <div class="class-box-section">
+            <div class="class-attr"><span class="type">bigint</span> id <span class="er-field-pk">PK</span></div>
+            <div class="class-attr"><span class="type">string</span> name</div>
+            <div class="class-attr"><span class="type">string</span> color</div>
+          </div>
+          <div class="class-box-section">
+            <div class="class-attr class-method">expenses() : HasMany</div>
+          </div>
+        </div>
+
+        <div class="class-box">
+          <div class="class-box-header">MonthlyReport</div>
+          <div class="class-box-section">
+            <div class="class-attr"><span class="type">bigint</span> id <span class="er-field-pk">PK</span></div>
+            <div class="class-attr"><span class="type">string</span> name</div>
+            <div class="class-attr"><span class="type">int</span> month, year</div>
+            <div class="class-attr"><span class="type">decimal</span> total_budget</div>
+            <div class="class-attr"><span class="type">decimal</span> total_expenses</div>
+            <div class="class-attr"><span class="type">decimal</span> net_profit</div>
+            <div class="class-attr"><span class="type">string</span> file_path</div>
+            <div class="class-attr"><span class="type">enum</span> file_type</div>
+            <div class="class-attr"><span class="type">bigint</span> generated_by <span class="er-field-fk">FK</span>
+            </div>
+            <div class="class-attr"><span class="type">datetime</span> generated_at</div>
+          </div>
+          <div class="class-box-section">
+            <div class="class-attr class-method">generator() : BelongsTo</div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="relations-list relations-list-mt">
+        <div class="relation-item"><span class="rel-from">User</span><span class="rel-arrow">──1──&lt;──*──</span><span
+            class="rel-to">Project</span><span class="rel-label">(created_by)</span></div>
+        <div class="relation-item"><span class="rel-from">User</span><span class="rel-arrow">──1──&lt;──*──</span><span
+            class="rel-to">Expense</span><span class="rel-label">(created_by)</span></div>
+        <div class="relation-item"><span class="rel-from">User</span><span class="rel-arrow">──1──&lt;──*──</span><span
+            class="rel-to">MonthlyReport</span><span class="rel-label">(generated_by)</span></div>
+        <div class="relation-item"><span class="rel-from">Client</span><span
+            class="rel-arrow">──1──&lt;──*──</span><span class="rel-to">Project</span></div>
+        <div class="relation-item"><span class="rel-from">Project</span><span
+            class="rel-arrow">──1──&lt;──*──</span><span class="rel-to">Expense</span></div>
+        <div class="relation-item"><span class="rel-from">ExpenseCategory</span><span
+            class="rel-arrow">──1──&lt;──*──</span><span class="rel-to">Expense</span></div>
+      </div>
+    </div>
+
+    <!-- ── 4.3 DIAGRAMMES DE SÉQUENCE ───────────────── -->
+</div>
+<div style='background:#1A2B4A;color:#C9A84C;padding:12px 24px;display:flex;gap:16px;align-items:center;font-family:Inter,sans-serif;font-size:13px;flex-wrap:wrap;'><a href='index.html' style='color:#C9A84C;text-decoration:none;'>&#8962; Index</a><span style='color:#888;flex:1;text-align:center;'>Section 4a — Architecture : Cas d'usage et Classes</span><a href='01-introduction.html' style='color:#C9A84C;text-decoration:none;'>&#8592; Précédent</a><a href='02b-architecture-sequences-etats.html' style='color:#C9A84C;text-decoration:none;'>Suivant &#8594;</a></div>
+</body>
+</html>

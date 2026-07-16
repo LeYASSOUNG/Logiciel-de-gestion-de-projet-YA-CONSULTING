@@ -1,0 +1,177 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="doc.css" />
+</head>
+<body>
+<div style='background:#1A2B4A;color:#C9A84C;padding:12px 24px;display:flex;gap:16px;align-items:center;font-family:Inter,sans-serif;font-size:13px;flex-wrap:wrap;'><a href='index.html' style='color:#C9A84C;text-decoration:none;'>&#8962; Index</a><span style='color:#888;flex:1;text-align:center;'>Sections 7-8 — Modules et API</span><a href='03-donnees-erd.html' style='color:#C9A84C;text-decoration:none;'>&#8592; Précédent</a><a href='05-securite-tests.html' style='color:#C9A84C;text-decoration:none;'>Suivant &#8594;</a></div>
+<div style='max-width:1200px;margin:0 auto;padding:32px 24px;'>
+    <div id="s7" class="section-header">
+      <div class="section-number">07</div>
+      <div>
+        <div class="section-title">Modèles Eloquent</div>
+        <div class="section-subtitle">Attributs calculés, relations et scopes</div>
+      </div>
+    </div>
+
+    <h3>Project — Attributs calculés (accesseurs)</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Attribut</th>
+          <th>Calcul</th>
+          <th>Type</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>total_expenses</code></td>
+          <td><code>SUM(expenses.amount)</code> via Eloquent</td>
+          <td>float</td>
+        </tr>
+        <tr>
+          <td><code>gross_gain</code></td>
+          <td><code>budget − total_expenses</code></td>
+          <td>float</td>
+        </tr>
+        <tr>
+          <td><code>profitability_rate</code></td>
+          <td><code>(gross_gain / budget) × 100</code> arrondi à 2 décimales</td>
+          <td>float (%)</td>
+        </tr>
+        <tr>
+          <td><code>is_profitable</code></td>
+          <td><code>gross_gain >= 0</code></td>
+          <td>bool</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Project — Scopes de requête</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Scope</th>
+          <th>SQL équivalent</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>scopeEnCours($q)</code></td>
+          <td><code>WHERE status = 'en_cours'</code></td>
+        </tr>
+        <tr>
+          <td><code>scopeTermine($q)</code></td>
+          <td><code>WHERE status = 'termine'</code></td>
+        </tr>
+        <tr>
+          <td><code>scopeEnPause($q)</code></td>
+          <td><code>WHERE status = 'en_pause'</code></td>
+        </tr>
+        <tr>
+          <td><code>scopeByClient($q, $id)</code></td>
+          <td><code>WHERE client_id = $id</code></td>
+        </tr>
+        <tr>
+          <td><code>scopeByYear($q, $year)</code></td>
+          <td><code>WHERE YEAR(start_date) = $year</code></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ══════════════════════════════════════════════════════ -->
+    <!--  8. CONTRÔLEURS                                       -->
+    <!-- ══════════════════════════════════════════════════════ -->
+    <div id="s8" class="section-header">
+      <div class="section-number">08</div>
+      <div>
+        <div class="section-title">Contrôleurs</div>
+        <div class="section-subtitle">Actions, validations et données retournées</div>
+      </div>
+    </div>
+
+    <h3>ProjectController — Règles de validation</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Champ</th>
+          <th>Règles</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>name</code></td>
+          <td>required | string | max:255</td>
+        </tr>
+        <tr>
+          <td><code>client_id</code></td>
+          <td>required | exists:clients,id</td>
+        </tr>
+        <tr>
+          <td><code>start_date</code></td>
+          <td>required | date</td>
+        </tr>
+        <tr>
+          <td><code>planned_end_date</code></td>
+          <td>required | date | after_or_equal:start_date</td>
+        </tr>
+        <tr>
+          <td><code>actual_end_date</code></td>
+          <td>nullable | date | after_or_equal:start_date <em>(update uniquement)</em></td>
+        </tr>
+        <tr>
+          <td><code>budget</code></td>
+          <td>required | numeric | min:0</td>
+        </tr>
+        <tr>
+          <td><code>status</code></td>
+          <td>required | in:en_cours,termine,en_pause</td>
+        </tr>
+        <tr>
+          <td><code>supplier_contact</code></td>
+          <td>nullable | string | max:255</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>ExpenseController — Règles de validation</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Champ</th>
+          <th>Règles</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>project_id</code></td>
+          <td>required | exists:projects,id</td>
+        </tr>
+        <tr>
+          <td><code>category_id</code></td>
+          <td>required | exists:expense_categories,id</td>
+        </tr>
+        <tr>
+          <td><code>date</code></td>
+          <td>required | date</td>
+        </tr>
+        <tr>
+          <td><code>amount</code></td>
+          <td>required | numeric | min:0.01</td>
+        </tr>
+        <tr>
+          <td><code>receipt</code></td>
+          <td>nullable | file | max:5120 | mimes:pdf,jpeg,png,jpg,webp</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ══════════════════════════════════════════════════════ -->
+    <!--  9. ROUTES                                            -->
+    <!-- ══════════════════════════════════════════════════════ -->
+</div>
+<div style='background:#1A2B4A;color:#C9A84C;padding:12px 24px;display:flex;gap:16px;align-items:center;font-family:Inter,sans-serif;font-size:13px;flex-wrap:wrap;'><a href='index.html' style='color:#C9A84C;text-decoration:none;'>&#8962; Index</a><span style='color:#888;flex:1;text-align:center;'>Sections 7-8 — Modules et API</span><a href='03-donnees-erd.html' style='color:#C9A84C;text-decoration:none;'>&#8592; Précédent</a><a href='05-securite-tests.html' style='color:#C9A84C;text-decoration:none;'>Suivant &#8594;</a></div>
+</body>
+</html>
