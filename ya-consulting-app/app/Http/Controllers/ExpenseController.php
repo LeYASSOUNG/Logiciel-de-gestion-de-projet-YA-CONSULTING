@@ -139,7 +139,9 @@ class ExpenseController extends Controller
         $this->authorize('create', Expense::class);
 
         return Inertia::render('Expenses/Create', [
-            'projects'   => $this->authorizedProjectsQuery()->orderBy(self::COL_NAME)->get(['id', self::COL_NAME, 'budget']),
+            'projects'   => $this->authorizedProjectsQuery()
+                ->orderBy(self::COL_NAME)
+                ->get(['id', self::COL_NAME, 'budget']),
             'categories' => ExpenseCategory::orderBy(self::COL_NAME)->get(['id', self::COL_NAME]),
         ]);
     }
@@ -227,7 +229,9 @@ class ExpenseController extends Controller
 
         return Inertia::render('Expenses/Edit', [
             'expense'    => $expense,
-            'projects'   => $this->authorizedProjectsQuery()->orderBy(self::COL_NAME)->get(['id', self::COL_NAME, 'budget']),
+            'projects'   => $this->authorizedProjectsQuery()
+                ->orderBy(self::COL_NAME)
+                ->get(['id', self::COL_NAME, 'budget']),
             'categories' => ExpenseCategory::orderBy(self::COL_NAME)->get(['id', self::COL_NAME]),
         ]);
     }

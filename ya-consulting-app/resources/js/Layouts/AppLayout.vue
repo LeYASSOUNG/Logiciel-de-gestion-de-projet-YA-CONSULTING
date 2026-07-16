@@ -46,7 +46,7 @@
           </Link>
         </template>
 
-        <template v-if="!$page.props.auth.user.roles?.includes('collaborateur') && !$page.props.auth.user.roles?.includes('client')">
+        <template v-if="$page.props.auth.user.roles?.includes('admin') || $page.props.auth.user.roles?.includes('chef_projet')">
           <Link :href="route('reports.index')" class="sidebar-item" :class="{ active: $page.url.startsWith('/reports') }">
             <span class="sidebar-item-icon"><Icon name="chart-bar" :size="20" /></span>
             <span class="sidebar-item-label">Rapports</span>

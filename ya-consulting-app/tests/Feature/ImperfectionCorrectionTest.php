@@ -129,22 +129,18 @@ class ImperfectionCorrectionTest extends TestCase
         $response->assertSessionHasErrors('actual_end_date');
     }
 
-    public function test_expense_date_cannot_be_before_project_start_date()
+    private function assertInvalidExpenseDate(array $projectOverrides, string $expenseDate)
     {
         $admin = $this->createAdmin();
-
         $client = $this->createTestClient();
         $category = ExpenseCategory::first();
 
-        $project = $this->createProject($client->id, $admin->id, [
-            'start_date' => '2026-06-10',
-        ]);
+        $project = $this->createProject($client->id, $admin->id, $projectOverrides);
 
-        // Attempt to create expense with date 2026-06-05 (before start_date 2026-06-10)
         $response = $this->actingAs($admin)->post(route('expenses.store'), [
             'project_id' => $project->id,
             'category_id' => $category->id,
-            'date' => '2026-06-05',
+            'date' => $expenseDate,
             'amount' => 5000,
             'description' => 'Test Expense',
         ]);
@@ -152,29 +148,18 @@ class ImperfectionCorrectionTest extends TestCase
         $response->assertSessionHasErrors('date');
     }
 
+    public function test_expense_date_cannot_be_before_project_start_date()
+    {
+        $this->assertInvalidExpenseDate(['start_date' => '2026-06-10'], '2026-06-05');
+    }
+
     public function test_expense_date_cannot_be_after_project_actual_end_date()
     {
-        $admin = $this->createAdmin();
-
-        $client = $this->createTestClient();
-        $category = ExpenseCategory::first();
-
-        $project = $this->createProject($client->id, $admin->id, [
+        $this->assertInvalidExpenseDate([
             'start_date' => '2026-06-10',
             'actual_end_date' => '2026-06-25',
-            'status' => 'termine',
-        ]);
-
-        // Attempt to create expense with date 2026-06-28 (after actual_end_date 2026-06-25)
-        $response = $this->actingAs($admin)->post(route('expenses.store'), [
-            'project_id' => $project->id,
-            'category_id' => $category->id,
-            'date' => '2026-06-28',
-            'amount' => 5000,
-            'description' => 'Test Expense',
-        ]);
-
-        $response->assertSessionHasErrors('date');
+            'status' => 'termine'
+        ], '2026-06-28');
     }
 
     public function test_user_shares_correct_inertia_notifications()

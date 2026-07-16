@@ -150,6 +150,8 @@ const submit = () => form.post(route('login'));
 </script>
 
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
 /* Base Layout */
 .login-wrapper {
   min-height: 100vh;
@@ -160,13 +162,13 @@ const submit = () => form.post(route('login'));
   background: #0F1C33;
   position: relative;
   overflow: hidden;
-  font-family: 'Times New Roman', Times, serif;
+  font-family: 'Inter', sans-serif;
 }
 
 /* Background animated shapes */
 .bg-shape {
   position: absolute;
-  border-radius: 0;
+  border-radius: 50%;
   filter: blur(80px);
   z-index: 0;
   animation: float 20s infinite ease-in-out alternate;
@@ -175,7 +177,7 @@ const submit = () => form.post(route('login'));
 .bg-shape-1 {
   width: 500px;
   height: 500px;
-  background: rgba(26, 43, 74, 0.9);
+  background: rgba(43, 88, 175, 0.4);
   top: -150px;
   left: -150px;
   animation-delay: 0s;
@@ -184,7 +186,7 @@ const submit = () => form.post(route('login'));
 .bg-shape-2 {
   width: 400px;
   height: 400px;
-  background: rgba(201, 168, 76, 0.15);
+  background: rgba(201, 168, 76, 0.25);
   bottom: -100px;
   right: -50px;
   animation-delay: -5s;
@@ -193,7 +195,7 @@ const submit = () => form.post(route('login'));
 .bg-shape-3 {
   width: 350px;
   height: 350px;
-  background: rgba(36, 54, 89, 0.7);
+  background: rgba(36, 171, 230, 0.3);
   top: 25%;
   left: 35%;
   animation-delay: -10s;
@@ -204,51 +206,50 @@ const submit = () => form.post(route('login'));
   100% { transform: translate(40px, 30px) scale(1.1); }
 }
 
-/* Container resized to be much more compact */
+/* Container */
 .login-container {
   width: 100%;
-  max-width: 1000px; /* Reduced from 1300px */
-  min-height: 550px; /* Reduced from 750px */
+  max-width: 1100px;
+  min-height: 600px;
   display: flex;
   position: relative;
   z-index: 1;
-  border-radius: 0; /* Slightly softer radius */
+  border-radius: 24px;
   overflow: hidden;
-  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
-  background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  background: rgba(255, 255, 255, 1);
   margin: 20px;
 }
 
 /* Left Panel */
 .login-info-panel {
   flex: 1.2;
-  padding: 40px 48px; /* Reduced padding */
+  padding: 60px;
   display: flex;
   flex-direction: column;
   justify-content: center;
   position: relative;
-  background: linear-gradient(135deg, rgba(26, 43, 74, 0.95) 0%, rgba(15, 28, 51, 0.98) 100%);
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  background: linear-gradient(135deg, #1A2B4A 0%, #0F1C33 100%);
+  color: #ffffff;
 }
 
 .logo-wrapper {
   background: #ffffff;
-  border-radius: 0; /* Smaller radius */
-  height: 65px; /* Reduced from 85px */
+  border-radius: 16px;
+  height: 70px;
   width: fit-content;
-  padding: 10px 20px;
+  padding: 12px 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 32px; /* Reduced margin */
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-  transition: transform 0.3s ease;
+  margin-bottom: 40px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .logo-wrapper:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.15);
 }
 
 .logo-wrapper img {
@@ -257,66 +258,64 @@ const submit = () => form.post(route('login'));
 }
 
 .brand-title {
-  font-size: 2.2rem; /* Reduced from 3.2rem */
+  font-size: 2.5rem;
   font-weight: 800;
   color: #ffffff;
   line-height: 1.15;
-  margin-bottom: 16px; /* Reduced margin */
+  margin-bottom: 20px;
   letter-spacing: -0.5px;
 }
 
 .brand-subtitle {
-  font-size: 1rem; /* Reduced from 1.15rem */
-  color: rgba(255, 255, 255, 0.75);
-  line-height: 1.5;
-  margin-bottom: 36px; /* Reduced margin */
-  max-width: 420px;
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.6;
+  margin-bottom: 48px;
+  max-width: 440px;
 }
 
 .features-list {
   display: flex;
   flex-direction: column;
-  gap: 20px; /* Reduced gap */
+  gap: 24px;
 }
 
 .feature-item {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 16px;
   opacity: 0;
   animation: fadeInUp 0.6s ease forwards;
 }
 
 .feature-icon {
-  width: 42px; /* Reduced from 52px */
-  height: 42px;
-  border-radius: 0;
-  background: rgba(201, 168, 76, 0.12);
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(201, 168, 76, 0.15);
   color: #C9A84C;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: inset 0 0 0 1px rgba(201, 168, 76, 0.25);
   transition: all 0.3s ease;
 }
 
 .feature-item:hover .feature-icon {
-  background: rgba(201, 168, 76, 0.2);
-  transform: scale(1.05);
+  background: rgba(201, 168, 76, 0.25);
+  transform: scale(1.1) rotate(5deg);
 }
 
 .feature-text h3 {
   color: #ffffff;
-  font-size: 0.95rem; /* Reduced */
+  font-size: 1rem;
   font-weight: 600;
   margin: 0 0 4px 0;
-  letter-spacing: -0.2px;
 }
 
 .feature-text p {
   color: rgba(255, 255, 255, 0.6);
-  font-size: 0.85rem; /* Reduced */
+  font-size: 0.85rem;
   margin: 0;
   line-height: 1.4;
 }
@@ -324,16 +323,21 @@ const submit = () => form.post(route('login'));
 /* Right Panel (Form) */
 .login-form-panel {
   flex: 1;
-  padding: 40px; /* Reduced padding */
+  padding: 60px 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.98);
+  background: #f8fafc;
 }
 
 .glass-card {
   width: 100%;
-  max-width: 360px; /* Reduced from 420px */
+  max-width: 400px;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.03);
 }
 
 .mobile-logo {
@@ -341,11 +345,11 @@ const submit = () => form.post(route('login'));
 }
 
 .form-header {
-  margin-bottom: 32px; /* Reduced from 48px */
+  margin-bottom: 32px;
 }
 
 .form-header h2 {
-  font-size: 1.8rem; /* Reduced from 2.2rem */
+  font-size: 2rem;
   font-weight: 800;
   color: #1A2B4A;
   margin: 0 0 8px 0;
@@ -354,24 +358,24 @@ const submit = () => form.post(route('login'));
 
 .form-header p {
   color: #64748B;
-  font-size: 0.9rem; /* Reduced from 1rem */
+  font-size: 0.95rem;
   margin: 0;
 }
 
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 20px; /* Reduced from 28px */
+  gap: 24px;
 }
 
 .input-group {
   display: flex;
   flex-direction: column;
-  gap: 8px; /* Reduced from 10px */
+  gap: 8px;
 }
 
 .input-group label {
-  font-size: 0.85rem; /* Reduced from 0.9rem */
+  font-size: 0.9rem;
   font-weight: 600;
   color: #1E293B;
 }
@@ -384,31 +388,43 @@ const submit = () => form.post(route('login'));
 
 .input-icon {
   position: absolute;
-  left: 14px; /* Adjusted */
+  left: 16px;
   color: #94A3B8;
   transition: color 0.3s ease;
 }
 
 .input-wrapper input {
   width: 100%;
-  padding: 12px 40px 12px 40px; /* Space for both icons */
+  padding: 14px 44px 14px 44px;
   border: 1.5px solid #E2E8F0;
-  border-radius: 0; /* Slightly sharper */
-  font-size: 0.9rem; /* Reduced from 1rem */
+  border-radius: 12px;
+  font-size: 1rem;
   color: #1E293B;
   background: #ffffff;
   transition: all 0.3s ease;
   outline: none;
+  font-family: inherit;
+}
+
+/* Fix for Chrome autofill background */
+.input-wrapper input:-webkit-autofill,
+.input-wrapper input:-webkit-autofill:hover, 
+.input-wrapper input:-webkit-autofill:focus, 
+.input-wrapper input:-webkit-autofill:active{
+    -webkit-box-shadow: 0 0 0 30px white inset !important;
+    -webkit-text-fill-color: #1E293B !important;
+    border: 1.5px solid #E2E8F0;
+    border-radius: 12px;
 }
 
 .input-wrapper input:focus {
-  border-color: #1A2B4A;
-  box-shadow: 0 0 0 3px rgba(26, 43, 74, 0.08);
+  border-color: #C9A84C;
+  box-shadow: 0 0 0 4px rgba(201, 168, 76, 0.1);
 }
 
 .password-toggle {
   position: absolute;
-  right: 12px;
+  right: 14px;
   top: 50%;
   transform: translateY(-50%);
   background: none;
@@ -436,7 +452,7 @@ const submit = () => form.post(route('login'));
 }
 
 .error-msg {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: #EF4444;
   margin-top: 4px;
 }
@@ -445,18 +461,18 @@ const submit = () => form.post(route('login'));
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: -6px;
-  margin-bottom: 6px;
+  margin-top: -4px;
 }
 
 .checkbox-label {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.85rem; /* Reduced */
+  gap: 10px;
+  font-size: 0.9rem;
   color: #64748B;
   cursor: pointer;
   user-select: none;
+  font-weight: 500;
 }
 
 .checkbox-label input {
@@ -464,15 +480,16 @@ const submit = () => form.post(route('login'));
 }
 
 .checkmark {
-  width: 18px; /* Reduced from 20px */
-  height: 18px;
-  border: 1.5px solid #CBD5E1;
-  border-radius: 0;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #CBD5E1;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
   position: relative;
+  background: #ffffff;
 }
 
 .checkbox-label input:checked ~ .checkmark {
@@ -483,36 +500,37 @@ const submit = () => form.post(route('login'));
 .checkbox-label input:checked ~ .checkmark::after {
   content: '';
   position: absolute;
-  width: 4px;
-  height: 8px;
+  width: 5px;
+  height: 10px;
   border: solid white;
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
-  top: 1px; /* Adjusted */
+  top: 2px;
 }
 
 .btn-submit {
   background: #1A2B4A;
   color: #ffffff;
   border: none;
-  border-radius: 0; /* Adjusted radius */
-  padding: 14px; /* Reduced padding */
-  font-size: 0.95rem; /* Reduced from 1.05rem */
+  border-radius: 12px;
+  padding: 16px;
+  font-size: 1.05rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   overflow: hidden;
-  margin-top: 4px; /* Reduced margin */
+  box-shadow: 0 4px 6px -1px rgba(26, 43, 74, 0.2), 0 2px 4px -1px rgba(26, 43, 74, 0.1);
+  font-family: inherit;
 }
 
 .btn-submit:hover:not(:disabled) {
-  background: #0F1C33;
-  transform: translateY(-1px);
-  box-shadow: 0 8px 16px -8px rgba(26, 43, 74, 0.6);
+  background: #27406a;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(26, 43, 74, 0.3), 0 4px 6px -2px rgba(26, 43, 74, 0.15);
 }
 
 .btn-submit:active:not(:disabled) {
@@ -527,19 +545,19 @@ const submit = () => form.post(route('login'));
 .btn-content {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   transition: transform 0.3s ease;
 }
 
 .btn-submit:hover:not(:disabled) .btn-content {
-  transform: translateX(3px);
+  transform: translateX(4px);
 }
 
 .loader {
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border: 2px solid rgba(255,255,255,0.3);
-  border-radius: 0;
+  border-radius: 50%;
   border-top-color: #fff;
   animation: spin 0.8s linear infinite;
 }
@@ -560,12 +578,12 @@ const submit = () => form.post(route('login'));
 }
 
 @keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(30px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes slideInRight {
-  from { opacity: 0; transform: translateX(20px); }
+  from { opacity: 0; transform: translateX(30px); }
   to { opacity: 1; transform: translateX(0); }
 }
 
@@ -591,20 +609,21 @@ const submit = () => form.post(route('login'));
   .glass-card {
     background: rgba(255, 255, 255, 0.95);
     backdrop-filter: blur(24px);
-    padding: 32px; /* Reduced from 48px */
-    border-radius: 0;
-    box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+    padding: 40px;
+    border-radius: 24px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    border: 1px solid rgba(255,255,255,0.4);
   }
   
   .mobile-logo {
     display: flex;
     background: #ffffff;
-    border-radius: 0;
-    height: 60px; /* Reduced */
+    border-radius: 16px;
+    height: 60px;
     width: fit-content;
-    padding: 10px 16px;
-    margin: 0 auto 24px auto;
-    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+    padding: 10px 20px;
+    margin: 0 auto 32px auto;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
   }
   
   .mobile-logo img {
@@ -614,16 +633,16 @@ const submit = () => form.post(route('login'));
   
   .form-header {
     text-align: center;
-    margin-bottom: 24px;
+    margin-bottom: 32px;
   }
 }
 
 @media (max-width: 480px) {
   .glass-card {
-    padding: 24px 20px;
+    padding: 32px 24px;
   }
   .form-header h2 {
-    font-size: 1.6rem;
+    font-size: 1.8rem;
   }
 }
 </style>

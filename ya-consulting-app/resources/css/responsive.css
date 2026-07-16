@@ -1,4 +1,4 @@
-﻿/* ── Responsive ─────────────────────────────────────────────────── */
+/* ── Responsive ─────────────────────────────────────────────────── */
 @media (max-width: 1024px) {
   .grid-4 { grid-template-columns: 1fr 1fr; }
 }
@@ -17,8 +17,9 @@
   inset: 0;
   background: rgba(10, 19, 36, 0.6);
   z-index: 199;
-  backdrop-filter: blur(4px);
+
   -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
   transition: all 0.3s ease;
 }
   .app-main { margin-left: 0; }
@@ -33,7 +34,6 @@
   .table-container {
   width: 100%;
   overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border-light);
 }
@@ -140,8 +140,9 @@ div[style*="position: fixed"][style*="z-index: 1000"] {
 /* ── Glass Panels (pour pages premium) ─────────────────────────── */
 .glass-panel {
   background: rgba(255,255,255,0.85);
-  backdrop-filter: blur(12px);
+
   -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   border-radius: var(--radius-lg);
   border: 1px solid rgba(255,255,255,0.6);
   box-shadow: var(--shadow-md);
@@ -150,8 +151,9 @@ div[style*="position: fixed"][style*="z-index: 1000"] {
 
 .glass-card {
   background: rgba(255,255,255,0.7);
-  backdrop-filter: blur(10px);
+
   -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   border: 1px solid rgba(255,255,255,0.5);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
@@ -239,3 +241,4 @@ div[style*="position: fixed"][style*="z-index: 1000"] {
   margin: 0;
   line-height: 1.6;
 }
+

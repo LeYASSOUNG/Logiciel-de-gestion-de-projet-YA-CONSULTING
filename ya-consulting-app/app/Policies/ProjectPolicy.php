@@ -101,7 +101,15 @@ class ProjectPolicy
      */
     public function delete(User $user, Project $project): bool
     {
-        // Admin only
-        return $user->hasRole('admin');
+        if ($user->hasRole('admin')) {
+            return true;
+        }
+
+        if ($user->hasRole('chef_projet')) {
+            // Restriction : le chef de projet ne peut supprimer que ses projets
+            return $project->created_by === $user->id;
+        }
+
+        return false;
     }
 }

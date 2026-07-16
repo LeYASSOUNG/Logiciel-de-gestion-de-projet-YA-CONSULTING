@@ -335,11 +335,7 @@
                     <td class="text-right text-bold">{{ number_format($cat['total'], 0, ',', ' ') }} FCFA</td>
                 </tr>
             @empty
-                <tr>
-                    <td colspan="4" class="text-center text-muted">
-                        Aucune dépense n'a été enregistrée sur cette période.
-                    </td>
-                </tr>
+                <tr class="empty-row"><td colspan="4" class="text-center text-muted">Aucune dépense n'a été enregistrée sur cette période.</td></tr>
             @endforelse
         </tbody>
     </table>
@@ -393,11 +389,7 @@
                     </td>
                 </tr>
             @empty
-                <tr>
-                    <td colspan="6" class="text-center text-muted">
-                        Aucun projet n'est actif sur cette période.
-                    </td>
-                </tr>
+                <tr class="empty-row"><td colspan="6" class="text-center text-muted">Aucun projet n'est actif sur cette période.</td></tr>
             @endforelse
         </tbody>
     </table>
@@ -410,3 +402,4 @@
 
 </body>
 </html>
+

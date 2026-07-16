@@ -25,15 +25,30 @@ class ReportController extends Controller
     use AuthorizesRequests;
 
     /**
+     * Vérifie si l'utilisateur connecté est un chef de projet.
+     */
+    private function isChefProjet(): bool
+    {
+        /** @var User|null $user */
+        $user = Auth::user();
+        return $user && $user->hasRole('chef_projet');
+    }
+
+    /**
      * Affiche la liste des rapports mensuels générés, avec pagination.
      * Prépare également les données nécessaires aux filtres (mois et années disponibles).
      */
     public function index(Request $request): Response
     {
-        $reports = MonthlyReport::with('generator')
+        $query = MonthlyReport::with('generator')
             ->orderBy('year', 'desc')
-            ->orderBy('month', 'desc')
-            ->paginate(15);
+            ->orderBy('month', 'desc');
+
+        if ($this->isChefProjet()) {
+            $query->where('generated_by', Auth::id());
+        }
+
+        $reports = $query->paginate(15);
 
         // Noms des mois en français
         $months = [
@@ -160,19 +175,27 @@ class ReportController extends Controller
                 $q->whereNull('actual_end_date')
                   ->orWhere('actual_end_date', '>=', $startDate);
             })
+            ->when($this->isChefProjet(), fn ($q) => $q->where('created_by', Auth::id()))
             ->with(['client', 'expenses', 'payments'])
             ->get();
 
         $totalBudget = (float) $projects->sum('budget');
 
         $monthlyExpenses = Expense::whereBetween('date', [$startDate, $endDate])
+            ->when($this->isChefProjet(), function ($q) {
+                $q->whereHas('project', fn ($qp) => $qp->where('created_by', Auth::id()));
+            })
             ->with('category')
             ->get();
 
         $totalExpenses = (float) $monthlyExpenses->sum('amount');
         $totalPaid     = (float) \App\Models\Payment::whereBetween(
             'payment_date', [$startDate, $endDate]
-        )->get()->sum('amount');
+        )
+        ->when($this->isChefProjet(), function ($q) {
+            $q->whereHas('project', fn ($qp) => $qp->where('created_by', Auth::id()));
+        })
+        ->get()->sum('amount');
         $netProfit     = $totalPaid - $totalExpenses;
         $profitabilityRate = $totalPaid > 0 ? round(($netProfit / $totalPaid) * 100, 2) : 0;
 
@@ -190,6 +213,7 @@ class ReportController extends Controller
 
         $completedProjects   = Project::where('status', 'termine')
             ->whereBetween('actual_end_date', [$startDate, $endDate])
+            ->when($this->isChefProjet(), fn ($q) => $q->where('created_by', Auth::id()))
             ->get();
         $totalGainsCompleted = (float) $completedProjects->sum(fn ($p) => $p->gross_gain);
 
@@ -216,13 +240,20 @@ class ReportController extends Controller
                 $q->whereNull('actual_end_date')
                   ->orWhere('actual_end_date', '>=', $prevStartDate);
             })
+            ->when($this->isChefProjet(), fn ($q) => $q->where('created_by', Auth::id()))
             ->with('payments')
             ->get();
 
         $prevTotalBudget   = (float) $prevProjects->sum('budget');
         $prevTotalExpenses = (float) Expense::whereBetween('date', [$prevStartDate, $prevEndDate])
+            ->when($this->isChefProjet(), function ($q) {
+                $q->whereHas('project', fn ($qp) => $qp->where('created_by', Auth::id()));
+            })
             ->get()->sum('amount');
         $prevTotalPaid = (float) \App\Models\Payment::whereBetween('payment_date', [$prevStartDate, $prevEndDate])
+            ->when($this->isChefProjet(), function ($q) {
+                $q->whereHas('project', fn ($qp) => $qp->where('created_by', Auth::id()));
+            })
             ->get()->sum('amount');
 
         $prevNetProfit = $prevTotalPaid - $prevTotalExpenses;
@@ -363,6 +394,7 @@ class ReportController extends Controller
         $existing = MonthlyReport::where('month', $month)
             ->where('year', $year)
             ->where('file_type', $fileType)
+            ->when($this->isChefProjet(), fn ($q) => $q->where('generated_by', Auth::id()))
             ->first();
         if ($existing) {
             if ($existing->file_path) {
