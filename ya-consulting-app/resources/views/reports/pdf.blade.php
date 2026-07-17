@@ -258,7 +258,7 @@
                 <td class="text-right text-bold
                     {{ ($total_paid - ($prev_total_paid ?? 0)) >= 0 ? 'text-success' : 'text-danger' }}">
                     {{ ($total_paid - ($prev_total_paid ?? 0)) >= 0 ? '+' : '' }}
-                    {{- number_format($total_paid - ($prev_total_paid ?? 0), 0, ',', ' ') }} FCFA
+                    {{ number_format($total_paid - ($prev_total_paid ?? 0), 0, ',', ' ') }} FCFA
                 </td>
             </tr>
             <tr>
@@ -268,7 +268,7 @@
                 <td class="text-right text-bold
                     {{ ($total_expenses - $prev_total_expenses) <= 0 ? 'text-success' : 'text-danger' }}">
                     {{ ($total_expenses - $prev_total_expenses) >= 0 ? '+' : '' }}
-                    {{- number_format($total_expenses - $prev_total_expenses, 0, ',', ' ') }} FCFA
+                    {{ number_format($total_expenses - $prev_total_expenses, 0, ',', ' ') }} FCFA
                 </td>
             </tr>
             <tr>
@@ -278,7 +278,7 @@
                 <td class="text-right text-bold
                     {{ ($net_profit - $prev_net_profit) >= 0 ? 'text-success' : 'text-danger' }}">
                     {{ ($net_profit - $prev_net_profit) >= 0 ? '+' : '' }}
-                    {{- number_format($net_profit - $prev_net_profit, 0, ',', ' ') }} FCFA
+                    {{ number_format($net_profit - $prev_net_profit, 0, ',', ' ') }} FCFA
                 </td>
             </tr>
             <tr>
@@ -288,7 +288,7 @@
                 <td class="text-right text-bold
                     {{ ($profitability_rate - $prev_profitability_rate) >= 0 ? 'text-success' : 'text-danger' }}">
                     {{ ($profitability_rate - $prev_profitability_rate) >= 0 ? '+' : '' }}
-                    {{- round($profitability_rate - $prev_profitability_rate, 2) }}%
+                    {{ round($profitability_rate - $prev_profitability_rate, 2) }}%
                 </td>
             </tr>
             <tr>

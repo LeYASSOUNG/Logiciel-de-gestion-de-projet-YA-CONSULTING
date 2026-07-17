@@ -122,7 +122,7 @@ Logiciel-de-gestion-de-projet-YA-CONSULTING/
 
 
 > [!TIP]
-> Une fois connecté en tant qu'**Administrateur**, vous pouvez créer de nouveaux profils d'utilisateurs et leur affecter les rôles de **Chef de Projet**, **Collaborateur** ou **Client** directement depuis l'interface d'administration.
+> Une fois connecté en tant qu'**Administrateur**, vous pouvez créer de nouveaux profils d'utilisateurs et leur affecter les rôles de **Chef de Projet**, **Collaborateur** directement depuis l'interface d'administration.
 
 ---
 
